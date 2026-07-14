@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기적의 시작 (The Miracle) - 출산 시뮬레이션 게임</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background: linear-gradient(135deg, #ffe5ec 0%, #ffebec 50%, #f0e6ff 100%);
+        }
+        .fancy-font {
+            font-family: 'Gamja Flower', cursive;
+        }
+        /* Custom progress bar animation */
+        .progress-transition {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 select-none">
+
+    <!-- 메인 게임 컨테이너 -->
+    <div id="game-container" class="w-full max-w-md bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-pink-100 overflow-hidden relative flex flex-col my-auto" style="min-height: 640px;">
+        
+        <!-- ================= START SCREEN ================= -->
+        <div id="screen-start" class="flex-1 flex flex-col justify-between p-6 text-center">
+            <div class="my-auto space-y-6">
+                <div class="relative w-40 h-40 mx-auto bg-pink-100 rounded-full flex items-center justify-center border-4 border-white shadow-inner animate-pulse">
+                    <!-- SVG 아기 아이콘 -->
+                    <svg class="w-24 h-24 text-pink-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A1.5,1.5 0 0,1 13.5,5.5A1.5,1.5 0 0,1 12,7A1.5,1.5 0 0,1 10.5,5.5A1.5,1.5 0 0,1 12,4M12,18C8.67,18 5.43,15.9 4,12.5C5.43,9.1 8.67,7 12,7C15.33,7 18.57,9.1 20,12.5C18.57,15.9 15.33,18 12,18M12,9A3.5,3.5 0 0,0 8.5,12.5A3.5,3.5 0 0,0 12,16A3.5,3.5 0 0,0 15.5,12.5A3.5,3.5 0 0,0 12,9M12,11A1.5,1.5 0 0,1 13.5,12.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 10.5,12.5A1.5,1.5 0 0,1 12,11Z" />
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-bold text-pink-600 fancy-font tracking-wide">기적의 시작</h1>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    생명이 찾아온 신비로운 10개월의 순간들.<br>
+                    따뜻한 보살핌으로 아이를 무사히 세상에 맞이해 주세요.
+                </p>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="startGame()" class="w-full py-4 bg-pink-500 hover:bg-pink-600 active:translate-y-0.5 text-white font-bold rounded-2xl shadow-lg transition-all duration-150 text-lg">
+                    부모가 되는 여정 시작하기
+                </button>
+                <p class="text-xs text-gray-400">Copyright © 2026 The Miracle. All rights reserved.</p>
+            </div>
+        </div>
+
+        <!-- ================= MAIN GAME SCREEN ================= -->
+        <div id="screen-game" class="hidden flex-1 flex flex-col justify-between">
+            <!-- 상단 헤더: 주차 및 기본 알림 -->
+            <div class="bg-gradient-to-r from-pink-400 to-purple-400 text-white px-6 py-4 flex justify-between items-center shadow-md">
+                <div>
+                    <span class="text-xs opacity-90 uppercase tracking-widest font-semibold block">Pregnancy Progress</span>
+                    <span id="current-week" class="text-2xl font-bold fancy-font">임신 4주차</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs opacity-90 block">출산까지</span>
+                    <span id="days-left" class="font-bold text-lg">D-252</span>
+                </div>
+            </div>
+
+            <!-- 스탯 패널 -->
+            <div class="bg-pink-50/50 p-4 border-b border-pink-100 grid grid-cols-2 gap-4 text-xs">
+                <!-- 산모 스탯 -->
+                <div class="space-y-2 bg-white/70 p-2.5 rounded-xl border border-pink-100/50">
+                    <div class="font-bold text-gray-700 flex items-center gap-1">
+                        <i class="fa-solid fa-person-pregnant text-pink-500"></i> 엄마의 상태
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                            <span>스트레스</span>
+                            <span id="stat-stress-val">20%</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="stat-stress-bar" class="h-full bg-red-400 progress-transition" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                            <span>피로도</span>
+                            <span id="stat-fatigue-val">10%</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="stat-fatigue-bar" class="h-full bg-yellow-400 progress-transition" style="width: 10%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                            <span>영양 균형</span>
+                            <span id="stat-nutrition-val">50%</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="stat-nutrition-bar" class="h-full bg-green-400 progress-transition" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 아기 스탯 -->
+                <div class="space-y-2 bg-white/70 p-2.5 rounded-xl border border-pink-100/50">
+                    <div class="font-bold text-gray-700 flex items-center gap-1">
+                        <i class="fa-solid fa-baby text-purple-500"></i> 태아의 상태
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                            <span>건강 지수</span>
+                            <span id="stat-health-val">80%</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="stat-health-bar" class="h-full bg-teal-400 progress-transition" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                            <span>엄마와의 교감</span>
+                            <span id="stat-bond-val">30%</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="stat-bond-bar" class="h-full bg-purple-400 progress-transition" style="width: 30%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-0.5">
+                            <span>체중 & 성장</span>
+                            <span id="stat-growth-val">0.1kg / 아주 작음</span>
+                        </div>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="stat-growth-bar" class="h-full bg-blue-400 progress-transition" style="width: 10%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 시각화 영역 (초음파 화면 & 산모 실루엣 교체 가능) -->
+            <div class="p-6 flex flex-col items-center justify-center bg-gray-50/50 relative flex-1 min-h-[180px]">
+                <!-- 초음파 테두리 데코레이션 -->
+                <div class="w-full max-w-[280px] aspect-[4/3] bg-black rounded-2xl border-4 border-gray-800 shadow-inner flex flex-col justify-between p-3 overflow-hidden relative">
+                    <!-- 초음파 모니터 텍스트 데코 -->
+                    <div class="flex justify-between text-[8px] text-green-500 font-mono">
+                        <div>PATIENT: MOM<br>MODE: 2D/OB</div>
+                        <div class="text-right">GA: <span id="us-ga">4w0d</span><br>EDD: 10/10/2026</div>
+                    </div>
+                    
+                    <!-- 아기 이미지 위치 (SVG 그림으로 표현) -->
+                    <div class="absolute inset-0 flex items-center justify-center p-4">
+                        <svg id="baby-svg" class="w-32 h-32 text-white/40 filter blur-[0.6px] transition-all duration-1000" viewBox="0 0 100 100" fill="currentColor">
+                            <!-- 초기에는 작은 점 형태 (JS로 주차별 변경 예정) -->
+                            <circle cx="50" cy="50" r="5" />
+                        </svg>
+                    </div>
+
+                    <div class="w-full text-center text-[10px] text-green-500/80 font-mono z-10">
+                        * ULTRASOUND REALTIME MONITOR *
+                    </div>
+                </div>
+                <div id="growth-info-bubble" class="mt-3 bg-pink-100 text-pink-700 text-xs px-4 py-1.5 rounded-full font-medium shadow-sm">
+                    아기 크기: 깨소금 한 알 크기 🌱
+                </div>
+            </div>
+
+            <!-- 메인 플레이 인터랙션 영역 -->
+            <div class="bg-white p-5 border-t border-gray-100 space-y-4">
+                <!-- 상호작용 지문 (스토리텔링 상자) -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <p id="event-description" class="text-sm text-gray-700 leading-relaxed font-medium">
+                        임신 사실을 처음 알게 되었습니다! 심장이 두근거리네요. 앞으로 40주 동안 아기를 무사히 키워내야 합니다. 어떻게 준비를 시작할까요?
+                    </p>
+                </div>
+
+                <!-- 선택지 버튼 컨테이너 -->
+                <div id="choices-container" class="space-y-2">
+                    <!-- 기본 행동들 -->
+                    <button onclick="handleChoice(1)" class="choice-btn w-full text-left p-3.5 bg-pink-50 hover:bg-pink-100 border border-pink-200/60 rounded-xl text-xs sm:text-sm font-semibold text-pink-700 transition duration-150 flex items-center justify-between">
+                        <span><i class="fa-solid fa-book-open mr-2"></i>태교 일기 쓰기 및 영양제 섭취</span>
+                        <i class="fa-solid fa-chevron-right text-pink-400"></i>
+                    </button>
+                    <button onclick="handleChoice(2)" class="choice-btn w-full text-left p-3.5 bg-purple-50 hover:bg-purple-100 border border-purple-200/60 rounded-xl text-xs sm:text-sm font-semibold text-purple-700 transition duration-150 flex items-center justify-between">
+                        <span><i class="fa-solid fa-walking mr-2"></i>가벼운 동네 산책 및 마음 다스리기</span>
+                        <i class="fa-solid fa-chevron-right text-purple-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= LABOR / BIRTH SCREEN ================= -->
+        <div id="screen-labor" class="hidden flex-1 flex flex-col justify-between p-6">
+            <div class="text-center space-y-2">
+                <span class="inline-block bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider animate-bounce">Emergency</span>
+                <h2 class="text-2xl font-bold text-gray-800">40주차: 기적의 출산</h2>
+                <p class="text-xs text-gray-500 leading-relaxed">아이가 세상 밖으로 나올 준비를 마쳤습니다!<br>의사 선생님의 신호와 호흡 주기에 맞춰 건강하게 순산하세요!</p>
+            </div>
+
+            <!-- 미니게임 시각 패널 -->
+            <div class="my-6 bg-gray-900 rounded-2xl p-4 text-white text-center relative overflow-hidden flex-1 flex flex-col justify-between min-h-[220px]">
+                
+                <!-- 출산 진행 게이지 -->
+                <div>
+                    <div class="flex justify-between text-xs text-pink-300 mb-1">
+                        <span>출산 진행도 (아기 내려옴)</span>
+                        <span id="labor-progress-percent">0%</span>
+                    </div>
+                    <div class="w-full h-4 bg-gray-800 rounded-full overflow-hidden p-0.5 border border-gray-700">
+                        <div id="labor-progress-bar" class="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- 실시간 호흡 서클 연출 -->
+                <div class="relative w-36 h-36 mx-auto flex items-center justify-center my-4">
+                    <!-- 가이드 범위 가이드라인 -->
+                    <div class="absolute inset-0 rounded-full border-4 border-dashed border-teal-500/30 animate-spin" style="animation-duration: 20s;"></div>
+                    <!-- 합격선 타겟 라인 -->
+                    <div class="absolute w-28 h-28 rounded-full border-4 border-teal-400 opacity-60"></div>
+                    
+                    <!-- 실시간 팽창/수축되는 리듬 서클 -->
+                    <div id="breath-target" class="w-20 h-20 rounded-full bg-pink-500/30 border-2 border-pink-400 flex items-center justify-center transition-all duration-100">
+                        <div class="text-xs font-bold text-pink-200" id="breath-guide-text">대기</div>
+                    </div>
+                </div>
+
+                <!-- 상태 코칭 텍스트 -->
+                <div>
+                    <div id="doctor-coaching" class="text-sm font-semibold text-teal-300 bg-teal-950/40 py-2 rounded-lg border border-teal-800/50">
+                        "진통이 시작됩니다! 호흡 주기에 맞춰 누르세요!"
+                    </div>
+                    <div class="flex justify-between items-center mt-3 text-xs text-gray-400">
+                        <div>산모 기력: <span id="mom-stamina" class="text-yellow-400 font-bold">100</span>%</div>
+                        <div>성공 횟수: <span id="success-count" class="text-green-400 font-bold">0</span>/6</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 미니게임 조작 버튼 -->
+            <div class="space-y-3">
+                <button id="btn-action" onmousedown="onActionPress()" onmouseup="onActionRelease()" ontouchstart="onActionPress()" ontouchend="onActionRelease()" class="w-full py-5 bg-gradient-to-r from-teal-500 to-emerald-500 active:scale-[0.98] text-white font-extrabold rounded-2xl shadow-xl transition-all duration-75 text-lg select-none touch-none">
+                    호흡 버튼 (눌러서 숨 참기)
+                </button>
+                <p class="text-center text-[11px] text-gray-400">
+                    <i class="fa-solid fa-circle-info"></i> 타이밍 팁: 원이 초록색 가이드선과 같아졌을 때 꾹 누르세요!
+                </p>
+            </div>
+        </div>
+
+        <!-- ================= END / RESULT SCREEN ================= -->
+        <div id="screen-end" class="hidden flex-1 flex flex-col justify-between p-6 text-center">
+            <div class="my-auto space-y-6">
+                <div class="relative w-36 h-36 mx-auto bg-amber-50 rounded-full flex items-center justify-center border-4 border-amber-200 shadow-lg animate-bounce">
+                    <!-- 우는 아기 혹은 포대기 아이콘 -->
+                    <svg class="w-20 h-20 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18C8.67,18 6,15.33 6,12C6,10.12 7.5,8.5 9.38,8.08C9.13,8.94 9,9.85 9,10.8C9,14.61 11.66,17.79 15.2,18.5C14.23,19.46 12.92,20 11.5,20C11.5,20 11.45,20 11.4,20C11.6,19.36 11.7,18.69 11.7,18H12M15,10A2,2 0 0,1 17,12A2,2 0 0,1 15,14A2,2 0 0,1 13,12A2,2 0 0,1 15,10Z" />
+                    </svg>
+                </div>
+
+                <div class="space-y-1">
+                    <h2 class="text-3xl font-bold text-amber-600 fancy-font">응애! 응애! 👶</h2>
+                    <p class="text-xs text-gray-400">2026년 10월 10일 마침내 세상과 마주한 순간</p>
+                </div>
+
+                <!-- 아기 성향 리포트 카드 -->
+                <div class="bg-amber-50/60 border border-amber-200/50 p-4 rounded-2xl text-left space-y-3 shadow-inner">
+                    <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1">
+                        <i class="fa-solid fa-scroll text-amber-500"></i> 아기의 출생 증명서
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="text-gray-500">성별: <span id="baby-gender" class="text-gray-800 font-semibold">공주님</span></div>
+                        <div class="text-gray-500">체중: <span id="baby-weight" class="text-gray-800 font-semibold">3.12 kg</span></div>
+                        <div class="text-gray-500">지능/감성: <span id="baby-trait" class="text-gray-800 font-semibold">사랑이 넘침</span></div>
+                        <div class="text-gray-500">건강 상태: <span id="baby-health-status" class="text-gray-800 font-semibold">매우 튼튼함</span></div>
+                    </div>
+                    <div class="border-t border-dashed border-amber-200 pt-2.5">
+                        <p id="baby-letter" class="text-xs text-gray-600 leading-relaxed italic">
+                            "엄마, 아빠! 10개월 동안 저를 사랑으로 지켜주셔서 감사해요. 세상에서 가장 특별하고 포근한 품에 안기게 되어 정말 기뻐요."
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <button onclick="restartGame()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-2xl shadow-lg transition duration-150">
+                    다시 태교 시작하기 (새로운 아이 만나기)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 임시 안내 메시지 알림 팝업 (얼럿 대체용) -->
+    <div id="toast-message" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 text-white text-xs px-6 py-3 rounded-full shadow-xl transition-all duration-300 z-50 flex items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-bell text-pink-400"></i>
+        <span id="toast-text">안내 메시지입니다.</span>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- GAME LOGIC JAVASCRIPT                      -->
+    <!-- ========================================== -->
+    <script>
+        // --- 글로벌 게임 데이터 및 상태 관리 ---
+        let currentWeek = 4; // 시작 4주차
+        const totalWeeks = 40;
+        
+        let stats = {
+            stress: 20,
+            fatigue: 10,
+            nutrition: 50,
+            health: 80,
+            bond: 30,
+            growth: 0.1 // kg
+        };
+
+        // 주차별 랜덤 시나리오 데이터베이스
+        const scenarios = {
+            4: {
+                desc: "임신 테스트기에 선명한 두 줄이 떴습니다! 새로운 생명의 존재가 느껴지네요. 첫 태교 활동을 어떻게 시작할까요?",
+                choices: [
+                    {
+                        text: "💊 엽산과 비타민을 챙겨 먹으며 휴식하기",
+                        results: { nutrition: 15, stress: -10, health: 10, bond: 5 },
+                        narrative: "충분한 영양과 수면으로 아기가 아늑한 둥지를 틀 준비를 시작합니다."
+                    },
+                    {
+                        text: "📙 임신/육아 서적을 읽으며 지식 습득하기",
+                        results: { bond: 15, fatigue: 10, stress: 5, health: 5 },
+                        narrative: "첫 발걸음을 완벽히 대비하려는 마음에 기대감과 약간의 피로가 함께 쌓입니다."
+                    }
+                ]
+            },
+            8: {
+                desc: "입덧이 심하게 찾아오는 시기입니다. 냄새만 맡아도 울렁거리지만 무언가는 먹어야 할 텐데요. 어떻게 하시겠습니까?",
+                choices: [
+                    {
+                        text: "🥗 새콤한 과일과 가벼운 크래커로 버티기",
+                        results: { nutrition: 5, stress: 5, health: 5, fatigue: 10 },
+                        narrative: "속을 부드럽게 달랬습니다. 무리하지 않는 것이 입덧 시기에는 최선입니다."
+                    },
+                    {
+                        text: "🍖 기운을 내기 위해 억지로 갈비를 먹어본다",
+                        results: { nutrition: 20, stress: 25, fatigue: 20, health: -5 },
+                        narrative: "결국 심한 체증과 구역질을 겪었지만, 영양분은 어찌어찌 조금 섭취되었습니다."
+                    }
+                ]
+            },
+            12: {
+                desc: "1차 정밀 초음파 검사를 가는 날입니다. 아기의 첫 심장 소리를 듣는 순간입니다. 어떤 감정이 앞서나요?",
+                choices: [
+                    {
+                        text: "🎵 소중한 소리를 들으며 태담을 나눠본다",
+                        results: { bond: 25, stress: -15, health: 10 },
+                        narrative: "'쿠쿵쿠쿵' 힘차게 뛰는 아기의 심장 소리가 온 감각에 전해집니다. 교감이 크게 쌓였습니다."
+                    },
+                    {
+                        text: "🩺 안도하며 정밀 의학 수치에만 초점을 맞춘다",
+                        results: { health: 20, bond: 5, fatigue: 5 },
+                        narrative: "태아가 주차에 맞춰 정상 크기로 안전하게 자라고 있다는 검사 결과에 가슴이 놓입니다."
+                    }
+                ]
+            },
+            16: {
+                desc: "성별을 넌지시 확인할 수 있는 시기입니다. 초음파 속 아이의 행동이 독특하네요. 어떤 태교 음악을 틀어줄까요?",
+                choices: [
+                    {
+                        text: "🎹 잔잔하고 부드러운 클래식 피아노 연주곡",
+                        results: { bond: 15, stress: -10, health: 10 },
+                        narrative: "아기가 차분히 평온함을 느끼는 것이 움직임의 강도로 전해집니다."
+                    },
+                    {
+                        text: "🎸 경쾌하고 즐거운 자연 소리가 가미된 동요",
+                        results: { bond: 20, stress: -5, fatigue: 5 },
+                        narrative: "발가락을 꼬물꼬물 움직이는 아기의 활기찬 리듬이 전해져 미소를 자아냅니다."
+                    }
+                ]
+            },
+            20: {
+                desc: "배가 조금씩 불룩해지며 첫 '태동'을 느끼게 됩니다! 방 안에서 갑자기 노크를 한 듯 툭 치는 느낌이 듭니다.",
+                choices: [
+                    {
+                        text: "🤰 배를 따뜻하게 어루만지며 이름을 불러준다",
+                        results: { bond: 30, stress: -20, health: 5 },
+                        narrative: "태명에 응답하듯 다시 한번 '툭' 하고 아기가 인사를 건넵니다. 형언할 수 없는 신비로운 감정입니다."
+                    },
+                    {
+                        text: "🥛 깜짝 놀란 마음을 차가운 우유 한 잔으로 가라앉힌다",
+                        results: { nutrition: 10, bond: 10, stress: -5 },
+                        narrative: "엄마의 심장박동이 차분해지자 아기도 자리를 잡고 조용히 휴식을 취합니다."
+                    }
+                ]
+            },
+            24: {
+                desc: "임신 중기, 갑자기 한밤중에 평소에는 먹지도 않던 시큼하고 자극적인 비빔국수가 너무 먹고 싶어집니다. 속 쓰림이 염려되는데...",
+                choices: [
+                    {
+                        text: "🍜 스트레스가 더 해롭다! 맛있게 한 그릇 먹는다",
+                        results: { stress: -25, nutrition: 10, fatigue: 5, health: -5 },
+                        narrative: "정말 달콤한 한 밤의 야식이었습니다! 스트레스는 눈 녹듯 사라졌지만 속은 조금 더부룩하네요."
+                    },
+                    {
+                        text: "💧 따뜻한 물을 마시며 내일 건강한 아침 식사를 기약한다",
+                        results: { health: 15, nutrition: 15, stress: 15 },
+                        narrative: "대단한 절제력입니다! 신체 밸런스를 건강하게 지키는 선택을 아기도 응원하고 있을 것입니다."
+                    }
+                ]
+            },
+            28: {
+                desc: "임신 후기에 진입하며 몸이 무거워지고 다리에 수시로 쥐가 납니다. 쉽게 잠들기 힘든 밤이 지속됩니다.",
+                choices: [
+                    {
+                        text: "🧘 가벼운 스트레칭과 다리 마사지기를 사용한다",
+                        results: { fatigue: -15, health: 10, stress: -5 },
+                        narrative: "몸의 혈액순환을 돕자 통증이 가라앉고 오랜만에 깊고 아늑한 잠에 빠져듭니다."
+                    },
+                    {
+                        text: "📱 침대에 누워 밤늦게까지 육아용품 후기를 비교 검색한다",
+                        results: { bond: 20, fatigue: 20, stress: 10, health: -5 },
+                        narrative: "밤을 새워 유용한 아기 침대 정보를 찾았지만, 눈과 목의 피로가 극심해졌습니다."
+                    }
+                ]
+            },
+            32: {
+                desc: "아기의 뇌 기능이 발달하며 청각이 완성되는 시기입니다. 밖에서 나누는 대화도 필터링되어 아기에게 들린다고 합니다.",
+                choices: [
+                    {
+                        text: "👪 부부가 마주 앉아 다정한 사랑의 대화를 자주 들려준다",
+                        results: { bond: 30, stress: -15, health: 5 },
+                        narrative: "안정적이고 다정한 부모의 목소리 톤을 인지한 아기의 뇌 발달에 긍정적인 파동이 전달됩니다."
+                    },
+                    {
+                        text: "🔇 소음 차단을 위해 귀마개를 끼고 클래식을 독서하며 보낸다",
+                        results: { stress: -5, health: 10, bond: 10 },
+                        narrative: "정적 속에서 차분하게 정신을 힐링하며 다가올 예정일을 담담하게 그립니다."
+                    }
+                ]
+            },
+            36: {
+                desc: "이제 만삭입니다. 배가 상당히 불러 거동이 크게 불편합니다. 출산용 가방을 미리 싸두어야 안전합니다.",
+                choices: [
+                    {
+                        text: "🎒 꼼꼼하게 병원 가방(손수건, 배냇저고리 등)을 세팅한다",
+                        results: { health: 15, fatigue: 15, bond: 10 },
+                        narrative: "미리 만반의 준비를 해두어 마음이 든든합니다. 언제 신호가 오더라도 당황하지 않을 것 같습니다."
+                    },
+                    {
+                        text: "🛌 일단 무리하지 않고 누워서 컨디션을 최우선으로 아낀다",
+                        results: { fatigue: -25, stress: -10, health: 5 },
+                        narrative: "체력을 완충시켜 두는 것도 중요합니다. 산모의 여유로움이 태아에게도 고스란히 정화 작용을 줍니다."
+                    }
+                ]
+            }
+        };
+
+        // --- 사운드 효과 및 시각 효과 대체 기능 (비주얼/인터랙션 피드백) ---
+        function showToast(text, isAlert = false) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastText.textContent = text;
+            if (isAlert) {
+                toast.classList.remove('bg-gray-900/90');
+                toast.classList.add('bg-red-600');
+                toastIcon.className = "fa-solid fa-circle-exclamation text-yellow-300 animate-bounce";
+            } else {
+                toast.classList.remove('bg-red-600');
+                toast.classList.add('bg-gray-900/90');
+                toastIcon.className = "fa-solid fa-heart text-pink-400";
+            }
+
+            toast.classList.remove('hidden');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- 화면 네비게이션용 헬퍼 함수 ---
+        function switchScreen(screenId) {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-labor').classList.add('hidden');
+            document.getElementById('screen-end').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // --- 주차별 아기 비주얼 성장 렌더링 (SVG 패스 변경) ---
+        function updateBabySVG(week) {
+            const svg = document.getElementById('baby-svg');
+            let pathContent = '';
+
+            if (week <= 8) {
+                // 초임신 - 작은 세포/올챙이 형태
+                pathContent = `
+                    <circle cx="50" cy="50" r="6" fill="#fbcfe8" class="animate-pulse" />
+                    <circle cx="53" cy="53" r="3" fill="#ec4899" opacity="0.6"/>
+                    <path d="M 50,56 C 50,65 44,70 42,75" stroke="#fbcfe8" stroke-width="2" stroke-linecap="round" fill="none"/>
+                `;
+            } else if (week <= 16) {
+                // 임신 초기 - 머리가 크고 사지가 돋아나는 형태
+                pathContent = `
+                    <!-- 머리 -->
+                    <circle cx="50" cy="40" r="14" fill="#fbcfe8" />
+                    <!-- 눈 검은점 -->
+                    <circle cx="54" cy="38" r="1.5" fill="#475569" />
+                    <!-- 몸통 -->
+                    <ellipse cx="46" cy="58" rx="11" ry="14" fill="#fbcfe8" transform="rotate(-15 46 58)" />
+                    <!-- 꼬리/다리 흔적 -->
+                    <path d="M 42,70 C 40,76 35,78 30,76" stroke="#fbcfe8" stroke-width="5" stroke-linecap="round" fill="none" />
+                    <!-- 팔 흔적 -->
+                    <path d="M 50,52 C 55,55 58,58 55,62" stroke="#fbcfe8" stroke-width="4" stroke-linecap="round" fill="none" />
+                `;
+            } else if (week <= 28) {
+                // 임신 중기 - 완성도 높은 인간 실루엣, 탯줄 연결
+                pathContent = `
+                    <!-- 탯줄 라인 뒤로 배치 -->
+                    <path d="M 10,75 C 30,85 35,70 45,64" stroke="#ec4899" stroke-width="3" stroke-dasharray="2 2" stroke-linecap="round" fill="none" opacity="0.8"/>
+                    <!-- 아기 몸체 (웅크린 자세) -->
+                    <circle cx="50" cy="36" r="16" fill="#fbcfe8" />
+                    <!-- 귀여운 미소와 눈 -->
+                    <circle cx="55" cy="34" r="1.5" fill="#475569" />
+                    <path d="M 56,42 Q 54,45 52,43" stroke="#e11d48" stroke-width="1.5" fill="none" />
+                    <!-- 웅크린 몸통 -->
+                    <ellipse cx="45" cy="58" rx="14" ry="18" fill="#fbcfe8" transform="rotate(-25 45 58)" />
+                    <!-- 다리 굽힘 -->
+                    <path d="M 40,73 C 48,78 52,70 54,64" stroke="#fbcfe8" stroke-width="7" stroke-linecap="round" fill="none" />
+                    <!-- 팔이 입 근처로 감 -->
+                    <path d="M 52,50 C 58,48 57,40 52,38" stroke="#fbcfe8" stroke-width="5" stroke-linecap="round" fill="none" />
+                `;
+            } else {
+                // 임신 후기 및 만삭 - 완전히 발달하고 거꾸로 돌아간 아기 (머리가 아래로)
+                pathContent = `
+                    <!-- 거꾸로 있는 자세 (출산 자세) -->
+                    <g transform="rotate(180 50 50)">
+                        <!-- 탯줄 -->
+                        <path d="M 15,60 C 25,65 30,55 42,50" stroke="#fbcfe8" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+                        <!-- 머리 -->
+                        <circle cx="50" cy="32" r="18" fill="#fbcfe8" />
+                        <!-- 편안히 감은 눈 -->
+                        <path d="M 54,30 Q 56,33 58,30" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round" />
+                        <!-- 포동포동한 몸통 -->
+                        <ellipse cx="44" cy="56" rx="16" ry="21" fill="#fbcfe8" transform="rotate(-20 44 56)" />
+                        <!-- 손과 발 -->
+                        <path d="M 42,74 C 48,82 54,72 55,64" stroke="#fbcfe8" stroke-width="8" stroke-linecap="round" fill="none" />
+                        <path d="M 52,48 C 58,45 57,38 52,36" stroke="#fbcfe8" stroke-width="6" stroke-linecap="round" fill="none" />
+                    </g>
+                `;
+            }
+
+            svg.innerHTML = pathContent;
+        }
+
+        // 주차별 성장 텍스트 업데이트
+        function updateGrowthDisplay() {
+            const bubble = document.getElementById('growth-info-bubble');
+            const usGa = document.getElementById('us-ga');
+            
+            usGa.textContent = `${currentWeek}w0d`;
+
+            let text = "";
+            if (currentWeek <= 4) {
+                text = "아기 크기: 깨소금 한 알 크기 🌱";
+                stats.growth = 0.05;
+            } else if (currentWeek <= 8) {
+                text = "아기 크기: 딸기 씨앗만 해요 🍓";
+                stats.growth = 0.15;
+            } else if (currentWeek <= 12) {
+                text = "아기 크기: 달콤한 자두 크기 🍑";
+                stats.growth = 0.45;
+            } else if (currentWeek <= 16) {
+                text = "아기 크기: 맛있는 아보카도 크기 🥑";
+                stats.growth = 0.95;
+            } else if (currentWeek <= 20) {
+                text = "아기 크기: 큼직한 망고 크기 🥭";
+                stats.growth = 1.35;
+            } else if (currentWeek <= 24) {
+                text = "아기 크기: 단단한 옥수수 크기 🌽";
+                stats.growth = 1.85;
+            } else if (currentWeek <= 28) {
+                text = "아기 크기: 양배추 한 통 크기 🥬";
+                stats.growth = 2.25;
+            } else if (currentWeek <= 32) {
+                text = "아기 크기: 달콤한 파인애플 크기 🍍";
+                stats.growth = 2.75;
+            } else {
+                text = "아기 크기: 커다란 수박만큼 자랐어요! 🍉";
+                stats.growth = 3.25;
+            }
+
+            bubble.textContent = text;
+            updateBabySVG(currentWeek);
+        }
+
+        // UI에 스탯 바인딩 및 프로그레스 렌더링
+        function renderStats() {
+            // 한계치 제어
+            stats.stress = Math.max(0, Math.min(100, stats.stress));
+            stats.fatigue = Math.max(0, Math.min(100, stats.fatigue));
+            stats.nutrition = Math.max(0, Math.min(100, stats.nutrition));
+            stats.health = Math.max(0, Math.min(100, stats.health));
+            stats.bond = Math.max(0, Math.min(100, stats.bond));
+
+            // 데이터 바인딩
+            document.getElementById('stat-stress-val').textContent = `${Math.round(stats.stress)}%`;
+            document.getElementById('stat-stress-bar').style.width = `${stats.stress}%`;
+
+            document.getElementById('stat-fatigue-val').textContent = `${Math.round(stats.fatigue)}%`;
+            document.getElementById('stat-fatigue-bar').style.width = `${stats.fatigue}%`;
+
+            document.getElementById('stat-nutrition-val').textContent = `${Math.round(stats.nutrition)}%`;
+            document.getElementById('stat-nutrition-bar').style.width = `${stats.nutrition}%`;
+
+            document.getElementById('stat-health-val').textContent = `${Math.round(stats.health)}%`;
+            document.getElementById('stat-health-bar').style.width = `${stats.health}%`;
+
+            document.getElementById('stat-bond-val').textContent = `${Math.round(stats.bond)}%`;
+            document.getElementById('stat-bond-bar').style.width = `${stats.bond}%`;
+
+            // 아기 성장 게이지 및 레이블 처리
+            let growthText = `${stats.growth.toFixed(2)}kg / `;
+            if (currentWeek < 12) growthText += "조금씩 세포분열 중";
+            else if (currentWeek < 24) growthText += "뼈와 관절 형성기";
+            else if (currentWeek < 36) growthText += "오감 발달 및 태동기";
+            else growthText += "안전한 출산 대기 상태";
+            
+            document.getElementById('stat-growth-val').textContent = growthText;
+            document.getElementById('stat-growth-bar').style.width = `${(currentWeek / totalWeeks) * 100}%`;
+
+            // 상단 요약 텍스트
+            document.getElementById('current-week').textContent = `임신 ${currentWeek}주차`;
+            document.getElementById('days-left').textContent = `D-${(totalWeeks - currentWeek) * 7}`;
+        }
+
+        // --- 게임 시작 및 리셋 ---
+        function startGame() {
+            currentWeek = 4;
+            stats = {
+                stress: 20,
+                fatigue: 10,
+                nutrition: 50,
+                health: 80,
+                bond: 30,
+                growth: 0.1
+            };
+            switchScreen('screen-game');
+            loadWeekEvent();
+            renderStats();
+            updateGrowthDisplay();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // --- 이벤트 시스템 구현 ---
+        function loadWeekEvent() {
+            const descBox = document.getElementById('event-description');
+            const choicesBox = document.getElementById('choices-container');
+            
+            // 현재 주차에 전용 스토리가 있는가?
+            if (scenarios[currentWeek]) {
+                const currentScenario = scenarios[currentWeek];
+                descBox.textContent = currentScenario.desc;
+                
+                // 전용 선택지 렌더링
+                choicesBox.innerHTML = '';
+                currentScenario.choices.forEach((choice, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = "choice-btn w-full text-left p-3.5 bg-pink-50 hover:bg-pink-100 border border-pink-200/60 rounded-xl text-xs sm:text-sm font-semibold text-pink-700 transition duration-150 flex items-center justify-between";
+                    btn.onclick = () => selectSpecialChoice(choice);
+                    
+                    btn.innerHTML = `
+                        <span>${choice.text}</span>
+                        <i class="fa-solid fa-chevron-right text-pink-400"></i>
+                    `;
+                    choicesBox.appendChild(btn);
+                });
+            } else {
+                // 일반/일상 주차 이벤트 자동 생성
+                const dailyDesc = `임신 ${currentWeek}주차에 접어들었습니다. 아기가 안정적으로 성장할 수 있도록 오늘의 일과와 태교 방침을 선택해 주세요.`;
+                descBox.textContent = dailyDesc;
+
+                // 기본 템플릿 선택지 복구
+                choicesBox.innerHTML = `
+                    <button onclick="handleBasicChoice('rest')" class="choice-btn w-full text-left p-3.5 bg-pink-50 hover:bg-pink-100 border border-pink-200/60 rounded-xl text-xs sm:text-sm font-semibold text-pink-700 transition duration-150 flex items-center justify-between">
+                        <span><i class="fa-solid fa-bed mr-2"></i>편안한 잠자리 및 충분한 휴식 (피로도 케어)</span>
+                        <i class="fa-solid fa-chevron-right text-pink-400"></i>
+                    </button>
+                    <button onclick="handleBasicChoice('nutrition')" class="choice-btn w-full text-left p-3.5 bg-teal-50 hover:bg-teal-100 border border-teal-200/60 rounded-xl text-xs sm:text-sm font-semibold text-teal-700 transition duration-150 flex items-center justify-between">
+                        <span><i class="fa-solid fa-apple-whole mr-2"></i>제철 과일과 영양 가득한 식사 대접 (영양 케어)</span>
+                        <i class="fa-solid fa-chevron-right text-teal-400"></i>
+                    </button>
+                    <button onclick="handleBasicChoice('diary')" class="choice-btn w-full text-left p-3.5 bg-purple-50 hover:bg-purple-100 border border-purple-200/60 rounded-xl text-xs sm:text-sm font-semibold text-purple-700 transition duration-150 flex items-center justify-between">
+                        <span><i class="fa-solid fa-heart mr-2"></i>부드러운 음악 감상과 동화책 읽기 (아기 교감)</span>
+                        <i class="fa-solid fa-chevron-right text-purple-400"></i>
+                    </button>
+                `;
+            }
+        }
+
+        // 특별 시나리오 선택 처리
+        function selectSpecialChoice(choice) {
+            // 스탯 업데이트
+            for (let stat in choice.results) {
+                if (stats.hasOwnProperty(stat)) {
+                    stats[stat] += choice.results[stat];
+                }
+            }
+
+            // 엄마 건강 관리에 따른 태아 건강 동적 연계
+            if (stats.stress > 60) {
+                stats.health -= 5;
+                showToast("엄마의 높은 스트레스가 태아 건강에 부담을 줍니다.", true);
+            }
+
+            showToast(choice.narrative);
+            nextWeek();
+        }
+
+        // 일상 선택 처리
+        function handleBasicChoice(type) {
+            let narrative = "";
+            if (type === 'rest') {
+                stats.fatigue = Math.max(0, stats.fatigue - 20);
+                stats.stress = Math.max(0, stats.stress - 10);
+                stats.health += 5;
+                narrative = "아늑한 방에서 단잠을 잤습니다. 몸이 무척 가벼워졌네요.";
+            } else if (type === 'nutrition') {
+                stats.nutrition = Math.min(100, stats.nutrition + 25);
+                stats.health += 10;
+                stats.fatigue += 5;
+                narrative = "몸에 좋은 단백질과 유기농 야채 위주로 알차게 섭취했습니다.";
+            } else if (type === 'diary') {
+                stats.bond = Math.min(100, stats.bond + 20);
+                stats.stress = Math.max(0, stats.stress - 15);
+                narrative = "아기와 속삭이듯 오순도순 교감을 나눴습니다. 따스한 유대가 고스란히 전달됩니다.";
+            }
+
+            showToast(narrative);
+            nextWeek();
+        }
+
+        // 주차 상승
+        function nextWeek() {
+            currentWeek += 4; // 빠른 체험을 위해 4주 단위로 증폭 진행
+            
+            if (currentWeek >= totalWeeks) {
+                currentWeek = totalWeeks;
+                renderStats();
+                updateGrowthDisplay();
+                setTimeout(() => {
+                    initiateLabor();
+                }, 1500);
+            } else {
+                renderStats();
+                updateGrowthDisplay();
+                loadWeekEvent();
+            }
+        }
+
+        // --- ==================================== ---
+        // --- 40주차: 출산 미니게임 시스템 (리듬 & 호흡) ---
+        // --- ==================================== ---
+        let laborProgress = 0;
+        let successCount = 0;
+        const targetSuccesses = 6;
+        let stamina = 100;
+        let rhythmTimer = null;
+        let isButtonPressed = false;
+        
+        let cycleState = "breathe-in"; // breathe-in -> hold -> breathe-out
+        let targetCircleSize = 20; // 20px에서 120px로 확장 및 축소
+        let growing = true;
+
+        function initiateLabor() {
+            switchScreen('screen-labor');
+            showToast("⚠️ 양수가 파수되었습니다! 분만이 시작됩니다!", true);
+            
+            // 미니게임 상태값 초기화
+            laborProgress = 0;
+            successCount = 0;
+            stamina = 100;
+            cycleState = "breathe-in";
+            
+            document.getElementById('labor-progress-bar').style.width = '0%';
+            document.getElementById('labor-progress-percent').textContent = '0%';
+            document.getElementById('mom-stamina').textContent = stamina;
+            document.getElementById('success-count').textContent = successCount;
+
+            startGameLoop();
+        }
+
+        // 시뮬레이션용 호흡 리듬 틱 루프
+        function startGameLoop() {
+            if (rhythmTimer) clearInterval(rhythmTimer);
+            
+            rhythmTimer = setInterval(() => {
+                const circle = document.getElementById('breath-target');
+                const textGuide = document.getElementById('breath-guide-text');
+                
+                // 크기 변환 로직
+                if (growing) {
+                    targetCircleSize += 3;
+                    if (targetCircleSize >= 130) {
+                        growing = false;
+                    }
+                } else {
+                    targetCircleSize -= 3;
+                    if (targetCircleSize <= 20) {
+                        growing = true;
+                    }
+                }
+
+                circle.style.width = `${targetCircleSize}px`;
+                circle.style.height = `${targetCircleSize}px`;
+
+                // 가이드 범위 판정 (90px ~ 115px 사이가 퍼펙트 타이밍)
+                if (targetCircleSize >= 90 && targetCircleSize <= 115) {
+                    circle.classList.add('border-teal-400', 'bg-teal-400/40');
+                    circle.classList.remove('border-pink-400', 'bg-pink-500/30');
+                    textGuide.textContent = "누르세요!";
+                    textGuide.className = "text-xs font-bold text-teal-200 animate-ping";
+                } else {
+                    circle.classList.remove('border-teal-400', 'bg-teal-400/40');
+                    circle.classList.add('border-pink-400', 'bg-pink-500/30');
+                    textGuide.textContent = "대기";
+                    textGuide.className = "text-xs font-bold text-pink-200";
+                }
+
+                // 점진적 기력 감소 및 피로 누적 구현
+                if (isButtonPressed) {
+                    // 숨참는 동안 기력 소모
+                    stamina = Math.max(0, stamina - 0.4);
+                    document.getElementById('mom-stamina').textContent = Math.floor(stamina);
+                    if (stamina <= 0) {
+                        onActionRelease();
+                        showToast("산모의 기력이 소진되었습니다! 잠시 쉬어갑니다.", true);
+                        stamina = 30; // 약간 보정
+                    }
+                }
+
+            }, 50);
+        }
+
+        // 호흡 시작 (마우스 다운/터치 스타트)
+        function onActionPress() {
+            isButtonPressed = true;
+            const textGuide = document.getElementById('breath-guide-text');
+
+            // 판정 체크
+            if (targetCircleSize >= 90 && targetCircleSize <= 115) {
+                // 성공!
+                successCount++;
+                laborProgress = Math.min(100, laborProgress + 17); // 약 6회 성공시 완료
+                
+                document.getElementById('success-count').textContent = successCount;
+                document.getElementById('labor-progress-bar').style.width = `${laborProgress}%`;
+                document.getElementById('labor-progress-percent').textContent = `${Math.round(laborProgress)}%`;
+
+                showToast("호흡법 완벽하게 적중! 아기가 내려옵니다! 💓");
+
+                // 분만사 코칭 메시지 변경
+                const coachMsgs = [
+                    "아기 머리가 조금씩 보여요! 힘내세요!",
+                    "정말 잘하고 계십니다! 호흡 조절 좋아요!",
+                    "이제 골반까지 진입했습니다! 마지막 조절!",
+                    "거의 다 왔습니다! 조금만 더!",
+                    "머리가 다 나왔어요! 마지막 한 번만 더 힘을 주세요!"
+                ];
+                
+                const randomMsg = coachMsgs[Math.min(successCount, coachMsgs.length - 1)];
+                document.getElementById('doctor-coaching').textContent = `"${randomMsg}"`;
+
+                // 출산 성공 조건 충족
+                if (successCount >= targetSuccesses) {
+                    setTimeout(() => {
+                        triggerDelivery();
+                    }, 1000);
+                }
+            } else {
+                // 진통 타이밍 빗나감
+                stamina = Math.max(0, stamina - 10);
+                document.getElementById('mom-stamina').textContent = Math.floor(stamina);
+                showToast("진통 주기가 맞지 않아 호흡이 흩어졌습니다.", true);
+            }
+        }
+
+        // 호흡 해제
+        function onActionRelease() {
+            isButtonPressed = false;
+        }
+
+        // --- 출산 대성공 및 엔딩 연출 ---
+        function triggerDelivery() {
+            clearInterval(rhythmTimer);
+            switchScreen('screen-end');
+
+            // 성별 확률 결정
+            const isGirl = Math.random() > 0.5;
+            document.getElementById('baby-gender').textContent = isGirl ? "사랑스러운 공주님" : "든든한 왕자님";
+
+            // 체중 계산 (엄마의 영양 상태와 건강도 보정)
+            let finalWeight = 2.5 + (stats.nutrition / 100) * 1.2 + (Math.random() * 0.4);
+            document.getElementById('baby-weight').textContent = `${finalWeight.toFixed(2)} kg`;
+
+            // 아기 성격 및 특징 매핑
+            let babyTrait = "호기심 많고 활기찬 아이";
+            let babyLetterText = "";
+            let babyHealthText = "매우 양호 (태아 건강 지수 80+)";
+
+            if (stats.health < 60) {
+                babyHealthText = "경미한 미숙 (출산 케어 관찰 필요)";
+            } else if (stats.health >= 90) {
+                babyHealthText = "강철 건강 (최상급 면역 수치)";
+            }
+
+            if (stats.bond >= 80) {
+                babyTrait = "풍부한 감성과 사랑이 가득한 예술가 타입";
+                babyLetterText = `"엄마, 아빠의 심장 소리를 들을 때마다 정말 안심이 되었어요. 언제나 제 곁에서 부드럽게 말을 걸어주신 다정한 목소리를 평생 잊지 못할 거예요. 저를 위해 늘 사랑 가득 태교를 해주셔서 고맙습니다!"`;
+            } else if (stats.nutrition >= 85) {
+                babyTrait = "뼈가 튼튼하고 발육 능력이 탁월한 튼튼이 타입";
+                babyLetterText = `"건강한 음식만 골라 먹으며 절 소중하게 아껴주신 덕분에 저는 아주 씩씩하고 단단한 몸으로 태어날 수 있었어요! 첫 울음소리도 엄청 우렁찼죠? 멋진 세상을 마음껏 뛰어놀며 튼튼하게 자랄게요!"`;
+            } else if (stats.stress >= 60) {
+                babyTrait = "예민하지만 집중력이 뛰어나고 기민한 감각의 인재";
+                babyLetterText = `"가끔 엄마가 힘들어하거나 슬퍼할 때 저도 마음이 아팠지만, 마지막 순간까지 저를 위해 포기하지 않고 꿋꿋하게 힘내주셔서 다 알고 있어요. 이제부턴 제가 엄마를 행복하게 만들어 드릴게요."`;
+            } else {
+                babyTrait = "온화하고 편안한 성격의 평화주의자 타입";
+                babyLetterText = `"포근하고 따스한 열 달 동안 무사히 무럭무럭 자랄 수 있게 안식처가 되어 주셔서 감사해요. 엄마 아빠와 함께 보낼 앞으로의 하루하루가 매일매일 축제 같을 것 같아요."`;
+            }
+
+            document.getElementById('baby-trait').textContent = babyTrait;
+            document.getElementById('baby-health-status').textContent = babyHealthText;
+            document.getElementById('baby-letter').textContent = babyLetterText;
+        }
+
+        // 최초 로딩 시 화면 초기화
+        window.onload = function() {
+            // 최초 게임 시작은 대기 상태
+            switchScreen('screen-start');
+        }
+    </script>
+</body>
+</html>
