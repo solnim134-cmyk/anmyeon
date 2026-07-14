@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>골든타임을 잡아라! 야간 갯벌 탈출 레이스</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght=300;400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-title {
+            font-family: 'Black Han Sans', sans-serif;
+        }
+
+        /* 갯벌 특유의 질감과 경계선 */
+        .mudflat-grid {
+            background-image: 
+                radial-gradient(#1e293b 1px, transparent 1px), 
+                radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        .tide-water {
+            background: linear-gradient(180deg, rgba(30, 64, 175, 0.55) 0%, rgba(17, 24, 39, 0.95) 100%);
+            backdrop-filter: blur(2px);
+        }
+
+        /* 가로등 불빛 펄스 애니메이션 효과 */
+        @keyframes light-glow {
+            0%, 100% { transform: scale(1); opacity: 0.35; }
+            50% { transform: scale(1.15); opacity: 0.5; }
+        }
+
+        .light-aura {
+            animation: light-glow 3s infinite ease-in-out;
+        }
+
+        /* 모바일 화면 대응 키패드 */
+        .touch-btn {
+            active-class: scale-95;
+            transition: transform 0.1s;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col items-center justify-between p-4 overflow-y-auto">
+
+    <!-- 배경 데코레이션 (밤하늘 별빛과 달) -->
+    <div class="absolute top-4 right-6 text-yellow-200 opacity-80 flex flex-col items-center z-0">
+        <i data-lucide="moon" class="w-12 h-12 text-yellow-300 animate-pulse"></i>
+        <span class="text-xs mt-1 font-bold text-yellow-100">대조기 (만조 주의!)</span>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <main class="w-full max-w-lg bg-slate-900 border-4 border-slate-700 rounded-3xl shadow-2xl overflow-hidden relative z-10 flex flex-col my-auto">
+        
+        <!-- [1] 시작 대기 화면 (Intro Screen) -->
+        <div id="screen-intro" class="p-6 flex flex-col items-center text-center py-10">
+            <div class="inline-block bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-full mb-3 uppercase tracking-wider animate-bounce">
+                국어 수행평가 캠페인 자료
+            </div>
+            <h1 class="text-3xl font-title text-yellow-400 tracking-wide mb-1 leading-tight">골든타임을 잡아라!</h1>
+            <h2 class="text-2xl font-title text-blue-300 tracking-wider mb-6">야간 갯벌 탈출 레이스</h2>
+
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl text-left text-sm mb-6 space-y-3 w-full">
+                <p class="text-amber-300 font-bold flex items-center gap-1">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> 야간 갯벌은 매우 위험합니다!
+                </p>
+                <p class="text-slate-300 leading-relaxed">
+                    매년 밤에 무분별하게 조개를 잡는 해루질 관광객들이 <strong>밀물 시간을 인지하지 못해 고립되는 사고</strong>가 급증하고 있습니다. 
+                </p>
+                <p class="text-slate-300">
+                    그냥 도망치기만 해서는 안 됩니다! 갯벌 속의 생물이나 쓰레기를 찾아 올바르게 대처하는 <strong>생태 정화 탐사 미션을 완수</strong>해야 최종 안전지대로 탈출할 수 있습니다!
+                </p>
+                <div class="border-t border-slate-700 pt-2 text-xs text-slate-400 space-y-1.5">
+                    <div class="text-yellow-300 font-bold">🎯 탈출 필수 미션:</div>
+                    <div class="pl-2">갯벌 속 숨은 조개/생물/쓰레기 등을 탐색하여 <strong class="text-amber-400">총 3회 이상 올바른 선택(방생/수거/채취)</strong>을 완료하세요!</div>
+                    <div class="pt-1">⚠️ 주의: 미션을 채우지 않으면 대피소 입구가 막혀 들어갈 수 없습니다!</div>
+                </div>
+            </div>
+
+            <!-- 닉네임 입력 -->
+            <div class="w-full mb-6">
+                <label class="block text-slate-400 text-xs font-bold mb-2 text-left">관광객 이름(닉네임)을 입력하세요</label>
+                <input type="text" id="player-name" value="초보탐험가" class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white font-bold text-center focus:outline-none focus:border-yellow-400">
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-title text-xl rounded-2xl shadow-lg shadow-yellow-500/20 transform active:scale-95 transition">
+                체험 시작하기 (랜턴 켜기)
+            </button>
+        </div>
+
+        <!-- [2] 게임 플레이 화면 (Game Screen) -->
+        <div id="screen-game" class="hidden flex-col relative w-full h-[620px] bg-slate-950 select-none overflow-hidden">
+            
+            <!-- 상단 정보 바 (HUD) -->
+            <div class="absolute top-0 left-0 w-full bg-slate-900/90 border-b border-slate-800 p-3 flex justify-between items-center z-30">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4 text-blue-400"></i>
+                    <span id="hud-name" class="text-sm font-bold text-slate-200">닉네임</span>
+                </div>
+                <!-- 실시간 밀물 시간 타이머 -->
+                <div class="flex items-center gap-2 bg-red-950/80 border border-red-800 px-3 py-1 rounded-full animate-pulse">
+                    <i data-lucide="hourglass" class="w-4 h-4 text-red-400"></i>
+                    <span class="text-xs font-bold text-red-300 mr-1">대피까지:</span>
+                    <span id="hud-timer" class="text-base font-title text-red-400">30.00</span>초
+                </div>
+                <!-- 탐사 미션 상태 카운터 -->
+                <div id="hud-mission-box" class="bg-amber-950/90 border border-amber-600 px-2.5 py-1 rounded-full text-xs text-amber-300 font-bold flex items-center gap-1.5 animate-pulse">
+                    <i data-lucide="check-square" class="w-4 h-4 text-yellow-400"></i>
+                    미션: <span id="hud-mission" class="font-title text-yellow-300 text-sm">0/3</span>
+                </div>
+                <!-- 생태 포인트 점수 -->
+                <div class="bg-blue-950/80 border border-blue-800 px-3 py-1 rounded-full text-xs text-blue-300 font-bold flex items-center gap-1 hidden">
+                    <i data-lucide="leaf" class="w-4 h-4 text-emerald-400"></i>
+                    생태점수: <span id="hud-score" class="text-emerald-300 font-title text-sm">0</span>점
+                </div>
+            </div>
+
+            <!-- 밀물 경보 위험 사이렌 바 -->
+            <div id="danger-siren" class="absolute top-12 left-0 w-full bg-red-600 text-white text-xs font-title text-center py-1 z-30 hidden animate-bounce">
+                🚨 위기! 밀물이 빠르게 밀려옵니다! 즉시 위쪽 대피소(초록색)로 올라가세요! 🚨
+            </div>
+
+            <!-- 실제 게임보드 캔버스 및 레이아웃 -->
+            <div id="game-board" class="w-full h-full relative mudflat-grid bg-slate-900 overflow-hidden">
+                <!-- 플레이어 캐릭터 -->
+                <div id="game-player" class="absolute w-8 h-8 rounded-full bg-yellow-400 border-2 border-white flex items-center justify-center shadow-lg shadow-yellow-400/50 transition-all duration-75 z-20">
+                    <span class="text-xs">🚶</span>
+                </div>
+
+                <!-- 안전지대 (대피소) - 맨 위에 위치 -->
+                <div id="safety-zone" class="absolute top-12 left-0 w-full h-12 bg-red-900/30 border-b-2 border-red-500 flex items-center justify-center transition-colors duration-300 z-10">
+                    <div id="safety-message" class="text-red-300 font-title text-xs flex items-center gap-1 animate-pulse">
+                        <i data-lucide="lock" class="w-4 h-4"></i> 대피 구역 잠김 (미션 3회 달성 필요!)
+                    </div>
+                </div>
+
+                <!-- 밀물 시각적 바다 (바닥에서 차오름) -->
+                <div id="sea-water" class="absolute bottom-0 left-0 w-full h-0 tide-water z-5 border-t-2 border-blue-400/80 transition-all duration-100 ease-linear flex justify-center">
+                    <div class="text-blue-200 font-title text-xs mt-2 uppercase tracking-widest opacity-80 animate-pulse">
+                        🌊 들어오는 바닷물 (밀물)
+                    </div>
+                </div>
+
+                <!-- 생물체 및 가로등을 그리는 백그라운드 레이어 -->
+                <div id="entity-layer" class="absolute inset-0 z-5"></div>
+
+                <!-- 야간 시야 및 가로등 라이팅 효과 캔버스 -->
+                <canvas id="lighting-canvas" class="absolute inset-0 pointer-events-none z-10"></canvas>
+            </div>
+
+            <!-- 모바일용 터치 키패드 콘트롤러 -->
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-30 opacity-70 hover:opacity-100 transition-opacity">
+                <button onclick="movePlayer('up')" class="touch-btn w-12 h-12 bg-slate-800/80 border border-slate-600 rounded-xl flex items-center justify-center text-white font-bold active:bg-slate-700">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+                <div class="flex gap-4">
+                    <button onclick="movePlayer('left')" class="touch-btn w-12 h-12 bg-slate-800/80 border border-slate-600 rounded-xl flex items-center justify-center text-white font-bold active:bg-slate-700">
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <div class="w-12 h-12 bg-transparent"></div>
+                    <button onclick="movePlayer('right')" class="touch-btn w-12 h-12 bg-slate-800/80 border border-slate-600 rounded-xl flex items-center justify-center text-white font-bold active:bg-slate-700">
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+                <button onclick="movePlayer('down')" class="touch-btn w-12 h-12 bg-slate-800/80 border border-slate-600 rounded-xl flex items-center justify-center text-white font-bold active:bg-slate-700">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+                <span class="text-[10px] text-slate-400 mt-1">※ 키보드 방향키(←,↑,↓,→)도 작동합니다.</span>
+            </div>
+        </div>
+
+        <!-- [3] 돌발 생태 퀴즈 / 방생 이벤트 팝업 (Quiz Popup) -->
+        <div id="modal-event" class="hidden absolute inset-0 bg-slate-950/90 z-40 flex-col items-center justify-center p-6 text-center">
+            <div id="event-box" class="bg-slate-900 border-2 border-yellow-500 rounded-2xl p-5 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-200">
+                <div class="text-3xl mb-3" id="event-emoji">🦀</div>
+                <h3 class="text-lg font-title text-yellow-400 mb-2" id="event-title">생물 발견!</h3>
+                <p class="text-sm text-slate-300 mb-4" id="event-desc">설명이 들어갑니다.</p>
+
+                <!-- 선택 버튼 구성 -->
+                <div class="space-y-2">
+                    <button id="btn-choice-1" onclick="handleEventChoice(1)" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg text-sm font-bold transition">선택지 1</button>
+                    <button id="btn-choice-2" onclick="handleEventChoice(2)" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg text-sm font-bold transition">선택지 2</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [4] 돌발 갯벌 빠짐(갯골) 탈출 모달 -->
+        <div id="modal-escape-game" class="hidden absolute inset-0 bg-red-950/95 z-50 flex-col items-center justify-center p-6 text-center">
+            <div class="bg-slate-900 border-2 border-red-500 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <i data-lucide="alert-octagon" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-xl font-title text-red-400 mb-1">🚨 펄(갯벌)에 다리가 빠졌습니다!</h3>
+                <p class="text-xs text-slate-400 mb-4">물이 빠르게 차오릅니다! 올바른 갯벌 탈출 방법 버튼을 5번 연타하여 빠르게 탈출하세요!</p>
+                
+                <!-- 탈출용 연타 게이지 -->
+                <div class="w-full bg-slate-800 rounded-full h-4 mb-4 overflow-hidden border border-slate-700">
+                    <div id="escape-bar" class="bg-red-500 h-full transition-all duration-100" style="width: 0%"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button onclick="pressEscape(true)" class="py-3 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-xs leading-tight">
+                        몸을 뒤로 눕히고<br>발을 흔들어 뺀다
+                    </button>
+                    <button onclick="pressEscape(false)" class="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs leading-tight">
+                        억지로 서서<br>발을 수직으로 당긴다
+                    </button>
+                </div>
+                <p class="text-[11px] text-yellow-300">💡 팁: 갯벌에 빠졌을 땐 눕는 자세로 하중을 분산해야 쉽게 빠져나옵니다!</p>
+            </div>
+        </div>
+
+        <!-- [5] 결과 및 교육 엔딩 화면 (Result Screen) -->
+        <div id="screen-result" class="hidden p-6 flex flex-col items-center text-center py-8">
+            <div id="result-icon-box" class="w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                <!-- 동적으로 아이콘 변경 -->
+            </div>
+            
+            <h2 id="result-title" class="text-2xl font-title text-yellow-400 mb-1">대피 성공!</h2>
+            <p id="result-badge" class="text-sm font-bold text-slate-300 mb-4">관광객 안전 등급</p>
+
+            <!-- 결과 스펙 박스 -->
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl w-full text-left text-sm mb-5 space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">최종 생태보호 점수:</span>
+                    <span id="res-score" class="font-bold text-emerald-400">0점</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">남은 탈출 시간:</span>
+                    <span id="res-time" class="font-bold text-blue-400">0초</span>
+                </div>
+                <div class="border-t border-slate-700 pt-2 text-xs text-slate-300 space-y-1">
+                    <p class="font-bold text-amber-300">💡 우리가 배운 야간 갯벌 안전 수칙!</p>
+                    <ul class="list-disc pl-4 text-[11px] text-slate-400 space-y-1">
+                        <li>밀물 알람은 만조 최소 2시간 전 울리게 설정하기</li>
+                        <li>야간 체험 시 가로등과 안전유도선이 설치된 구간에서만 활동하기</li>
+                        <li>어린 새끼 조개나 금어기 생물은 무조건 방생하기</li>
+                        <li>갯벌에 빠지면 상체를 눕혀 뒤로 기어 나오기</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 w-full">
+                <button onclick="resetGame()" class="py-3 bg-slate-700 hover:bg-slate-600 text-white font-title text-sm rounded-xl transition">
+                    다시 도전하기
+                </button>
+                <button onclick="showCampaignInfo()" class="py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-title text-sm rounded-xl transition">
+                    수행평가 자료 보기
+                </button>
+            </div>
+        </div>
+
+        <!-- [6] 수행평가 발표용 캠페인 상세 정보 (Campaign Detail Info) -->
+        <div id="screen-info" class="hidden p-6 flex flex-col items-center py-6">
+            <h2 class="text-xl font-title text-yellow-400 mb-3 text-center flex items-center gap-1">
+                <i data-lucide="book-open" class="w-5 h-5 text-yellow-400"></i> 기획 의도 및 캠페인 자료
+            </h2>
+
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl text-left text-xs mb-5 space-y-3 w-full max-h-[380px] overflow-y-auto">
+                <h3 class="text-sm font-bold text-blue-300">🔍 주제 선정 이유</h3>
+                <p class="text-slate-300 leading-relaxed">
+                    서해안 등의 갯벌을 찾는 야간 관광객이 매년 급증하고 있으나, <strong>'물때를 제대로 인지하지 못하고 어두워진 방향을 못찾아 고립되는 조난사고'</strong>가 빈번하게 일어나고 있습니다. 이에 따라 가로등 안전 경로 가이드와 안전한 채취 문화를 재미있게 체험하고 학습할 수 있는 공익 게임을 기획했습니다.
+                </p>
+
+                <h3 class="text-sm font-bold text-emerald-300">💡 핵심 메시지</h3>
+                <ul class="list-decimal pl-4 text-slate-300 space-y-1">
+                    <li><strong>"가로등 구역은 안심 구역"</strong>: 가로등 주변에서는 시야 확보는 물론 펄에 발이 잠기는 고립 상황을 미연에 방지할 수 있습니다.</li>
+                    <li><strong>"타이머는 생명줄이다"</strong>: 밀물이 차오르는 경보 사이렌이 울리면 즉시 가로등 방향 퇴로를 찾아 철수해야 합니다.</li>
+                    <li><strong>"방생과 수호"</strong>: 야간 갯벌에서의 어린 개체 채취는 과태료 부과 및 생태 파괴의 지름길입니다.</li>
+                </ul>
+
+                <h3 class="text-sm font-bold text-amber-300">📢 관광객 대상 실천 슬로건</h3>
+                <p class="text-slate-100 bg-slate-900 border-l-4 border-yellow-500 p-2 italic font-serif">
+                    "가로등 불빛이 지키는 안전한 해변 길을 넘어가 해루질을 하지 마세요. 안전한 선 안에서만 행복한 추억이 완성됩니다!"
+                </p>
+            </div>
+
+            <button onclick="goBackToResult()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-title text-sm rounded-xl transition">
+                이전 화면으로
+            </button>
+        </div>
+
+    </main>
+
+    <!-- 캠페인 푸터 주석 -->
+    <footer class="text-[11px] text-slate-500 text-center mt-4">
+        <p>© 국어 수행평가 프로젝트 - 야간 갯벌 안전 및 가로등 유도 캠페인 게임</p>
+    </footer>
+
+    <!-- 게임 구동 스크립트 -->
+    <script>
+        // Lucide 아이콘 초기화
+        lucide.createIcons();
+
+        // 게임 기본 변수들
+        let playerName = "관광객";
+        let score = 0;
+        let timeLeft = 30.00;
+        let gameActive = false;
+        let gameTimer = null;
+
+        // 미션 관련 변수 (최소 3번 생태 탐사 행위 완수해야 탈출 보장!)
+        let missionCount = 0;
+        const targetMission = 3;
+
+        // 플레이어 캐릭터 위치 (상대좌표 % 단위)
+        let playerX = 50; 
+        let playerY = 85; 
+
+        // 갯벌 생물 스폰 데이터
+        let entities = [];
+        let curEventEntity = null; // 현재 발생한 생물 조우 이벤트
+
+        // 가로등 (안전 조명) 배치 정보
+        const streetlights = [
+            { id: 1, x: 25, y: 60, radius: 75, name: "안전 가로등 A" },
+            { id: 2, x: 75, y: 45, radius: 75, name: "안전 가로등 B" },
+            { id: 3, x: 45, y: 25, radius: 85, name: "안전 가로등 C" }
+        ];
+
+        // 펄 빠짐 위기 관련 변수
+        let escapeProgress = 0;
+        let inEscapeGame = false;
+
+        // 마우스 및 터치 손전등 좌표 기록
+        let mouseX = 50;
+        let mouseY = 85;
+
+        const board = document.getElementById('game-board');
+        const canvas = document.getElementById('lighting-canvas');
+
+        // 전등 시야 마우스/터치 리스너
+        board.addEventListener('mousemove', (e) => {
+            const rect = board.getBoundingClientRect();
+            mouseX = ((e.clientX - rect.left) / rect.width) * 100;
+            mouseY = ((e.clientY - rect.top) / rect.height) * 100;
+        });
+
+        board.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const rect = board.getBoundingClientRect();
+                mouseX = ((touch.clientX - rect.left) / rect.width) * 100;
+                mouseY = ((touch.clientY - rect.top) / rect.height) * 100;
+            }
+        });
+
+        // 키보드 이동 이벤트 등록
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive || inEscapeGame) return;
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    movePlayer('up');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    movePlayer('down');
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    movePlayer('left');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    movePlayer('right');
+                    break;
+            }
+        });
+
+        // 1. 게임 시작 처리
+        function startGame() {
+            playerName = document.getElementById('player-name').value.trim() || "초보탐험가";
+            document.getElementById('hud-name').innerText = playerName;
+
+            // 화면 가리기/보이기
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            // 기본 데이터 초기화
+            score = 0;
+            timeLeft = 30.00;
+            missionCount = 0;
+            playerX = 50;
+            playerY = 85;
+            mouseX = 50;
+            mouseY = 85;
+            gameActive = true;
+            entities = [];
+            inEscapeGame = false;
+            escapeProgress = 0;
+
+            // HUD 초기화
+            document.getElementById('hud-score').innerText = score;
+            document.getElementById('hud-mission').innerText = `0/${targetMission}`;
+            
+            // 안전 구역을 잠금 상태 빨간색 디자인으로 복원
+            const safetyZone = document.getElementById('safety-zone');
+            const safetyMessage = document.getElementById('safety-message');
+            safetyZone.className = "absolute top-12 left-0 w-full h-12 bg-red-900/30 border-b-2 border-red-500 flex items-center justify-center transition-colors duration-300 z-10";
+            safetyMessage.innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> 대피 구역 잠김 (미션 3회 달성 필요!)`;
+
+            updatePlayerPosition();
+            spawnEntities();
+            renderStreetlights();
+
+            // 타이머 작동 (10ms 정밀도)
+            gameTimer = setInterval(() => {
+                if (!gameActive || inEscapeGame) return;
+
+                timeLeft -= 0.01;
+                if (timeLeft <= 0) {
+                    timeLeft = 0;
+                    endGame(false, "익사");
+                }
+
+                document.getElementById('hud-timer').innerText = timeLeft.toFixed(2);
+
+                // 밀물이 차오르는 시각화 (시간 비례하여 물이 점차 위로 올라옴)
+                const seaLevel = ((30 - timeLeft) / 30) * 100;
+                document.getElementById('sea-water').style.height = `${seaLevel}%`;
+
+                // 특정 시간대 경고 알람 (15초 이하일 때)
+                if (timeLeft <= 15) {
+                    document.getElementById('danger-siren').classList.remove('hidden');
+                } else {
+                    document.getElementById('danger-siren').classList.add('hidden');
+                }
+
+                // 가로등 내부 위치 체크 (가로등 불빛 버프)
+                let insideLight = false;
+                streetlights.forEach(light => {
+                    const dx = playerX - light.x;
+                    const dy = playerY - light.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < (light.radius / 7)) { // % 스케일에 알맞은 가로등 판정
+                        insideLight = true;
+                    }
+                });
+
+                // 밀물 물높이가 플레이어 높이보다 올라가면 서서히 생명이 위협받음 (가로등 안에서는 안 빠짐)
+                const playerHeightPercent = 100 - playerY;
+                if (seaLevel > playerHeightPercent + 5 && gameActive && !insideLight) {
+                    // 깊은 곳에 빠짐 돌발 상황 트리거 (일정 확률로 탈출 미니게임 발생)
+                    if (Math.random() < 0.03 && !inEscapeGame) {
+                        triggerEscapeGame();
+                    }
+                }
+
+                // 야간 시야 및 가로등 라이팅 다시 렌더링
+                drawLighting();
+
+                // 충돌/생물 획득 체크
+                checkCollisions();
+            }, 10);
+        }
+
+        // 야간 라이팅 캔버스 드로잉 (손전등 및 가로등 마스킹)
+        function drawLighting() {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = board.clientWidth;
+            const h = canvas.height = board.clientHeight;
+
+            // 전체 어두운 밤 장막 치기
+            ctx.fillStyle = 'rgba(5, 8, 16, 0.95)';
+            ctx.fillRect(0, 0, w, h);
+
+            // 빛을 원형으로 오려내기 (destination-out)
+            ctx.globalCompositeOperation = 'destination-out';
+
+            // 플레이어 자체 기본 전신 조명
+            const plX = (playerX / 100) * w;
+            const plY = (playerY / 100) * h;
+            drawLightGlow(ctx, plX, plY, 100);
+
+            // 조준 중인 손전등 빔
+            const msX = (mouseX / 100) * w;
+            const msY = (mouseY / 100) * h;
+            drawLightGlow(ctx, msX, msY, 80);
+
+            // 가로등 안심 빛줄기 오려내기
+            streetlights.forEach(light => {
+                const lx = (light.x / 100) * w;
+                const ly = (light.y / 100) * h;
+                drawLightGlow(ctx, lx, ly, light.radius);
+            });
+
+            // 오리기 합성 모드 해제
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 가로등 위로 은은한 오렌지색 아우라 얹기
+            streetlights.forEach(light => {
+                const lx = (light.x / 100) * w;
+                const ly = (light.y / 100) * h;
+                const grad = ctx.createRadialGradient(lx, ly, 0, lx, ly, light.radius);
+                grad.addColorStop(0, 'rgba(253, 224, 71, 0.15)');
+                grad.addColorStop(0.5, 'rgba(253, 224, 71, 0.05)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(lx, ly, light.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // 원형 그라데이션 빛 연산
+        function drawLightGlow(ctx, x, y, radius) {
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            grad.addColorStop(0, 'rgba(0, 0, 0, 1.0)');
+            grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.7)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 플레이어 캐릭터 위치 갱신
+        function updatePlayerPosition() {
+            const p = document.getElementById('game-player');
+            p.style.left = `${playerX}%`;
+            p.style.top = `${playerY}%`;
+        }
+
+        // 맵에 가로등 비주얼 타워 렌더링
+        function renderStreetlights() {
+            const layer = document.getElementById('entity-layer');
+            layer.innerHTML = ''; // 초기화
+
+            streetlights.forEach(light => {
+                const lightDiv = document.createElement('div');
+                lightDiv.className = "absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-25 pointer-events-none";
+                lightDiv.style.left = `${light.x}%`;
+                lightDiv.style.top = `${light.y}%`;
+
+                lightDiv.innerHTML = `
+                    <div class="relative flex flex-col items-center">
+                        <div class="light-aura absolute -top-1.5 w-7 h-7 rounded-full bg-yellow-300 filter blur-xs"></div>
+                        <div class="w-5.5 h-5.5 rounded-full bg-yellow-400 border border-white flex items-center justify-center shadow-lg relative z-10 animate-pulse">
+                            <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-slate-900"></i>
+                        </div>
+                        <div class="w-1 h-6 bg-gradient-to-b from-slate-400 to-slate-700"></div>
+                        <span class="text-[8px] font-bold bg-slate-900/80 text-yellow-300 px-1 py-0.5 rounded mt-0.5">${light.name}</span>
+                    </div>
+                `;
+                layer.appendChild(lightDiv);
+            });
+            lucide.createIcons();
+        }
+
+        // 플레이어 캐릭터 이동 처리
+        function movePlayer(direction) {
+            if (!gameActive || inEscapeGame) return;
+
+            // 가로등 안에 서있는지 판단하여 이동 속도 보너스 부여
+            let insideLight = false;
+            streetlights.forEach(light => {
+                const dx = playerX - light.x;
+                const dy = playerY - light.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < (light.radius / 7)) {
+                    insideLight = true;
+                }
+            });
+
+            // 기본 가로등 없는 어두운 곳 4.0 / 가로등 안심 빛 구역 6.0
+            const step = insideLight ? 6.0 : 4.0;
+
+            // 움직이기 이전의 상태 기록 (충돌 거부 시 되돌리기용)
+            const prevY = playerY;
+
+            if (direction === 'up') playerY = Math.max(12, playerY - step); // 안전지대 입구 한계선
+            if (direction === 'down') playerY = Math.min(95, playerY + step);
+            if (direction === 'left') playerX = Math.max(5, playerX - step);
+            if (direction === 'right') playerX = Math.min(95, playerX + step);
+
+            updatePlayerPosition();
+
+            // 탈출 지점 체크
+            if (playerY <= 14) {
+                // 미션 달성 완료 여부 판정
+                if (missionCount >= targetMission) {
+                    endGame(true, "성공");
+                } else {
+                    // 튕겨내기 및 알림
+                    playerY = 16;
+                    updatePlayerPosition();
+                    showFeedbackEffect(`🚨 미션 미완료! 갯벌 속 조개나 생물을 확인하여 탐사 미션(${missionCount}/${targetMission})을 먼저 채우세요!`, true);
+                }
+            }
+        }
+
+        // 갯벌 생물 스폰 함수
+        function spawnEntities() {
+            const container = document.getElementById('entity-layer');
+
+            const items = [
+                { id: 1, name: "어린 참굴", emoji: "🦪", type: 'baby', desc: "아직 자라지 않은 아주 조그만 애기 조개입니다. 크기가 3cm 미만이에요." },
+                { id: 2, name: "어린 꽃게", emoji: "🦀", type: 'baby', desc: "손톱 크기만 한 아주 귀여운 애기 꽃게예요." },
+                { id: 3, name: "어린 낙지", emoji: "🐙", type: 'baby', desc: "포획 금지 체장에 한참 미치지 못하는 아주 작은 낙지입니다." },
+                { id: 4, name: "백합 조개", emoji: "🐚", type: 'adult', desc: "다 자란 큼지막하고 먹음직스러운 성체 조개입니다!" },
+                { id: 5, name: "큰 낙지", emoji: "🐙", type: 'adult', desc: "크기가 충분히 크고 맛도 좋은 성체 낙지입니다!" },
+                { id: 6, name: "돌게 (성체)", emoji: "🦀", type: 'adult', desc: "법정 금지 크기 기준을 가뿐히 넘는 성체 돌게입니다." },
+                { id: 7, name: "버려진 폐그물", emoji: "🕸️", type: 'trash', desc: "갯벌 환경을 더럽히고 야간 해루질러의 발을 걸어 넘어뜨리는 위험한 쓰레기입니다." }
+            ];
+
+            items.forEach((item, index) => {
+                const x = 12 + Math.random() * 76;
+                const y = 22 + Math.random() * 58; // 중간 갯벌 위치에 골고루 분포
+
+                // 생물 개체 오브젝트 저장
+                const entityObj = {
+                    ...item,
+                    x: x,
+                    y: y,
+                    collected: false
+                };
+                entities.push(entityObj);
+
+                // DOM 요소 추가
+                const div = document.createElement('div');
+                div.id = `entity-${index}`;
+                div.className = "absolute text-lg cursor-pointer transform -translate-x-1/2 -translate-y-1/2 hover:scale-125 transition-transform z-15 pointer-events-none";
+                div.style.left = `${x}%`;
+                div.style.top = `${y}%`;
+                div.innerHTML = item.emoji;
+
+                container.appendChild(div);
+            });
+        }
+
+        // 충돌 범위 체크 및 생물체 조우 이벤트 트리거
+        function checkCollisions() {
+            entities.forEach((entity, index) => {
+                if (entity.collected) return;
+
+                // 맨해튼 거리가 매우 가까워지면 충돌로 판정
+                const dist = Math.abs(playerX - entity.x) + Math.abs(playerY - entity.y);
+                if (dist < 6) {
+                    entity.collected = true;
+                    // 화면에서 일시적 숨김
+                    const el = document.getElementById(`entity-${index}`);
+                    if (el) el.style.display = 'none';
+                    triggerEventModal(entity);
+                }
+            });
+        }
+
+        // 생물 조우에 따른 선택 모달 발생
+        function triggerEventModal(entity) {
+            curEventEntity = entity;
+            inEscapeGame = true; // 게임 일시정지 효과
+
+            const modal = document.getElementById('modal-event');
+            const emoji = document.getElementById('event-emoji');
+            const title = document.getElementById('event-title');
+            const desc = document.getElementById('event-desc');
+            const btn1 = document.getElementById('btn-choice-1');
+            const btn2 = document.getElementById('btn-choice-2');
+
+            emoji.innerText = entity.emoji;
+            title.innerText = entity.name;
+            desc.innerText = `${entity.desc}\n 어떻게 행동해야 할까요?`;
+
+            // 타입별 선택지 커스터마이징
+            if (entity.type === 'baby') {
+                btn1.innerText = "어리니까 살려준다 (방생)";
+                btn2.innerText = "아까우니까 챙겨간다 (채취)";
+            } else if (entity.type === 'adult') {
+                btn1.innerText = "올바른 채취 요령으로 채취한다 (+10점)";
+                btn2.innerText = "일단 자연을 위해 놓아준다";
+            } else if (entity.type === 'trash') {
+                btn1.innerText = "가져가서 해양 쓰레기 수거통에 넣는다 (+20점)";
+                btn2.innerText = "귀찮으니 그냥 가던 길 간다";
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        // 이벤트 모달 선택지 결과 연산
+        function handleEventChoice(choice) {
+            const modal = document.getElementById('modal-event');
+            modal.classList.add('hidden');
+            inEscapeGame = false; // 다시 게임 재개
+
+            if (!curEventEntity) return;
+
+            // 미션 카운트 증가 및 HUD 갱신
+            missionCount++;
+            document.getElementById('hud-mission').innerText = `${missionCount}/${targetMission}`;
+
+            // 안전지대 조명 색상 변경 유도 (미션 만족 시 초록색 오픈)
+            if (missionCount >= targetMission) {
+                const safetyZone = document.getElementById('safety-zone');
+                const safetyMessage = document.getElementById('safety-message');
+                safetyZone.className = "absolute top-12 left-0 w-full h-12 bg-emerald-600/40 border-b-2 border-emerald-500 flex items-center justify-center transition-colors duration-300 z-10";
+                safetyMessage.innerHTML = `<i data-lucide="unlock" class="w-4 h-4 text-emerald-400"></i> 대피 구역 개방! 안전지대로 들어오세요!`;
+                lucide.createIcons();
+            }
+
+            if (curEventEntity.type === 'baby') {
+                if (choice === 1) {
+                    // 방생 선택 시 착한 생태점수 가산
+                    score += 15;
+                    showFeedbackEffect(`미션 완료 (${missionCount}/3)! 방생 성공! +15`);
+                } else {
+                    // 욕심부려서 어린 생물 잡음 감점
+                    score -= 10;
+                    showFeedbackEffect(`미션 완료 (${missionCount}/3)! 어린 생물 남획 감점! -10`, true);
+                }
+            } else if (curEventEntity.type === 'adult') {
+                if (choice === 1) {
+                    score += 10;
+                    showFeedbackEffect(`미션 완료 (${missionCount}/3)! 성체 적정량 채취 완료! +10`);
+                } else {
+                    score += 5;
+                    showFeedbackEffect(`미션 완료 (${missionCount}/3)! 자연 사랑 방생! +5`);
+                }
+            } else if (curEventEntity.type === 'trash') {
+                if (choice === 1) {
+                    score += 20;
+                    showFeedbackEffect(`미션 완료 (${missionCount}/3)! 환경 정화 보너스! +20`);
+                } else {
+                    score -= 5;
+                    showFeedbackEffect(`미션 완료 (${missionCount}/3)! 환경 무관심 패널티 -5`, true);
+                }
+            }
+
+            document.getElementById('hud-score').innerText = score;
+            curEventEntity = null;
+        }
+
+        // 화면 피드백 토스트 알림창
+        function showFeedbackEffect(msg, isBad = false) {
+            const colorClass = isBad ? 'bg-red-600' : 'bg-emerald-600';
+            const feedback = document.createElement('div');
+            feedback.className = `absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-sm px-4 py-2 rounded-xl shadow-lg z-50 ${colorClass} animate-bounce text-center max-w-[280px]`;
+            feedback.innerText = msg;
+            document.body.appendChild(feedback);
+
+            setTimeout(() => {
+                feedback.remove();
+            }, 1800);
+        }
+
+        // 펄 고립 위기상황 연타 게임 트리거
+        function triggerEscapeGame() {
+            inEscapeGame = true;
+            escapeProgress = 0;
+            document.getElementById('escape-bar').style.width = '0%';
+            document.getElementById('modal-escape-game').classList.remove('hidden');
+        }
+
+        // 연타 처리 (올바른 탈출법을 선택해야만 바가 차오름)
+        function pressEscape(isCorrect) {
+            if (!inEscapeGame) return;
+
+            if (isCorrect) {
+                escapeProgress += 20; // 5번 누르면 100%
+                document.getElementById('escape-bar').style.width = `${escapeProgress}%`;
+                
+                if (escapeProgress >= 100) {
+                    // 탈출 성공
+                    inEscapeGame = false;
+                    document.getElementById('modal-escape-game').classList.add('hidden');
+                    score += 10;
+                    showFeedbackEffect("휴! 현명한 대처로 진흙에서 탈출했습니다! (+10)");
+                }
+            } else {
+                // 잘못된 대처 (더 깊이 빠짐 & 시간 대폭 삭감)
+                timeLeft -= 2;
+                showFeedbackEffect("아악! 마구 버둥대니 갯벌에 더 깊이 빠집니다! (시간 -2초)", true);
+            }
+        }
+
+        // 게임 최종 종료 처리
+        function endGame(isSuccess, reason) {
+            gameActive = false;
+            clearInterval(gameTimer);
+
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            const iconBox = document.getElementById('result-icon-box');
+            const resTitle = document.getElementById('result-title');
+            const resBadge = document.getElementById('result-badge');
+
+            document.getElementById('res-score').innerText = `${score}점`;
+            document.getElementById('res-time').innerText = `${timeLeft.toFixed(2)}초`;
+
+            if (isSuccess) {
+                iconBox.className = "w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-emerald-500/20 text-emerald-500 border-2 border-emerald-500";
+                iconBox.innerHTML = `<i data-lucide="shield" class="w-12 h-12"></i>`;
+                resTitle.innerText = "대피 성공! 🎉";
+                resTitle.className = "text-2xl font-title text-emerald-400 mb-1";
+
+                // 점수 및 활동 충실도에 따른 등급 산정
+                if (score >= 40) {
+                    resBadge.innerText = "🏆 최고의 환경 안전 탐험대장 관광객";
+                    resBadge.className = "text-sm font-bold text-yellow-300 mb-4";
+                } else if (score >= 10) {
+                    resBadge.innerText = "💚 수칙을 준수한 성실 생태 관광객";
+                    resBadge.className = "text-sm font-bold text-emerald-300 mb-4";
+                } else {
+                    resBadge.innerText = "😐 의무만 가까스로 채운 평범 관광객";
+                    resBadge.className = "text-sm font-bold text-slate-300 mb-4";
+                }
+            } else {
+                iconBox.className = "w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-red-500/20 text-red-500 border-2 border-red-500";
+                iconBox.innerHTML = `<i data-lucide="skull" class="w-12 h-12 animate-pulse"></i>`;
+                resTitle.innerText = "물이 가득 차서 고립되었습니다... 🌊";
+                resTitle.className = "text-2xl font-title text-red-400 mb-1";
+                resBadge.innerText = "🚨 안전 불감증 초보 해루질 관광객";
+                resBadge.className = "text-sm font-bold text-red-300 mb-4";
+            }
+            lucide.createIcons();
+        }
+
+        // 게임 처음 리셋
+        function resetGame() {
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-intro').classList.remove('hidden');
+        }
+
+        // 수행평가 공익 캠페인 정보 화면
+        function showCampaignInfo() {
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-info').classList.remove('hidden');
+        }
+
+        function goBackToResult() {
+            document.getElementById('screen-info').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
