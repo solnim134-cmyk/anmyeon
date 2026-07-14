@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태안 교통 구출 작전 (Taean Traffic Rescue)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter & Nanum Gothic -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for modern look -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Nanum Gothic', sans-serif;
+            background-color: #0f172a;
+        }
+        /* Custom scrollbar for game panels */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Pulse animations for traffic warnings on SVG map */
+        @keyframes custom-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.3); opacity: 0.4; }
+        }
+        .pulse-warning {
+            animation: custom-pulse 1.8s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-teal-500 selection:text-slate-900">
+
+    <!-- Header Area -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 transition-all">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-gradient-to-tr from-teal-500 to-emerald-400 rounded-lg shadow-lg shadow-teal-500/20 text-slate-950">
+                    <i class="fa-solid fa-traffic-light text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 to-emerald-300 bg-clip-text text-transparent">
+                        태안 교통 구출 작전
+                    </h1>
+                    <p class="text-xs text-slate-400">Taean Traffic Manager Simulator</p>
+                </div>
+            </div>
+            
+            <!-- Quick Status Metrics -->
+            <div class="flex items-center gap-4 text-xs md:text-sm bg-slate-950/50 px-3 py-1.5 rounded-full border border-slate-800">
+                <span id="game-term-badge" class="text-teal-400 font-bold"><i class="fa-regular fa-calendar-days mr-1"></i> 임기: 1년차 1분기</span>
+                <span class="text-slate-500">|</span>
+                <span id="game-rank-badge" class="text-amber-400 font-bold"><i class="fa-solid fa-award mr-1"></i> 주무관 (Lv.1)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="max-w-7xl w-full mx-auto p-4 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Column: Taean Map & Infrastructure Projects (5 cols on Desktop) -->
+        <div class="lg:col-span-5 flex flex-col gap-6 w-full">
+            
+            <!-- Map Card -->
+            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 shadow-xl relative overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm md:text-base font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-teal-400"></i>태안 교통 상황 지도
+                    </h2>
+                    <span class="text-xs text-slate-400 flex items-center gap-1">
+                        <span class="inline-block w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping"></span> 실시간 모니터링
+                    </span>
+                </div>
+                
+                <!-- SVG map outline representing Taean Peninsula -->
+                <div class="relative w-full aspect-[4/5] bg-slate-950/80 rounded-xl border border-slate-800/80 flex items-center justify-center p-2 overflow-hidden">
+                    
+                    <!-- Decorative Ocean Grid lines -->
+                    <div class="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                    
+                    <!-- Custom SVG Map of Taean Peninsula -->
+                    <svg viewBox="0 0 400 500" class="w-full h-full max-h-[420px] transition-transform duration-500 hover:scale-[1.02]">
+                        <!-- Landmass (Complex Paths representing Taean Peninsula) -->
+                        <!-- North (Iwon, Wonbuk) -->
+                        <path d="M 180,50 C 190,20 220,10 240,40 C 250,60 230,120 210,130 C 200,135 180,140 170,130 C 160,110 170,80 180,50 Z" fill="#1e293b" stroke="#334155" stroke-width="2" class="transition-colors hover:fill-slate-800" />
+                        <!-- Main Body & Sowon (Manlipo) -->
+                        <path d="M 170,130 C 150,130 110,140 80,160 C 60,170 50,190 70,210 C 90,220 120,200 150,210 C 170,215 190,240 210,240 C 240,240 270,200 270,170 C 270,140 200,130 170,130 Z" fill="#1e293b" stroke="#334155" stroke-width="2" class="transition-colors hover:fill-slate-800" />
+                        <!-- Anmyeondo (South peninsula stretching long) -->
+                        <path d="M 210,240 C 210,255 190,265 180,270 C 170,280 175,320 160,350 C 150,370 145,410 155,440 C 160,455 175,465 170,480 C 160,485 150,470 140,450 C 130,420 135,370 145,340 C 155,300 150,280 165,260 C 180,245 200,240 210,240 Z" fill="#1e293b" stroke="#334155" stroke-width="2" class="transition-colors hover:fill-slate-800" />
+                        <!-- East Link Mainland (Seosan direction boundary) -->
+                        <path d="M 270,170 C 290,170 330,175 350,185 C 360,190 360,230 340,240 C 310,250 250,245 210,240" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4" />
+                        
+                        <!-- Major Transportation Roads (Lines) -->
+                        <!-- Route 77 (Connecting through Taean North to South) -->
+                        <path d="M 210,100 Q 200,170 215,200 T 175,280 T 155,350 T 155,440" fill="none" stroke="#64748b" stroke-width="3" id="road-route77" class="transition-all duration-300" />
+                        <!-- Undersea Tunnel Path representation to Boryeong -->
+                        <path d="M 170,480 Q 190,495 210,510" fill="none" stroke="#0ea5e9" stroke-width="3" stroke-dasharray="4" />
+                        
+                        <!-- Intersections and Hotspots (interactive nodes) -->
+                        <!-- 1. Manlipo Spot -->
+                        <g class="cursor-pointer" onclick="triggerMapEvent('manlipo')">
+                            <circle cx="80" cy="190" r="14" fill="#0f172a" stroke="#ef4444" stroke-width="1.5" class="transition-all hover:r-16" />
+                            <circle cx="80" cy="190" r="6" fill="#ef4444" id="dot-manlipo" />
+                            <circle cx="80" cy="190" r="14" fill="none" stroke="#ef4444" stroke-width="2" class="pulse-warning opacity-75" id="pulse-manlipo" />
+                            <text x="80" y="165" text-anchor="middle" fill="#cbd5e1" font-size="10" font-weight="bold">만리포 (관광지 정체)</text>
+                        </g>
+
+                        <!-- 2. Taean-eup (Center terminal Hub) -->
+                        <g class="cursor-pointer" onclick="triggerMapEvent('taean')">
+                            <circle cx="215" cy="190" r="16" fill="#0f172a" stroke="#eab308" stroke-width="1.5" class="transition-all hover:r-18" />
+                            <circle cx="215" cy="190" r="7" fill="#eab308" id="dot-taean" />
+                            <circle cx="215" cy="190" r="16" fill="none" stroke="#eab308" stroke-width="2" class="pulse-warning opacity-75 hidden" id="pulse-taean" />
+                            <text x="215" y="165" text-anchor="middle" fill="#cbd5e1" font-size="10" font-weight="bold">태안읍 (대중교통 허브)</text>
+                        </g>
+
+                        <!-- 3. Kkotji Beach / Anmyeondo -->
+                        <g class="cursor-pointer" onclick="triggerMapEvent('kkotji')">
+                            <circle cx="150" cy="360" r="14" fill="#0f172a" stroke="#10b981" stroke-width="1.5" class="transition-all hover:r-16" />
+                            <circle cx="150" cy="360" r="6" fill="#10b981" id="dot-kkotji" />
+                            <circle cx="150" cy="360" r="14" fill="none" stroke="#10b981" stroke-width="2" class="pulse-warning opacity-75 hidden" id="pulse-kkotji" />
+                            <text x="90" y="363" text-anchor="start" fill="#cbd5e1" font-size="10" font-weight="bold">꽃지해변 (병목구간)</text>
+                        </g>
+
+                        <!-- 4. Yeongmok Port (Boryeong Tunnel Link) -->
+                        <g class="cursor-pointer" onclick="triggerMapEvent('yeongmok')">
+                            <circle cx="170" cy="475" r="14" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5" class="transition-all hover:r-16" />
+                            <circle cx="170" cy="475" r="6" fill="#3b82f6" id="dot-yeongmok" />
+                            <circle cx="170" cy="475" r="14" fill="none" stroke="#3b82f6" stroke-width="2" class="pulse-warning opacity-75 hidden" id="pulse-yeongmok" />
+                            <text x="170" y="455" text-anchor="middle" fill="#cbd5e1" font-size="10" font-weight="bold">영목항 (해저터널 연계)</text>
+                        </g>
+
+                        <!-- 5. Iwon-Daesan Bridge Proposal (North) -->
+                        <g class="cursor-pointer" onclick="triggerMapEvent('iwondaesan')">
+                            <circle cx="230" cy="40" r="12" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+                            <circle cx="230" cy="40" r="5" fill="#64748b" id="dot-iwondaesan" />
+                            <text x="230" y="62" text-anchor="middle" fill="#94a3b8" font-size="9">이원-대산 교량 예정지</text>
+                        </g>
+                    </svg>
+
+                    <!-- Overlay Map Warning Alert HUD -->
+                    <div id="map-alert-overlay" class="absolute bottom-3 left-3 right-3 bg-rose-950/90 border border-rose-800/60 p-2.5 rounded-lg text-xs flex items-center justify-between transition-all opacity-100 translate-y-0">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm animate-bounce"></i>
+                            <span id="map-alert-text">만리포 해수욕장 주말 교통 혼잡 최고조!</span>
+                        </div>
+                        <button onclick="resolveMapIssue()" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded font-bold transition-all text-[10px] uppercase shadow-lg shadow-rose-600/20 active:scale-95">
+                            긴급 조치 (-5%)
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-2 text-[11px] text-slate-400 text-center">
+                    💡 지도의 주요 거점(<span class="text-rose-400 font-semibold">만리포</span>, <span class="text-amber-400 font-semibold">태안읍</span>, <span class="text-emerald-400 font-semibold">꽃지</span>, <span class="text-sky-400 font-semibold">영목항</span>)을 클릭하면 해당 지역의 정보와 민원을 확인하고 즉각 대처할 수 있습니다.
+                </div>
+            </div>
+
+            <!-- National Infrastructure Project Status -->
+            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                <h3 class="text-sm md:text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-screwdriver-wrench text-teal-400"></i>태안 4대 교통 혁신 프로젝트
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Project 1 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-semibold">1. 태안고속도로 무유치 해결 (서해안선 연장)</span>
+                            <span id="prog-highway-txt" class="text-teal-400 font-bold">10%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="prog-highway" class="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 10%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Project 2 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-semibold">2. 안면도 국도 77호선 4차로 전면 확장</span>
+                            <span id="prog-route77-txt" class="text-sky-400 font-bold">20%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="prog-route77" class="bg-gradient-to-r from-sky-500 to-indigo-400 h-full rounded-full transition-all duration-500" style="width: 20%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Project 3 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-semibold">3. 수요응답형 대중교통 (DRT 마중택시) 전면 도입</span>
+                            <span id="prog-drt-txt" class="text-amber-400 font-bold">15%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="prog-drt" class="bg-gradient-to-r from-amber-500 to-orange-400 h-full rounded-full transition-all duration-500" style="width: 15%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Project 4 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-semibold">4. 이원-대산 가로림만 연륙교 건설 교두보</span>
+                            <span id="prog-bridge-txt" class="text-purple-400 font-bold">5%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="prog-bridge" class="bg-gradient-to-r from-purple-500 to-pink-400 h-full rounded-full transition-all duration-500" style="width: 5%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 bg-slate-950/40 border border-slate-800 p-2.5 rounded-lg text-xs text-slate-400">
+                    💡 <span class="text-emerald-400 font-semibold">성공 조건:</span> 16분기 종료 시까지 4가지 핵심 지표를 안전 범위(>0%)로 지키며, 메가 프로젝트 건설 진척도를 최대한 끌어올리십시오!
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Panel & Stats -->
+        <div class="lg:col-span-7 flex flex-col gap-6 w-full">
+            
+            <!-- Core Metrics Panel -->
+            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Stat 1: Budget -->
+                <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-10 group-hover:opacity-20 transition-all text-emerald-400 text-3xl">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">군 예산</span>
+                    <div class="flex items-baseline gap-1.5 my-1">
+                        <span id="stat-budget" class="text-2xl font-black text-emerald-400">60</span>
+                        <span class="text-xs text-slate-500">%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-budget" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 60%"></div>
+                    </div>
+                </div>
+
+                <!-- Stat 2: Residents Satisfaction -->
+                <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-10 group-hover:opacity-20 transition-all text-sky-400 text-3xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">주민 만족도</span>
+                    <div class="flex items-baseline gap-1.5 my-1">
+                        <span id="stat-residents" class="text-2xl font-black text-sky-400">50</span>
+                        <span class="text-xs text-slate-500">%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-residents" class="bg-sky-500 h-full rounded-full transition-all" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Stat 3: Tourism Attraction -->
+                <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-10 group-hover:opacity-20 transition-all text-pink-400 text-3xl">
+                        <i class="fa-solid fa-umbrella-beach"></i>
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">관광객 유치</span>
+                    <div class="flex items-baseline gap-1.5 my-1">
+                        <span id="stat-tourists" class="text-2xl font-black text-pink-400">50</span>
+                        <span class="text-xs text-slate-500">%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-tourists" class="bg-pink-500 h-full rounded-full transition-all" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Stat 4: Traffic Flow -->
+                <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-10 group-hover:opacity-20 transition-all text-amber-400 text-3xl">
+                        <i class="fa-solid fa-car-side"></i>
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">교통 원활도</span>
+                    <div class="flex items-baseline gap-1.5 my-1">
+                        <span id="stat-traffic" class="text-2xl font-black text-amber-400">70</span>
+                        <span class="text-xs text-slate-500">%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-traffic" class="bg-amber-500 h-full rounded-full transition-all" style="width: 70%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Interactive Card Game Section -->
+            <div id="card-section" class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl relative min-h-[400px] flex flex-col justify-between transition-all duration-300">
+                
+                <!-- Card Header -->
+                <div class="flex justify-between items-start gap-4 mb-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span id="card-tag" class="px-2.5 py-0.5 bg-teal-500/10 text-teal-400 border border-teal-500/20 text-[11px] font-bold rounded-full">여름 성수기 특별 민원</span>
+                            <span id="card-target-region" class="px-2.5 py-0.5 bg-slate-800 text-slate-300 text-[11px] font-medium rounded-full"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>태안 전역</span>
+                        </div>
+                        <h3 id="card-title" class="text-lg md:text-xl font-extrabold text-slate-100 mt-1">
+                            안면도 국도 77호선 병목 지옥 해결 방안 건의
+                        </h3>
+                    </div>
+                    <div class="text-right">
+                        <span id="quarter-text" class="text-xs text-slate-400 font-semibold block">1년차 1분기 / 총 16분기</span>
+                    </div>
+                </div>
+
+                <!-- Card Graphic / Illustration Frame -->
+                <div class="my-3 p-4 bg-slate-950/80 border border-slate-800/80 rounded-xl relative overflow-hidden flex items-center gap-4">
+                    <div id="card-icon" class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400 text-2xl shrink-0">
+                        <i class="fa-solid fa-car-burst"></i>
+                    </div>
+                    <div>
+                        <p id="card-desc" class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                            보령해저터널 개통 이후 영목항에서 안면도를 가로질러 나가는 관광 차량이 기하급수적으로 증가했습니다. 그러나 국도 77호선 일부 구간이 여전히 왕복 2차로로 좁아 주말마다 끔찍한 병목 현상이 발생하고 있습니다. 주민들의 일상이 마비되고 관광객의 불만이 극에 달했습니다. 어떻게 대처하시겠습니까?
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Button Options -->
+                <div class="space-y-3 mt-6">
+                    <!-- Option A Button -->
+                    <button id="btn-option-a" onclick="makeChoice('A')" class="w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-950/40 hover:bg-slate-950 hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/5 transition-all group duration-200">
+                        <div class="flex items-start gap-3">
+                            <span class="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-teal-500 group-hover:text-slate-950 transition-colors">A</span>
+                            <div>
+                                <h4 id="option-a-title" class="text-sm font-bold text-slate-200 group-hover:text-teal-300 transition-colors">예산을 긴급 편성하여 왕복 4차선 도로 확장을 우선 순위로 올려 공사를 즉각 강행한다.</h4>
+                                <div class="flex items-center gap-4 mt-2 text-[10px] text-slate-400">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-coins text-rose-400"></i> 예산 대폭 감소</span>
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-users text-teal-400"></i> 주민 만족도 급상승</span>
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-road text-sky-400"></i> 77호선 확장 +15%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </</button>
+
+                    <!-- Option B Button -->
+                    <button id="btn-option-b" onclick="makeChoice('B')" class="w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-950/40 hover:bg-slate-950 hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/5 transition-all group duration-200">
+                        <div class="flex items-start gap-3">
+                            <span class="w-6 h-6 rounded-lg bg-slate-500/10 text-slate-400 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-teal-500 group-hover:text-slate-950 transition-colors">B</span>
+                            <div>
+                                <h4 id="option-b-title" class="text-sm font-bold text-slate-200 group-hover:text-teal-300 transition-colors">당장의 대규모 도로 확장 공사는 예산 한계가 있으니 우회 신호 체계 개편과 주말 가변차로제만 우선 시행한다.</h4>
+                                <div class="flex items-center gap-4 mt-2 text-[10px] text-slate-400">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-coins text-teal-400"></i> 예산 절약</span>
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-car-side text-rose-400"></i> 교통 원활도 소폭 하락</span>
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-users text-rose-400"></i> 주민 불만 누적</span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Console log / Policy Log -->
+            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs md:text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-teal-400"></i>집행된 주요 정책 보고서 (피드백 로그)
+                    </h4>
+                    <button onclick="clearConsole()" class="text-[10px] text-slate-500 hover:text-slate-300"><i class="fa-solid fa-trash-can mr-1"></i>기록 초기화</button>
+                </div>
+                
+                <div id="console-logs" class="bg-slate-950/80 border border-slate-850 p-3.5 rounded-xl h-24 overflow-y-auto text-xs font-mono space-y-1.5 text-slate-300 flex flex-col-reverse">
+                    <div class="text-emerald-400"><span class="text-slate-500">[INFO]</span> 태안군 교통과장으로 임명되셨습니다. 4년의 임기(16분기) 동안 태안의 교통망을 스마트하게 이끌어 주십시오!</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Intro Welcome Modal Overlay -->
+    <div id="intro-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-md transition-all">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+            <!-- Decorative light effects -->
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-sky-500/20 rounded-full blur-2xl"></div>
+            
+            <div class="w-20 h-20 bg-gradient-to-tr from-teal-500 to-emerald-400 rounded-2xl mx-auto flex items-center justify-center text-slate-950 text-4xl shadow-xl shadow-teal-500/20 mb-6">
+                <i class="fa-solid fa-route"></i>
+            </div>
+            
+            <h2 class="text-2xl md:text-3xl font-black bg-gradient-to-r from-teal-400 to-emerald-300 bg-clip-text text-transparent mb-3">
+                태안 교통 구출 작전
+            </h2>
+            <p class="text-xs md:text-sm text-slate-400 mb-6 font-medium">
+                ~ 메가 모빌리티 정책 시뮬레이터 ~
+            </p>
+
+            <div class="text-left bg-slate-950/70 border border-slate-800 p-4 rounded-xl text-xs md:text-sm text-slate-300 space-y-3.5 mb-6">
+                <div class="flex gap-2.5">
+                    <i class="fa-solid fa-circle-info text-teal-400 shrink-0 mt-0.5"></i>
+                    <p>태안군은 3면이 바다인 반도형 지리구조와 고속도로/철도망의 부재로 인해 <strong>고질적인 대중교통난과 극심한 주말 관광 교통체증</strong>을 동시에 겪고 있습니다.</p>
+                </div>
+                <div class="flex gap-2.5">
+                    <i class="fa-solid fa-circle-check text-emerald-400 shrink-0 mt-0.5"></i>
+                    <p>당신은 태안군 최고의 모빌리티 해결사로 발탁되어 <strong>교통과장</strong>으로서 군정 교통 예산과 자원을 배분하는 무거운 결정을 담당합니다.</p>
+                </div>
+                <div class="flex gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 shrink-0 mt-0.5"></i>
+                    <p>4가지 능력치(예산, 만족도, 관광, 원활도) 중 단 하나라도 <strong>0%</strong>가 되면 탄핵되거나 주민 반발로 퇴임하게 됩니다. 밸런스가 핵심입니다!</p>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 font-extrabold text-base rounded-2xl shadow-xl shadow-teal-500/10 active:scale-[0.98] transition-all">
+                태안 교통 혁신 책임자로 출근하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Map Info Modal (Interactive clicking) -->
+    <div id="map-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm transition-all hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="modal-region-title" class="text-lg font-bold text-teal-400 flex items-center gap-2">
+                    <i class="fa-solid fa-map-pin"></i> 만리포 거점 보고서
+                </h3>
+                <button onclick="closeMapModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <p id="modal-region-desc" class="text-sm text-slate-300 leading-relaxed mb-4">
+                해당 지역에 관한 현안 설명 내용이 들어갑니다.
+            </p>
+            
+            <div id="modal-region-status" class="bg-slate-950/80 p-3.5 rounded-xl text-xs space-y-2 mb-5">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">발생 중인 문제:</span>
+                    <span id="modal-region-issue-label" class="text-rose-400 font-bold">주말 관광 교통 마비</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">민원 강도:</span>
+                    <span id="modal-region-warning-level" class="text-amber-400 font-bold">매우 높음</span>
+                </div>
+            </div>
+
+            <button onclick="closeMapModal()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all">
+                확인 완료
+            </button>
+        </div>
+    </div>
+
+    <!-- GameOver / Success Modal -->
+    <div id="result-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-md transition-all hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-lg w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl" id="result-bg-glow1"></div>
+            <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl" id="result-bg-glow2"></div>
+            
+            <div id="result-badge-container" class="w-20 h-20 bg-rose-500/20 rounded-2xl mx-auto flex items-center justify-center text-rose-500 text-4xl mb-6">
+                <i class="fa-solid fa-heart-crack"></i>
+            </div>
+            
+            <h2 id="result-title" class="text-2xl md:text-3xl font-black text-slate-100 mb-2">
+                태안 교통 마비 사태 발생!
+            </h2>
+            <p id="result-subtitle" class="text-sm text-slate-400 mb-6">
+                당신은 아쉽게도 임기를 마치지 못하고 하차하셨습니다.
+            </p>
+
+            <div class="bg-slate-950/80 border border-slate-800 p-5 rounded-2xl text-left text-xs md:text-sm text-slate-300 space-y-3 mb-6">
+                <h4 class="font-bold text-slate-200 border-b border-slate-800 pb-2">최종 성과 리포트</h4>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">진행된 분기:</span>
+                    <span id="result-quarters" class="font-bold text-slate-200">5분기차</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">남은 예산 수준:</span>
+                    <span id="result-budget" class="font-bold text-slate-200">45%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">최종 대정부 프로젝트 완성율:</span>
+                    <span id="result-projects-progress" class="font-bold text-teal-400">22%</span>
+                </div>
+                <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 mt-2" id="result-eval-text">
+                    주민들이 대중교통 불편으로 서명을 받고 있습니다. 예산 편성에 신경 쓰며 도로 확장도 병행해야 했습니다.
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 font-extrabold text-base rounded-2xl shadow-xl shadow-teal-500/10 active:scale-[0.98] transition-all">
+                처음부터 다시 작전 설계하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer Area -->
+    <footer class="bg-slate-950/80 border-t border-slate-900 text-slate-500 text-[11px] text-center py-4 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+            <p>© 2026 태안군 모빌리티 혁신 연구위원회. All rights reserved.</p>
+            <p>이 웹게임은 충청남도 태안군의 실지리 교통 환경을 기획하고 정책 우선순위를 설계하기 위한 시뮬레이션입니다.</p>
+        </div>
+    </footer>
+
+    <!-- Tone sound synthesis with Web Audio API to prevent external network request errors -->
+    <script>
+        // Custom synthesizer for premium retro click/alert sounds
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                } else if (type === 'alert') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'victory') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                } else if (type === 'gameover') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                }
+            } catch (err) {
+                // Audio context may require physical click
+            }
+        }
+    </script>
+
+    <script>
+        // Game State Variables
+        let budget = 60;
+        let residents = 50;
+        let tourists = 50;
+        let traffic = 70;
+
+        // Project Progress
+        let prgHighway = 10;
+        let prgRoute77 = 20;
+        let prgDrt = 15;
+        let prgBridge = 5;
+
+        let currentQuarter = 1;
+        const totalQuarters = 16;
+        let activeMapAlertRegion = 'manlipo'; // Track map warning area
+
+        // Card Index Database (Taean Specific Transit Scenarios)
+        const cardsDatabase = [
+            {
+                tag: "관광 교통 분산",
+                region: "안면도 국도 77호선",
+                title: "영목항 관문 병목 구간 해소",
+                desc: "보령 해저터널 개통 이래 영목항에서 올라오는 주말 차량 대수가 3배 늘어 상습 정체가 빚어지고 있습니다. 병목현상이 일어나는 안면도 남부 일부 2차선 도로망을 확장하라는 요청입니다.",
+                icon: "fa-solid fa-road-barrier",
+                optionA: {
+                    title: "추가 예산을 긴급 배정하여 왕복 4차로로 즉시 확장공사에 돌입한다.",
+                    effects: { budget: -20, residents: 15, tourists: 10, traffic: 15, prgRoute77: 25 },
+                    feedback: "안면도 남부 구간 4차선 확장이 추진되며 장기 정체 우려가 해소됩니다. 그러나 대규모 국정과제 예산 매칭으로 지자체 재정이 위축됩니다."
+                },
+                optionB: {
+                    title: "대체 도로 신호 체계 및 주말 가변차로제만 우선 시행하고 공사는 차후 추진한다.",
+                    effects: { budget: 5, residents: -10, tourists: -5, traffic: -10, prgRoute77: 2 },
+                    feedback: "예산은 크게 절약했으나 가변차로제만으로는 극심한 유입량 대비 한계가 있어 주말마다 교통지옥이 반복됩니다."
+                }
+            },
+            {
+                tag: "대중교통 사각지대",
+                region: "태안 농촌 지역 전체",
+                title: "교통 소외마을 '마중택시' 전면 확대 요청",
+                desc: "태안 원북면, 소원면 등지 농촌 구석구석은 버스가 하루에 단 2대만 다니는 고령 거주 지역이 많습니다. 어르신들의 의료·복지 접근을 위해 수요응답형 100원 마중택시 확대를 청원합니다.",
+                icon: "fa-solid fa-taxi",
+                optionA: {
+                    title: "시골 마을 전체를 커버할 수 있도록 마중택시 예산을 2배로 증액하고 택시 협회와 제휴한다.",
+                    effects: { budget: -15, residents: 25, tourists: 0, traffic: 0, prgDrt: 30 },
+                    feedback: "시골 지역 어르신들이 병원과 읍내 장터로 나오기 매우 편해지면서 주민 민원이 완전히 녹아내립니다."
+                },
+                optionB: {
+                    title: "기존의 버스 노선을 하루 3회로 소폭 조정하는 선에서 합의하고 택시 증차는 보류한다.",
+                    effects: { budget: 2, residents: -15, tourists: 0, traffic: -2, prgDrt: 5 },
+                    feedback: "어르신들이 불편한 시간대의 버스를 계속 기다리느라 불편해하며 교통 불평등 여론이 크게 악화되었습니다."
+                }
+            },
+            {
+                tag: "고속망 무유치 설움",
+                region: "태안-서산 연계",
+                title: "태안 고속도로 연계노선 국책 제안",
+                desc: "태안군은 충남도에서 고속도로가 직접 연결되지 않는 유일한 지자체 중 하나입니다. 서해안고속도로로부터 태안읍까지 25km 구간에 고속도로 연장을 기획재정부 예비타당성조사 면제 대상 사업으로 건의하려 합니다. 지방비 연구 분담이 필요합니다.",
+                icon: "fa-solid fa-road",
+                optionA: {
+                    title: "타당성 조사 설계 용역비 등 군비 15% 부담을 약속하고, 적극적으로 중앙 정부에 로비한다.",
+                    effects: { budget: -15, residents: 15, tourists: 10, traffic: 5, prgHighway: 30 },
+                    feedback: "정부 관계기관에서 태안고속도로 신설을 긍정적으로 적극 평가하기 시작하며 건설 실현 가능성이 폭발적으로 증가했습니다!"
+                },
+                optionB: {
+                    title: "기재부 부담 예산 비율 협상에 소극 대응하며, 국도 우회 정비 사업으로 선회하여 건의한다.",
+                    effects: { budget: 5, residents: -10, tourists: -5, traffic: 2, prgHighway: 0 },
+                    feedback: "고속도로 유치 운동이 흐지부지되며 군민들이 '고속도로 없는 태안의 설움'을 토로합니다."
+                }
+            },
+            {
+                tag: "북부 고립 해소",
+                region: "이원면-대산읍",
+                title: "이원-대산 가로림만 해상 연륙교 개설 추진",
+                desc: "태안군 북단 끝 이원면과 서산시 대산읍은 바다를 사이에 두고 2km 거리에 있으나, 육로로는 70km를 돌아서 가야 합니다. 가로림만을 교량으로 연결하면 태안 북부의 물류와 관광이 가치상승합니다. 설계 공동 분담금 요청입니다.",
+                icon: "fa-solid fa-bridge",
+                optionA: {
+                    title: "서산시와 연대 협약을 맺고 연륙교 추진 실무 예산 분담금을 기꺼이 납부하고 설계를 밀어붙인다.",
+                    effects: { budget: -20, residents: 15, tourists: 15, traffic: 5, prgBridge: 35 },
+                    feedback: "가로림만 국도 승격과 연륙교 타당성이 한층 견고해집니다. 태안 북부가 마침내 서산 산업단지와 바로 숨 쉬게 됩니다."
+                },
+                optionB: {
+                    title: "환경단체가 주장하는 가로림만 갯벌 오염 우려 및 막대한 분담금을 고려해 유보적 관망세를 취한다.",
+                    effects: { budget: 10, residents: -5, tourists: -5, traffic: 0, prgBridge: -5 },
+                    feedback: "북부 이원 주민들은 평생 고립된 지역으로 방치할 거냐며 거세게 소요 시위를 가집니다."
+                }
+            },
+            {
+                tag: "관광 교통 최적화",
+                region: "만리포 해수욕장",
+                title: "만리포 서핑 관광객 급증에 따른 주차난",
+                desc: "최근 만리포가 서해안의 서핑 명소 '만리포니아'로 급부상하면서, 주말마다 만리포 입구 교차로부터 백사장까지 차들이 뒤엉키고 난폭 주차가 만연하고 있습니다.",
+                icon: "fa-solid fa-square-parking",
+                optionA: {
+                    title: "만리포 초입에 초대형 임시 스마트 공영주차장을 신설하고 읍내까지 전기 셔틀버스를 15분 간격 운행한다.",
+                    effects: { budget: -10, residents: 5, tourists: 20, traffic: 15, prgDrt: 10 },
+                    feedback: "셔틀버스 환승 유도로 백사장 내 무단 불법주차가 급감하고 관광객과 해변 상인 모두 만족도가 올라갑니다."
+                },
+                optionB: {
+                    title: "경찰 지원을 받아 불법 주정차 단속 카메라를 다수 설치하고 주말 과태료 부과를 대폭 강화한다.",
+                    effects: { budget: 5, residents: -5, tourists: -15, traffic: 10, prgDrt: 0 },
+                    feedback: "딱지 끊긴 서퍼와 외지 관광객들이 다시는 태안에 오지 않겠다며 SNS 상에서 별점 테러를 감행합니다."
+                }
+            },
+            {
+                tag: "대중교통 터미널 현대화",
+                region: "태안읍",
+                title: "태안 버스터미널 시설 낙후 및 연계 시내버스 개편",
+                desc: "태안읍에 위치한 종합버스터미널은 충남 최낙후 수준으로 연계 전광판 오류가 잦고 대기실이 비좁습니다. 또한 시내버스와 택시 승강장이 엉켜 안전사고 위험도 높습니다.",
+                icon: "fa-solid fa-bus-simple",
+                optionA: {
+                    title: "터미널 부지 복합 환승센터 고도화 사업 추진 및 승하차 안전 분리 스마트 시스템을 구축한다.",
+                    effects: { budget: -15, residents: 20, tourists: 10, traffic: 5, prgDrt: 15 },
+                    feedback: "군민들과 태안을 대중교통으로 찾아온 뚜벅이 여행객들이 쾌적하고 쿨해진 종합터미널에 감탄합니다."
+                },
+                optionB: {
+                    title: "터미널 간이 도색과 벤치 증설 및 기본적인 LED 전광판 교체 등 최소한의 땜질식 정비만 실행한다.",
+                    effects: { budget: 2, residents: -10, tourists: 2, traffic: 0, prgDrt: 2 },
+                    feedback: "저렴한 조치였으나 휠체어 리프트 오작동 등 편의성 문제는 개선되지 않아 약자 단체의 거센 원성을 듣습니다."
+                }
+            },
+            {
+                tag: "친환경 신교통 도입",
+                region: "신두리 사구지대",
+                title: "신두리 해안사구 관광지 친환경 이동수단 전환",
+                desc: "천연기념물 신두리 해안사구 인근에 수많은 관광 디젤 버스와 불법 사륜 오토바이 매연으로 자연 유산이 훼손된다는 비판이 있습니다. 친환경 존 선포 여부의 선택입니다.",
+                icon: "fa-solid fa-leaf",
+                optionA: {
+                    title: "사구 1.5km 외부 영역까지만 경유차 진입을 제한하고, 내부 투어용 친환경 무공해 전기 카트 및 전동 자전거 대여망을 확립한다.",
+                    effects: { budget: -10, residents: 5, tourists: 15, traffic: 5, prgDrt: 5 },
+                    feedback: "자연 보호와 트렌디한 친환경 액티비티를 동시에 잡아 패밀리형 관광객 호응이 쇄도합니다."
+                },
+                optionB: {
+                    title: "생업권을 위협받는다며 거세게 반대하는 사구 인근 번영회 상인들의 반발을 감안해 현행 상태 유지를 결정한다.",
+                    effects: { budget: 0, residents: -5, tourists: -10, traffic: -5, prgDrt: 0 },
+                    feedback: "환경 단체와 보존 가치를 아끼는 생태관광객들에게 큰 불만을 사며 지역 가치 등급이 하락합니다."
+                }
+            },
+            {
+                tag: "국가 안보 및 국방 교통",
+                region: "태안 서부 전역",
+                title: "해안 군사 작전 차량 및 레이더 기지 진입로 병목 개량",
+                desc: "태안은 국방·해안 경계가 매우 튼튼한 요충지입니다. 작전 차량이 자주 진입하는 해안 초소 도로가 매우 좁고 비포장 상태라 군 작전 지연 우려가 보고되었습니다.",
+                icon: "fa-solid fa-shield-halved",
+                optionA: {
+                    title: "국방부와 비용을 50:50으로 매칭 분담하여, 군 작전과 지역 농기계가 함께 교행할 수 있는 연계 도로를 시원하게 보수한다.",
+                    effects: { budget: -8, residents: 10, tourists: 0, traffic: 15, prgHighway: 5 },
+                    feedback: "군용 전술 차량 운행 안정성이 도모되고 시골 트랙터와 충돌 위험도 없어져 안보와 농민 안전을 한꺼번에 지켰습니다."
+                },
+                optionB: {
+                    title: "국가 보조 사업이 아님을 들어 거절하고, 군부대에 부대 차량 자체 통행 완급 조절을 공문으로 요청한다.",
+                    effects: { budget: 2, residents: -5, tourists: 0, traffic: -10, prgHighway: 0 },
+                    feedback: "비포장 좁은 길에서 군용 트럭과 농촌 노약자 보행자 간 긴장감이 맴돌며 접촉 교통사고 민원이 터져 나옵니다."
+                }
+            },
+            {
+                tag: "관광 편의 확대",
+                region: "태안 해안둘레길",
+                title: "해안 절경 자전거 하이킹 도로 연계망 설계",
+                desc: "꾸지나무골에서 학암포, 만리포를 지나 몽산포까지 이어지는 수려한 리아스식 해안선을 따라 친환경 스마트 바이크 레인과 전기자전거 스테이션을 구축하여 교통 정체를 대체하자는 기획입니다.",
+                icon: "fa-solid fa-bicycle",
+                optionA: {
+                    title: "종합 둘레길 전용 스마트 무인 자전거 네트워크를 연계해 단절된 해안 관광 교통망을 혁신한다.",
+                    effects: { budget: -12, residents: 5, tourists: 25, traffic: 5, prgDrt: 10 },
+                    feedback: "바이크 투어 매니아층 유입이 증폭되며 주말 주요 관광지 차량 정체 유입도가 한결 가벼워지는 시너지가 납니다!"
+                },
+                optionB: {
+                    title: "해안 절벽 및 모래 사장 등 자전거 도로 토목 공사 비용이 과중하므로 도보 전용 솔바람길에 만족한다.",
+                    effects: { budget: 5, residents: 0, tourists: -5, traffic: 0, prgDrt: 0 },
+                    feedback: "예산은 비축했으나 2030 트렌디 레저 스포츠족 유치 기회를 보령/서천 등 다른 충남 시군에 추월당하고 맙니다."
+                }
+            },
+            {
+                tag: "철도 유치 꿈",
+                region: "태안 종단",
+                title: "중부권 동서횡단철도 및 서해선 태안 연장 제안",
+                desc: "태안은 철도가 없는 '철도 제로 군'입니다. 충남 서해안 관광 활성화와 국가 물류망 연계를 위해 충남 서해선에서 태안 안면도까지 연장 노선을 5차 국가철도망 구축계획에 반영시키려 합니다.",
+                icon: "fa-solid fa-train",
+                optionA: {
+                    title: "인근 서산시와 공동 예산을 모아 광역철도 타당성 공동 용역을 발주하고 국회 포럼을 열어 강력한 여론을 조성한다.",
+                    effects: { budget: -18, residents: 18, tourists: 12, traffic: 0, prgHighway: 15 },
+                    feedback: "국회 및 주무 부처의 지지를 확보해가며 역사적인 첫 삽을 뜨기 위한 타당성 점수가 크게 향상되었습니다!"
+                },
+                optionB: {
+                    title: "철도는 지자체 의지만으로 불가하므로 차후 충남도의 종합 정책이 하달될 때까지 수동 대기한다.",
+                    effects: { budget: 2, residents: -12, tourists: -2, traffic: 0, prgHighway: 0 },
+                    feedback: "타 시군은 앞서 나가는데 태안만 미래 교통 혁신 경쟁에서 완전히 도태될 것이라는 지역 언론의 비난 기사가 사방에 퍼집니다."
+                }
+            }
+        ];
+
+        // STEAMING_CHUNK: Game Mechanics functions - Start, Stop and Restart -->
+        // Initialize Game State
+        function startGame() {
+            playSound('victory');
+            document.getElementById('intro-modal').classList.add('hidden');
+            updateUI();
+            logConsole("태안군 스마트 교통 행정이 본격적으로 개시되었습니다. 지표 관리에 귀를 기울여 주세요.", "text-teal-400 font-bold");
+        }
+
+        // Restart Game
+        function restartGame() {
+            playSound('click');
+            budget = 60;
+            residents = 50;
+            tourists = 50;
+            traffic = 70;
+            
+            prgHighway = 10;
+            prgRoute77 = 20;
+            prgDrt = 15;
+            prgBridge = 5;
+            
+            currentQuarter = 1;
+            activeMapAlertRegion = 'manlipo';
+            
+            document.getElementById('result-modal').classList.add('hidden');
+            updateUI();
+            
+            // Reset consoles
+            const logsContainer = document.getElementById('console-logs');
+            logsContainer.innerHTML = '<div class="text-emerald-400"><span class="text-slate-500">[INFO]</span> 태안군 교통과장으로 임명되셨습니다. 성공적인 행정 설계를 응원합니다.</div>';
+        }
+
+        // Update the UI representation of game variables
+        function updateUI() {
+            // Cap values between 0 and 100
+            budget = Math.max(0, Math.min(100, budget));
+            residents = Math.max(0, Math.min(100, residents));
+            tourists = Math.max(0, Math.min(100, tourists));
+            traffic = Math.max(0, Math.min(100, traffic));
+
+            // Cap projects between 0 and 100
+            prgHighway = Math.max(0, Math.min(100, prgHighway));
+            prgRoute77 = Math.max(0, Math.min(100, prgRoute77));
+            prgDrt = Math.max(0, Math.min(100, prgDrt));
+            prgBridge = Math.max(0, Math.min(100, prgBridge));
+
+            // Set text values
+            document.getElementById('stat-budget').innerText = budget;
+            document.getElementById('stat-residents').innerText = residents;
+            document.getElementById('stat-tourists').innerText = tourists;
+            document.getElementById('stat-traffic').innerText = traffic;
+
+            // Set progress bars width
+            document.getElementById('bar-budget').style.width = budget + '%';
+            document.getElementById('bar-residents').style.width = residents + '%';
+            document.getElementById('bar-tourists').style.width = tourists + '%';
+            document.getElementById('bar-traffic').style.width = traffic + '%';
+
+            // Add dynamic alarming border for low stats
+            animateStatBarAlert('bar-budget', budget);
+            animateStatBarAlert('bar-residents', residents);
+            animateStatBarAlert('bar-tourists', tourists);
+            animateStatBarAlert('bar-traffic', traffic);
+
+            // Update Projects bars
+            document.getElementById('prog-highway').style.width = prgHighway + '%';
+            document.getElementById('prog-highway-txt').innerText = prgHighway + '%';
+            document.getElementById('prog-route77').style.width = prgRoute77 + '%';
+            document.getElementById('prog-route77-txt').innerText = prgRoute77 + '%';
+            document.getElementById('prog-drt').style.width = prgDrt + '%';
+            document.getElementById('prog-drt-txt').innerText = prgDrt + '%';
+            document.getElementById('prog-bridge').style.width = prgBridge + '%';
+            document.getElementById('prog-bridge-txt').innerText = prgBridge + '%';
+
+            // Check game status condition (Bankruptcy / Impeachment / Blockage)
+            if (budget <= 0 || residents <= 0 || tourists <= 0 || traffic <= 0) {
+                endGame(false);
+                return;
+            }
+
+            if (currentQuarter > totalQuarters) {
+                endGame(true);
+                return;
+            }
+
+            // Update Quarter details
+            const year = Math.floor((currentQuarter - 1) / 4) + 1;
+            const quarter = ((currentQuarter - 1) % 4) + 1;
+            document.getElementById('game-term-badge').innerHTML = `<i class="fa-regular fa-calendar-days mr-1"></i> 임기: ${year}년차 ${quarter}분기`;
+            document.getElementById('quarter-text').innerText = `${year}년차 ${quarter}분기 / 총 16분기`;
+
+            // Update Officer Level based on project completion or quarter progress
+            let levelTitle = "주무관 (Lv.1)";
+            if (currentQuarter > 12) levelTitle = "교통행정 명장 (Lv.4)";
+            else if (currentQuarter > 8) levelTitle = "교통과장 (Lv.3)";
+            else if (currentQuarter > 4) levelTitle = "팀장 (Lv.2)";
+            document.getElementById('game-rank-badge').innerHTML = `<i class="fa-solid fa-award mr-1"></i> ${levelTitle}`;
+
+            // Sync Map warning alerts with dynamic nodes on SVG
+            updateMapDisplay();
+
+            // Load next Card from deck
+            loadCard();
+        }
+
+        // Animate danger status for bars < 25%
+        function animateStatBarAlert(barId, val) {
+            const barEl = document.getElementById(barId);
+            if (val <= 25) {
+                barEl.classList.remove('bg-emerald-500', 'bg-sky-500', 'bg-pink-500', 'bg-amber-500');
+                barEl.classList.add('bg-rose-600', 'animate-pulse');
+            } else {
+                barEl.classList.remove('bg-rose-600', 'animate-pulse');
+                if (barId === 'bar-budget') barEl.classList.add('bg-emerald-500');
+                if (barId === 'bar-residents') barEl.classList.add('bg-sky-500');
+                if (barId === 'bar-tourists') barEl.classList.add('bg-pink-500');
+                if (barId === 'bar-traffic') barEl.classList.add('bg-amber-500');
+            }
+        }
+
+        // Load scenario card based on current game quarter
+        function loadCard() {
+            // Circularly loop through cards if quarter exceeds DB length
+            const cardData = cardsDatabase[(currentQuarter - 1) % cardsDatabase.length];
+            
+            document.getElementById('card-tag').innerText = cardData.tag;
+            document.getElementById('card-target-region').innerHTML = `<i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>${cardData.region}`;
+            document.getElementById('card-title').innerText = cardData.title;
+            document.getElementById('card-desc').innerText = cardData.desc;
+            
+            // Set dynamic icon inside the card panel
+            const iconFrame = document.getElementById('card-icon');
+            iconFrame.innerHTML = `<i class="${cardData.icon}"></i>`;
+
+            // Setup options title
+            document.getElementById('option-a-title').innerText = cardData.optionA.title;
+            document.getElementById('option-b-title').innerText = cardData.optionB.title;
+
+            // Setup option details sub-descriptions dynamically
+            const renderDetails = (opt, elId) => {
+                let html = "";
+                if (opt.effects.budget !== 0) {
+                    html += `<span class="flex items-center gap-1"><i class="fa-solid fa-coins ${opt.effects.budget > 0 ? 'text-emerald-400' : 'text-rose-400'}"></i> 예산 ${opt.effects.budget > 0 ? '+' : ''}${opt.effects.budget}%</span>`;
+                }
+                if (opt.effects.residents !== 0) {
+                    html += `<span class="flex items-center gap-1"><i class="fa-solid fa-users ${opt.effects.residents > 0 ? 'text-sky-400' : 'text-rose-400'}"></i> 만족도 ${opt.effects.residents > 0 ? '+' : ''}${opt.effects.residents}%</span>`;
+                }
+                if (opt.effects.tourists !== 0) {
+                    html += `<span class="flex items-center gap-1"><i class="fa-solid fa-umbrella-beach ${opt.effects.tourists > 0 ? 'text-pink-400' : 'text-rose-400'}"></i> 관광유치 ${opt.effects.tourists > 0 ? '+' : ''}${opt.effects.tourists}%</span>`;
+                }
+                if (opt.effects.traffic !== 0) {
+                    html += `<span class="flex items-center gap-1"><i class="fa-solid fa-car-side ${opt.effects.traffic > 0 ? 'text-emerald-400' : 'text-rose-400'}"></i> 교통원활 ${opt.effects.traffic > 0 ? '+' : ''}${opt.effects.traffic}%</span>`;
+                }
+                return html;
+            };
+
+            // Inject option effects hints
+            const optADetailsEl = document.querySelector('#btn-option-a .flex.items-center.gap-4.mt-2');
+            optADetailsEl.innerHTML = renderDetails(cardData.optionA);
+
+            const optBDetailsEl = document.querySelector('#btn-option-b .flex.items-center.gap-4.mt-2');
+            optBDetailsEl.innerHTML = renderDetails(cardData.optionB);
+        }
+
+        // Process user choice from card option buttons
+        function makeChoice(optKey) {
+            playSound('click');
+            const cardData = cardsDatabase[(currentQuarter - 1) % cardsDatabase.length];
+            const chosenOption = optKey === 'A' ? cardData.optionA : cardData.optionB;
+
+            // Apply effects
+            budget += chosenOption.effects.budget;
+            residents += chosenOption.effects.residents;
+            tourists += chosenOption.effects.tourists;
+            traffic += chosenOption.effects.traffic;
+
+            // Apply project completions
+            if (chosenOption.effects.prgHighway) prgHighway += chosenOption.effects.prgHighway;
+            if (chosenOption.effects.prgRoute77) prgRoute77 += chosenOption.effects.prgRoute77;
+            if (chosenOption.effects.prgDrt) prgDrt += chosenOption.effects.prgDrt;
+            if (chosenOption.effects.prgBridge) prgBridge += chosenOption.effects.prgBridge;
+
+            // Log output feedback with styles
+            logConsole(`[${cardData.title}] - 선택 ${optKey}: ${chosenOption.feedback}`, "text-slate-200 border-l-2 border-teal-500 pl-2 py-0.5");
+
+            // Advance Game Turn
+            currentQuarter++;
+
+            // Randomly trigger a map warning hotspot based on choices or randomly
+            triggerRandomMapAlert();
+
+            updateUI();
+        }
+
+        // Console logger
+        function logConsole(msg, styleClass) {
+            const logsContainer = document.getElementById('console-logs');
+            const newLog = document.createElement('div');
+            if (styleClass) {
+                newLog.className = styleClass;
+            }
+            const timeStamp = `<span class="text-slate-500">[${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span> `;
+            newLog.innerHTML = timeStamp + msg;
+            logsContainer.insertBefore(newLog, logsContainer.firstChild);
+        }
+
+        function clearConsole() {
+            playSound('click');
+            document.getElementById('console-logs').innerHTML = `<div class="text-slate-500">[초기화 완료] 새로운 정책 피드백이 기록됩니다.</div>`;
+        }
+
+        // Generate random traffic jams on map
+        function triggerRandomMapAlert() {
+            const regions = ['manlipo', 'taean', 'kkotji', 'yeongmok'];
+            // Random choice
+            activeMapAlertRegion = regions[Math.floor(Math.random() * regions.length)];
+            
+            // Map alert text mapping
+            const alertMsgs = {
+                'manlipo': "만리포 해수욕장 진입로 주말 휴가 차량으로 꽉 막힘!",
+                'taean': "태안읍 버스터미널 삼거리 안전 무단 횡단 위기 상황 접수!",
+                'kkotji': "안면도 꽃지해변 병목 차선에서 뒤엉킴 사고 발생 우려!",
+                'yeongmok': "보령해저터널을 통해 진입하는 전라도권 관광객 집중에 따른 정체!"
+            };
+
+            const overlay = document.getElementById('map-alert-overlay');
+            const alertText = document.getElementById('map-alert-text');
+            
+            alertText.innerText = alertMsgs[activeMapAlertRegion];
+            overlay.classList.remove('opacity-0', 'translate-y-4');
+            overlay.classList.add('opacity-100', 'translate-y-0');
+            
+            playSound('alert');
+        }
+
+        // Sync SVG visuals with current warning
+        function updateMapDisplay() {
+            const dots = {
+                'manlipo': 'dot-manlipo',
+                'taean': 'dot-taean',
+                'kkotji': 'dot-kkotji',
+                'yeongmok': 'dot-yeongmok'
+            };
+
+            const pulses = {
+                'manlipo': 'pulse-manlipo',
+                'taean': 'pulse-taean',
+                'kkotji': 'pulse-kkotji',
+                'yeongmok': 'pulse-yeongmok'
+            };
+
+            // Turn off all pulses & reset dots to default color
+            for (const key in dots) {
+                document.getElementById(dots[key]).setAttribute('fill', '#10b981'); // Safe Green
+                document.getElementById(pulses[key]).classList.add('hidden');
+            }
+
+            // Highlight the active warning region
+            if (activeMapAlertRegion && dots[activeMapAlertRegion]) {
+                document.getElementById(dots[activeMapAlertRegion]).setAttribute('fill', '#f43f5e'); // Dangerous Rose Red
+                document.getElementById(pulses[activeMapAlertRegion]).classList.remove('hidden');
+            }
+        }
+
+        // Map Click Interaction (Information lookup)
+        function triggerMapEvent(region) {
+            playSound('click');
+            const modal = document.getElementById('map-detail-modal');
+            const title = document.getElementById('modal-region-title');
+            const desc = document.getElementById('modal-region-desc');
+            const issueLabel = document.getElementById('modal-region-issue-label');
+            const warningLevel = document.getElementById('modal-region-warning-level');
+
+            const regionsInfo = {
+                'manlipo': {
+                    title: "만리포 해변 거점",
+                    desc: "리아스식 해안의 대표적 해수욕장인 만리포입니다. 최근에는 '만리포니아'로 통칭되며 사계절 내내 서핑 피플이 모여들어 국도 상습 초입 정체 및 불법 텐트차박 주차가 골칫거리입니다.",
+                    issue: "주말 병목 주차 지옥",
+                    level: "상당히 심각"
+                },
+                'taean': {
+                    title: "태안읍 행정 거점",
+                    desc: "군청 및 주요 공공기관, 버스터미널 허브가 몰려 있는 태안의 중심입니다. 노약자 무단 횡단 문제 및 택시 정차대 난맥, 이면도로 불법 주정차 해소가 요구됩니다.",
+                    issue: "교통 보행 안전 공백",
+                    level: "보통"
+                },
+                'kkotji': {
+                    title: "꽃지해수욕장 및 안면도 거점",
+                    desc: "대한민국 대표 일몰 명소이자 안면도 핵심 관광 벨트입니다. 보령 해저터널을 통해 남부에서 밀고 올라오는 차량들이 상시 국도 77호선 병목구간에 걸리는 주말 교통 단절 사태가 빚어집니다.",
+                    issue: "상습 정체 및 우회 부재",
+                    level: "최고조 경보"
+                },
+                'yeongmok': {
+                    title: "영목항 해저터널 연계 관문",
+                    desc: "과거에는 배를 타고 들어왔으나, 지금은 세계적 명품 해저터널로 대천 해수욕장 및 보령과 연결된 태안 남쪽 관문입니다. 갑작스러운 전라도/경상도 남부 유입량 정체로 정비가 필요합니다.",
+                    issue: "갑작스러운 남부 유입 폭증",
+                    level: "주의 수준"
+                },
+                'iwondaesan': {
+                    title: "이원-대산 가로림만 연륙교 예정지",
+                    desc: "세계 5대 갯벌로 보존 가치가 큰 가로림만 해상 구간입니다. 육상 연계 교통망이 뚫린다면 석유화학 산업단지 대산과 친환경 생태관광지 태안이 불과 2분 만에 연결되는 미래 거점입니다.",
+                    issue: "교량 무유치 고립 상태",
+                    level: "낮음 (개발 보류 중)"
+                }
+            };
+
+            const data = regionsInfo[region];
+            title.innerHTML = `<i class="fa-solid fa-map-pin"></i> ${data.title}`;
+            desc.innerText = data.desc;
+            issueLabel.innerText = data.issue;
+            warningLevel.innerText = data.level;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeMapModal() {
+            playSound('click');
+            document.getElementById('map-detail-modal').classList.add('hidden');
+        }
+
+        // Quick resolution button from map notification
+        function resolveMapIssue() {
+            if (!activeMapAlertRegion) return;
+            playSound('click');
+            
+            // Resolve costs small budget but recovers traffic flow
+            budget -= 5;
+            traffic += 15;
+            residents += 5;
+
+            logConsole(`[긴급 조치 실행] ${activeMapAlertRegion} 지역에 비상 통제 요원을 배치하고 교차로 신호 주기를 늘렸습니다. 교통 원활도가 소폭 회복되었습니다!`, "text-amber-300");
+
+            // Clear map alert UI
+            activeMapAlertRegion = null;
+            document.getElementById('map-alert-overlay').classList.add('opacity-0', 'translate-y-4');
+            
+            updateUI();
+        }
+
+        // Check Ending conditions
+        function endGame(isSuccess) {
+            const modal = document.getElementById('result-modal');
+            const resTitle = document.getElementById('result-title');
+            const resSubtitle = document.getElementById('result-subtitle');
+            const resQuarters = document.getElementById('result-quarters');
+            const resBudget = document.getElementById('result-budget');
+            const resProgress = document.getElementById('result-projects-progress');
+            const resEval = document.getElementById('result-eval-text');
+            const resBadge = document.getElementById('result-badge-container');
+
+            const totalProjectScore = Math.floor((prgHighway + prgRoute77 + prgDrt + prgBridge) / 4);
+
+            resQuarters.innerText = `${currentQuarter - 1}분기차`;
+            resBudget.innerText = `${budget}%`;
+            resProgress.innerText = `${totalProjectScore}%`;
+
+            if (isSuccess) {
+                // Success Term Game Ending
+                playSound('victory');
+                
+                // Colorize glow elements to emerald
+                document.getElementById('result-bg-glow1').className = "absolute -top-12 -left-12 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl";
+                document.getElementById('result-bg-glow2').className = "absolute -bottom-12 -right-12 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl";
+
+                resBadge.innerHTML = `<i class="fa-solid fa-trophy"></i>`;
+                resBadge.className = "w-20 h-20 bg-emerald-500/20 rounded-2xl mx-auto flex items-center justify-center text-emerald-400 text-4xl mb-6 shadow-xl shadow-emerald-500/10";
+
+                if (totalProjectScore >= 80) {
+                    resTitle.innerText = "태안 교통 혁신의 영웅 등극!";
+                    resSubtitle.innerText = "축하합니다! 주민 행복도와 교통 편의를 기적적으로 양립시켰습니다.";
+                    resEval.innerText = "당신은 임기 4년을 완벽하게 마무리하며 태안고속도로 무유치 해결, 안면도 도로 전면 확장, 보행 사각 농어촌 마중택시, 가로림만 해상 대교 교두보까지 거의 완벽히 추진했습니다. 태안군민들의 영웅적인 교통 사령관으로 칭송받습니다!";
+                } else if (totalProjectScore >= 50) {
+                    resTitle.innerText = "명예로운 군정 퇴임 달성";
+                    resSubtitle.innerText = "큰 무리 없이 16분기 임기를 무탈히 완수했습니다.";
+                    resEval.innerText = "태안의 교통 문제 극복을 위해 한 걸음 진척을 이루어 냈습니다. 비록 전면적 개설에는 미치지 못한 과업이 있지만, 주민들은 당신의 노력과 균형 잡힌 예산 집행에 충분히 감사해 하고 있습니다. 훌륭한 행정이었습니다!";
+                } else {
+                    resTitle.innerText = "아슬아슬한 임기 생존 성공";
+                    resSubtitle.innerText = "임기는 끝났으나 차후 선거에서 공약 이행 평가가 두려워집니다.";
+                    resEval.innerText = "무사히 은퇴는 완료했으나 중대한 4대 SOC 사업 실적이 다소 부실합니다. 주민들은 매번 지옥같은 주말 도로 정체에 피로를 호소하고 있습니다. 다음 기회에 더 대담하게 메가 프로젝트에 투자해 보십시오.";
+                }
+            } else {
+                // Failure Ending
+                playSound('gameover');
+                
+                // Colorize glow elements to rose
+                document.getElementById('result-bg-glow1').className = "absolute -top-12 -left-12 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl";
+                document.getElementById('result-bg-glow2').className = "absolute -bottom-12 -right-12 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl";
+
+                resBadge.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
+                resBadge.className = "w-20 h-20 bg-rose-500/20 rounded-2xl mx-auto flex items-center justify-center text-rose-500 text-4xl mb-6 shadow-xl shadow-rose-500/10";
+
+                if (budget <= 0) {
+                    resTitle.innerText = "태안군 재정 파산 사태";
+                    resSubtitle.innerText = "교통 사업에 너무 막대한 국정 예산을 쏟아부었습니다.";
+                    resEval.innerText = "교통망 고도화는 좋으나 매칭 기금 과다 출자로 인해 군청 소속 복지비와 교육 재정 전액이 동결되는 부작용이 터졌습니다. 군 의회의 전원 반대와 감사가 개시되며 실질적인 해고 처리가 내려집니다.";
+                } else if (residents <= 0) {
+                    resTitle.innerText = "대규모 군민 소요 및 주민 소환 주민투표";
+                    resSubtitle.innerText = "소외된 주민 만족도를 완전히 잃어버렸습니다.";
+                    resEval.innerText = "마을버스가 여전히 들어오지 않는 교통 불모지 농민들과 매주 정체에 시달리는 안면도 주민들의 연대 탄핵 서명이 도달해 임기가 박탈되었습니다. 주민 만족도 복원 정책에 좀 더 분배 투자를 가하셔야 했습니다.";
+                } else if (tourists <= 0) {
+                    resTitle.innerText = "관광 경제 붕괴 및 상권 연대 폐업";
+                    resSubtitle.innerText = "관광 유치 실패로 지역 상인들의 불만이 고조되었습니다.";
+                    resEval.innerText = "서퍼들과 외지 관광객들이 해상 정체와 주차 딱지에 경악해 전원 대천과 안면도를 피해 강원도로 여행지를 옮겼습니다. 상가 연합회의 집단 탄원과 성명서 발표로 직위 해제 조치를 받게 됩니다.";
+                } else if (traffic <= 0) {
+                    resTitle.innerText = "태안 한반도 역사상 최대 교통 대마비";
+                    resSubtitle.innerText = "모든 도로망이 거대한 주차장으로 고정되었습니다.";
+                    resEval.innerText = "안면도 국도 77호선과 원북면 진입로가 완전히 마비되었습니다. 구급차조차 통과할 수 없는 물류 셧다운 사태로 국토교통부로부터 비상 직무 유기 통보가 내려왔습니다. 긴급 교통 통제 조치를 주기적으로 실행했어야 합니다!";
+                }
+            }
+
+            modal.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

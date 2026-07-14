@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>국어 수행평가 - 나아낄 군 의원 설득 시뮬레이션</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Pretendard', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white py-4 px-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-500 text-slate-900 font-extrabold px-3 py-1.5 rounded text-sm tracking-wider">국어 수행평가</div>
+                <h1 class="text-xl font-bold tracking-tight">나아낄 군 의원 설득 시뮬레이션</h1>
+            </div>
+            <div class="flex items-center gap-4 text-xs md:text-sm text-slate-300">
+                <span><i class="fa-solid fa-user-graduate text-amber-400 mr-1"></i> 청소년 대표 (플레이어)</span>
+                <span class="text-slate-500">|</span>
+                <span><i class="fa-solid fa-building-columns text-amber-400 mr-1"></i> 의회 예산 심의실</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- Left Column: Guide & Status (Sticky Sidebar on Desktop) -->
+        <section class="w-full lg:w-1/3 flex flex-col gap-4 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto pr-0 lg:pr-2">
+            
+            <!-- NPC Profile Card -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center border-2 border-slate-300 overflow-hidden relative">
+                        <!-- SVG Assemblyman Badge/Face -->
+                        <svg class="w-12 h-12 text-slate-600 mt-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div class="absolute top-1 right-1 bg-amber-500 text-[9px] text-slate-900 font-extrabold px-1 rounded shadow">의원</div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-bold text-slate-900">나아낄 (62세)</h2>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">3선 군의원</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">"아낄 건 아끼고 쓸 덴 써야지!"</p>
+                    </div>
+                </div>
+                
+                <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 text-xs text-amber-900 mb-3">
+                    <span class="font-semibold block mb-1"><i class="fa-solid fa-brain mr-1"></i> 의원의 속마음 (비밀 정보)</span>
+                    "우리 군에 꼬부랑 노인들이 얼마나 많은데, 애들 노는 시설에 수억을 쓰나? 차라리 그 돈으로 쓰러져가는 경로당이나 더 고쳐주지 원..."
+                </div>
+                
+                <div class="text-xs text-slate-600 space-y-2">
+                    <p><strong>성격:</strong> 매우 보수적이며 현실적인 예산 중심주의자. 청소년 시설을 단순 '노는 곳'으로 취급하는 경향이 있음. 주민 표심(특히 노인층)에 매우 민감함.</p>
+                </div>
+            </div>
+
+            <!-- Rules & Score Multipliers -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-square-poll-vertical text-indigo-500 mr-1.5"></i> 채점 기준 (설득 룰)</span>
+                    <span class="text-xs text-indigo-600 font-normal">수행평가 채점표</span>
+                </h3>
+                <div class="space-y-2.5">
+                    <div class="flex items-start gap-2.5 p-2 bg-emerald-50 rounded-lg text-xs border border-emerald-100">
+                        <span class="bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0">+20점</span>
+                        <div>
+                            <span class="font-bold text-emerald-900">지역 사회 문제 연결</span>
+                            <p class="text-emerald-700 mt-0.5">지역 소멸 방지, 인구 유출 극복 등 공익적 가치와 연계하여 논리적으로 설득 시</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-2 bg-blue-50 rounded-lg text-xs border border-blue-100">
+                        <span class="bg-blue-500 text-white font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0">+15점</span>
+                        <div>
+                            <span class="font-bold text-blue-900">객관적 근거 제시</span>
+                            <p class="text-blue-700 mt-0.5">구체적인 통계 자료나 다른 지자체의 성공 사례(예: 아지트 사업 등)를 인용할 시</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-2 bg-indigo-50 rounded-lg text-xs border border-indigo-100">
+                        <span class="bg-indigo-500 text-white font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0">+10점</span>
+                        <div>
+                            <span class="font-bold text-indigo-900">올바른 언어 예절</span>
+                            <p class="text-indigo-700 mt-0.5">상대방을 존중하는 정중한 격식체(하십시오체)를 일관되게 사용할 시</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-2 bg-rose-50 rounded-lg text-xs border border-rose-100">
+                        <span class="bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded text-[10px] shrink-0">-15점</span>
+                        <div>
+                            <span class="font-bold text-rose-900">감정적 호소 및 단순 비교</span>
+                            <p class="text-rose-700 mt-0.5">"우리도 놀 권리가 있어요!", "왜 어르신들만 챙겨요?" 등 떼쓰기나 세대 갈등 유발 시</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evaluation Criteria Checker (Real-time Visual Feedback) -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-900 mb-3"><i class="fa-solid fa-clipboard-check text-slate-500 mr-1.5"></i> 획득 조건 체크리스트</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs" id="chk-cond1">
+                        <span class="text-slate-600"><i class="fa-solid fa-mountain-city mr-1.5 text-slate-400"></i> 지역 소멸 & 유출 방지 논리</span>
+                        <span class="font-semibold text-slate-400" id="badge-cond1">미달성</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs" id="chk-cond2">
+                        <span class="text-slate-600"><i class="fa-solid fa-chart-simple mr-1.5 text-slate-400"></i> 통계 / 타 지자체 성공 사례</span>
+                        <span class="font-semibold text-slate-400" id="badge-cond2">미달성</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs" id="chk-cond3">
+                        <span class="text-slate-600"><i class="fa-solid fa-comments mr-1.5 text-slate-400"></i> 격식 있는 하십시오체 어조</span>
+                        <span class="font-semibold text-slate-400" id="badge-cond3">미달성</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs" id="chk-penalty">
+                        <span class="text-slate-600"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-slate-400"></i> 감정적 떼쓰기/노인 비하 비난</span>
+                        <span class="font-semibold text-slate-400" id="badge-penalty">감점 내역 없음</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Column: Interactive Chat Game -->
+        <section class="w-full lg:w-2/3 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden lg:h-[calc(100vh-140px)]">
+            
+            <!-- Chat Header & Score Board -->
+            <div class="bg-slate-50 p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <h3 class="font-bold text-slate-900 text-sm">의원 집무실에서 면담 진행 중</h3>
+                </div>
+                
+                <!-- Score Display -->
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="text-right shrink-0">
+                        <span class="text-[10px] text-slate-500 block font-semibold">현재 설득 지수</span>
+                        <span class="text-2xl font-black text-slate-900" id="score-text">0 <span class="text-xs text-slate-400 font-bold">/ 100</span></span>
+                    </div>
+                    <div class="flex-grow sm:w-40 bg-slate-200 h-4 rounded-full overflow-hidden relative shadow-inner">
+                        <div class="bg-gradient-to-r from-amber-500 to-emerald-500 h-full transition-all duration-500 ease-out" id="score-bar" style="width: 0%"></div>
+                        <!-- Pass line marker at 90% -->
+                        <div class="absolute top-0 bottom-0 left-[90%] w-0.5 bg-red-600" title="통과 기준선 (90점)"></div>
+                    </div>
+                    <div class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-bold shrink-0">목표 90점</div>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="flex-grow p-4 overflow-y-auto space-y-4 bg-slate-50/50" id="chat-box">
+                <!-- Dialogue dynamically generated -->
+            </div>
+
+            <!-- Typing indicator -->
+            <div id="typing-indicator" class="hidden px-6 py-2 bg-slate-50 text-xs text-slate-500 flex items-center gap-1.5">
+                <i class="fa-solid fa-ellipsis fa-bounce"></i> 나아낄 의원이 생각을 정리하는 중...
+            </div>
+
+            <!-- Interactive feedback / Tip box -->
+            <div id="feedback-panel" class="hidden p-3 bg-indigo-50 border-t border-indigo-100 text-xs text-indigo-800 flex items-start gap-2">
+                <i class="fa-solid fa-lightbulb text-indigo-500 mt-0.5 shrink-0"></i>
+                <div id="feedback-text">설득 힌트가 여기에 노출됩니다.</div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="p-4 border-t border-slate-200 bg-white">
+                <form id="chat-form" class="flex gap-2">
+                    <textarea 
+                        id="user-input" 
+                        class="flex-grow border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none h-12"
+                        placeholder="이곳에 나아낄 의원을 설득할 답변을 입력하세요..."
+                        required
+                    ></textarea>
+                    <button 
+                        type="submit" 
+                        id="send-btn"
+                        class="bg-slate-900 text-white font-bold px-5 rounded-xl text-sm hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                        <span>제출</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+                <div class="mt-2 flex justify-between items-center text-[11px] text-slate-400">
+                    <span>* 국어적 예절과 논리적 근거(타지역 사례 등), 공익 연계를 의식해서 서술하세요.</span>
+                    <button id="reset-btn" class="text-rose-500 hover:underline flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i>처음부터 다시하기</button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full text-center shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+                <i class="fa-solid fa-medal animate-bounce"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 mb-1">설득 성공! 수행평가 만점!</h3>
+            <p class="text-xs text-slate-500 mb-4">나아낄 의원의 마음을 돌려 예산안 가결을 얻어냈습니다!</p>
+            
+            <div class="bg-emerald-50 rounded-2xl p-4 text-left border border-emerald-100 text-xs text-emerald-900 space-y-2 mb-6">
+                <div class="font-bold border-b border-emerald-200 pb-1 mb-2 text-sm"><i class="fa-solid fa-clipboard-check mr-1.5"></i>최종 수행평가 분석표</div>
+                <div class="flex justify-between"><span>지역 사회 문제 연계 (+20점):</span> <span class="font-bold" id="modal-cond1">달성</span></div>
+                <div class="flex justify-between"><span>객관적 통계/사례 활용 (+15점):</span> <span class="font-bold" id="modal-cond2">달성</span></div>
+                <div class="flex justify-between"><span>정중한 격식체 사용 (+10점):</span> <span class="font-bold" id="modal-cond3">달성</span></div>
+                <div class="flex justify-between"><span>감정적 떼쓰기 감점 여부 (-15점):</span> <span class="font-bold" id="modal-penalty">없음</span></div>
+                <div class="flex justify-between border-t border-emerald-200 pt-2 mt-2 font-black text-sm text-emerald-700"><span>최종 설득 점수:</span> <span id="modal-score">100 / 100</span></div>
+            </div>
+
+            <button id="modal-close-btn" class="w-full bg-slate-900 text-white font-bold py-3 rounded-2xl hover:bg-slate-800 transition-colors">
+                다시 한 번 도전하기
+            </button>
+        </div>
+    </div>
+
+    <!-- API Key setup / system state handler -->
+    <script>
+        const apiKey = ""; // Runtime-provided
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // State variables
+        let persuasionScore = 0;
+        let dialogueHistory = [];
+        let achievedConditions = {
+            cond1: false, // 지역 문제 연계
+            cond2: false, // 통계/성공사례
+            cond3: false, // 하십시오체
+            penalty: false // 감점
+        };
+
+        const chatBox = document.getElementById('chat-box');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const feedbackPanel = document.getElementById('feedback-panel');
+        const feedbackText = document.getElementById('feedback-text');
+        const scoreText = document.getElementById('score-text');
+        const scoreBar = document.getElementById('score-bar');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Modal Elements
+        const successModal = document.getElementById('success-modal');
+        const modalCond1 = document.getElementById('modal-cond1');
+        const modalCond2 = document.getElementById('modal-cond2');
+        const modalCond3 = document.getElementById('modal-cond3');
+        const modalPenalty = document.getElementById('modal-penalty');
+        const modalScore = document.getElementById('modal-score');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // Initial setup
+        const initialStatement = "어허, 학생이 군 의원실까지는 어쩐 일인가? 청소년 문화시설 예산? 그거 예산 낭비라는 지적이 많아서 이번에 삭감할 생각인데 말이야...";
+
+        // Initial launch
+        window.onload = function() {
+            resetGame();
+        };
+
+        function resetGame() {
+            persuasionScore = 0;
+            dialogueHistory = [
+                { role: "model", text: initialStatement }
+            ];
+            achievedConditions = {
+                cond1: false,
+                cond2: false,
+                cond3: false,
+                penalty: false
+            };
+            
+            updateScoreUI();
+            updateChecklistUI();
+            
+            chatBox.innerHTML = '';
+            appendMessage('model', initialStatement);
+            
+            feedbackPanel.classList.add('hidden');
+            successModal.classList.add('hidden');
+            userInput.value = '';
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+        }
+
+        // Add message bubble
+        function appendMessage(role, text, ratingText = '') {
+            const isUser = role === 'user';
+            const bubbleWrapper = document.createElement('div');
+            bubbleWrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 items-end gap-2 animate-in slide-in-from-bottom-2 duration-200`;
+
+            const avatar = isUser ? '' : `
+                <div class="w-10 h-10 bg-slate-800 text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                    의원
+                </div>
+            `;
+
+            const scoreDisplay = (!isUser && persuasionScore >= 0) ? `
+                <div class="mt-2 text-xs font-black text-slate-500 bg-slate-100 border border-slate-200 inline-block px-2 py-0.5 rounded-full">
+                    [설득 지수: ${persuasionScore} / 100]
+                </div>
+            ` : '';
+
+            const feedbackIndicator = ratingText ? `
+                <div class="mt-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 p-1.5 rounded-lg flex items-start gap-1">
+                    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5"></i>
+                    <span>${ratingText}</span>
+                </div>
+            ` : '';
+
+            bubbleWrapper.innerHTML = `
+                ${avatar}
+                <div class="max-w-[75%]">
+                    <div class="rounded-2xl px-4 py-2.5 shadow-sm text-sm ${
+                        isUser 
+                            ? 'bg-slate-950 text-white rounded-br-none' 
+                            : 'bg-white text-slate-800 rounded-bl-none border border-slate-200'
+                    }">
+                        <p class="whitespace-pre-line leading-relaxed">${escapeHtml(text)}</p>
+                        ${scoreDisplay}
+                        ${feedbackIndicator}
+                    </div>
+                </div>
+            `;
+
+            chatBox.appendChild(bubbleWrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function escapeHtml(string) {
+            return String(string).replace(/[&<>"']/g, function (s) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[s];
+            });
+        }
+
+        // Update Persuasion Score Progress Bar
+        function updateScoreUI() {
+            scoreText.innerHTML = `${persuasionScore} <span class="text-xs text-slate-400 font-bold">/ 100</span>`;
+            scoreBar.style.width = `${Math.min(persuasionScore, 100)}%`;
+            
+            // Highlight bar on success
+            if (persuasionScore >= 90) {
+                scoreBar.className = "bg-gradient-to-r from-emerald-400 to-green-600 h-full transition-all duration-500 ease-out";
+            } else if (persuasionScore >= 50) {
+                scoreBar.className = "bg-gradient-to-r from-amber-400 to-emerald-400 h-full transition-all duration-500 ease-out";
+            } else {
+                scoreBar.className = "bg-gradient-to-r from-rose-400 to-amber-400 h-full transition-all duration-500 ease-out";
+            }
+        }
+
+        // Update Sidebar Indicators
+        function updateChecklistUI() {
+            updateBadge('cond1', achievedConditions.cond1, '달성 (+20)', '미달성');
+            updateBadge('cond2', achievedConditions.cond2, '달성 (+15)', '미달성');
+            updateBadge('cond3', achievedConditions.cond3, '달성 (+10)', '미달성');
+            updateBadge('penalty', achievedConditions.penalty, '감점 발생 (-15)', '감점 없음', true);
+        }
+
+        function updateBadge(id, state, activeText, inactiveText, isPenalty = false) {
+            const container = document.getElementById(`chk-${id}`);
+            const badge = document.getElementById(`badge-${id}`);
+            
+            if (state) {
+                if (isPenalty) {
+                    container.className = "flex items-center justify-between p-2 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800";
+                    badge.className = "font-bold text-rose-600";
+                    badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>${activeText}`;
+                } else {
+                    container.className = "flex items-center justify-between p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800";
+                    badge.className = "font-bold text-emerald-600";
+                    badge.innerHTML = `<i class="fa-solid fa-check mr-1"></i>${activeText}`;
+                }
+            } else {
+                container.className = "flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs text-slate-500 border border-slate-100";
+                badge.className = "font-semibold text-slate-400";
+                badge.innerHTML = inactiveText;
+            }
+        }
+
+        // Handle Form Submit
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Render player message immediately
+            appendMessage('user', message);
+            dialogueHistory.push({ role: "user", text: message });
+            userInput.value = '';
+
+            // Loading state
+            typingIndicator.classList.remove('hidden');
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+
+            try {
+                // Construct evaluation payload for Gemini
+                const result = await evaluateDialogueWithGemini(message);
+                
+                // Parse result
+                const reply = result.reply;
+                const scoreChange = result.scoreChange;
+                const feedback = result.feedback;
+                
+                // Apply rules
+                if (scoreChange > 0) {
+                    if (scoreChange === 20 || scoreChange === 30 || scoreChange === 35 || scoreChange === 45) {
+                        achievedConditions.cond1 = true;
+                    }
+                    if (scoreChange === 15 || scoreChange === 25 || scoreChange === 35 || scoreChange === 45) {
+                        achievedConditions.cond2 = true;
+                    }
+                    if (scoreChange === 10 || scoreChange === 25 || scoreChange === 30 || scoreChange === 45) {
+                        achievedConditions.cond3 = true;
+                    }
+                } else if (scoreChange < 0) {
+                    achievedConditions.penalty = true;
+                }
+
+                persuasionScore = Math.max(0, persuasionScore + scoreChange);
+                dialogueHistory.push({ role: "model", text: reply });
+
+                // Update UI
+                updateScoreUI();
+                updateChecklistUI();
+                
+                // Hide loader
+                typingIndicator.classList.add('hidden');
+                
+                // Render NPC response
+                appendMessage('model', reply, feedback);
+
+                // Show tip on feedback panel
+                if (feedback) {
+                    feedbackPanel.classList.remove('hidden');
+                    feedbackText.innerText = feedback;
+                }
+
+                // Check Game Over (Win Condition)
+                if (persuasionScore >= 90) {
+                    triggerWinState();
+                } else {
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
+                }
+
+            } catch (err) {
+                console.error("API error, switching to rule-based fallback", err);
+                fallbackEvaluation(message);
+            }
+        });
+
+        // Trigger Success Modal
+        function triggerWinState() {
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            
+            // Pop success modal
+            setTimeout(() => {
+                modalCond1.innerHTML = achievedConditions.cond1 ? '<span class="text-emerald-600">성공 (+20)</span>' : '<span class="text-slate-400">미달성</span>';
+                modalCond2.innerHTML = achievedConditions.cond2 ? '<span class="text-emerald-600">성공 (+15)</span>' : '<span class="text-slate-400">미달성</span>';
+                modalCond3.innerHTML = achievedConditions.cond3 ? '<span class="text-emerald-600">성공 (+10)</span>' : '<span class="text-slate-400">미달성</span>';
+                modalPenalty.innerHTML = achievedConditions.penalty ? '<span class="text-rose-600">발생 (-15)</span>' : '<span class="text-emerald-600">감점 없음 (우수)</span>';
+                modalScore.innerText = `${persuasionScore} / 100`;
+                
+                successModal.classList.remove('hidden');
+            }, 1500);
+        }
+
+        // Rule-based Fallback in case of API failure or missing keys
+        function fallbackEvaluation(message) {
+            let scoreChange = 0;
+            let feedback = "의원이 학생의 논조와 태도를 주의 깊게 듣고 있습니다.";
+            let reply = "";
+
+            // Simple Keyword matching
+            const hasCond1 = message.includes("지역") || message.includes("소멸") || message.includes("인구") || message.includes("유출");
+            const hasCond2 = message.includes("사례") || message.includes("통계") || message.includes("성공") || message.includes("%") || message.includes("퍼센트") || message.includes("아지트");
+            const hasCond3 = message.endsWith("합니다") || message.endsWith("습니까?") || message.endsWith("하십시오") || message.endsWith("소서") || message.endsWith("것입니다") || message.endsWith("요.") || message.endsWith("니다.");
+            const hasPenalty = message.includes("권리") || message.includes("왜") || message.includes("노인") || message.includes("경로당") || message.includes("어르신만") || message.includes("혜택") || message.includes("떼");
+
+            if (hasCond1 && !achievedConditions.cond1) {
+                scoreChange += 20;
+                achievedConditions.cond1 = true;
+                feedback = "지역 소멸과 인구 유출 문제를 언급하며 공익적 논리를 사용해 의원이 솔깃해합니다! (+20점)";
+            }
+            if (hasCond2 && !achievedConditions.cond2) {
+                scoreChange += 15;
+                achievedConditions.cond2 = true;
+                feedback = "타 지자체의 사례나 구체적인 수치를 언급하여 타당한 근거를 확보했습니다! (+15점)";
+            }
+            if (hasCond3 && !achievedConditions.cond3) {
+                scoreChange += 10;
+                achievedConditions.cond3 = true;
+                feedback = "격을 갖춘 '하십시오체'를 정중하게 사용하여 정중한 태도로 대화를 이끌었습니다! (+10점)";
+            }
+            if (hasPenalty) {
+                scoreChange -= 15;
+                achievedConditions.penalty = true;
+                feedback = "노인 혜택과의 단순 비교나 감정적인 권리 주장을 펼쳐 의원이 불쾌함을 느끼고 훈계합니다. (-15점)";
+            }
+
+            if (scoreChange === 0) {
+                scoreChange = 5; // Default small progress for continuous talking
+                feedback = "정중한 대화를 시도하고 있습니다. 조금 더 구체적인 대안이나 지자체 통계, 혹은 지역사회 소멸과 연관 지어 이야기해 볼까요?";
+            }
+
+            // Generate Assemblyman Dialogue based on feedback/score
+            if (hasPenalty) {
+                reply = "어허, 이래서 요즘 어린 친구들은 문제라니까! 노인들 챙기는 걸 왜 거기다 비교하나? 평생을 일해서 이 군을 만든 분들을 대접하는 게 아까워? 문화시설이니 아지트니 하는 건 결국 공부 안 하고 놀러 다니는 공간 아닌가?";
+            } else if (hasCond1 && hasCond2) {
+                reply = "오... 지역 인구 유출을 막는 성공 사례라니, 일리가 있는 말이구만. 요즘 청소년들이 다른 시나 군으로 떠나는 바람에 우리 군 인구 절벽이 심각한 건 맞네만... 그 구체적인 운영 구조나 예산 타당성에 대한 설명이 좀 더 필요하지 않겠나?";
+            } else if (hasCond1) {
+                reply = "흐음... 인구 유출 방지와 청소년 복지 연계라, 확실히 고령화가 가속되는 우리 군에서 젊은 층 유치가 핵심이긴 하지. 하지만 단지 노는 공간 하나 만든다고 정말 청소년들이 여기에 머물고 싶어 하겠는가? 다른 구체적 근거가 더 필요한 것 같군.";
+            } else if (hasCond2) {
+                reply = "허어, 타 지자체의 실제 성공 사례를 들어 설명하니 그냥 뜬구름 잡는 소리는 아니군 그래. 하지만 우리 군 예산 사정이 다른 부유한 곳과는 달라요. 과연 이 아지트 시설이 지역 주민 전체에게도 어떤 이득이 갈지 증명할 수 있겠나?";
+            } else {
+                reply = "듣고 보니 학생도 우리 군을 위해 많은 고민을 해 온 것 같기는 하네만... 여전히 주민들의 피땀 어린 세금을 청소년 전용 여가 시설에 수억씩 쓰기엔 의회 설득력이 떨어져. 조금 더 분명하고 가시적인 효과가 무엇인지 말해봐라.";
+            }
+
+            persuasionScore = Math.max(0, persuasionScore + scoreChange);
+            dialogueHistory.push({ role: "model", text: reply });
+
+            setTimeout(() => {
+                updateScoreUI();
+                updateChecklistUI();
+                typingIndicator.classList.add('hidden');
+                
+                // Show win condition if reached
+                if (persuasionScore >= 90) {
+                    reply = "허허, 우리 군의 미래를 이렇게까지 진지하게 고민하고 해결책을 연구해왔을 줄은 몰랐네. 자네의 철저한 준비와 정중한 대화에 내 마음이 움직였구만! 이번 청소년 아지트 건립 예산안은 이번 예산 심의에서 원안 가결되도록 지지해 주겠네. 수고했네!";
+                    appendMessage('model', reply, "설득에 완전히 성공했습니다! 축하합니다.");
+                    triggerWinState();
+                } else {
+                    appendMessage('model', reply, feedback);
+                    feedbackPanel.classList.remove('hidden');
+                    feedbackText.innerText = feedback;
+                    userInput.disabled = false;
+                    sendBtn.disabled = false;
+                    userInput.focus();
+                }
+            }, 1000);
+        }
+
+        // Call Gemini-2.5-Flash to evaluate input
+        async function evaluateDialogueWithGemini(userMsg) {
+            const systemPrompt = `
+You are '나아낄 군 의원' (Assemblyman Na A-kkil), a fictional character in a high school Korean language performance evaluation game.
+Context:
+The user is a high school student representative trying to persuade you to approve the budget for a "Youth Cultural Facility (Azit)" in our small, rural county.
+
+Your profile and rules:
+1. You are 62 years old, highly conservative, practical, and highly sensitive to budget efficiency and your voters (who are mostly senior citizens).
+2. Secret inner thoughts: "We have so many elderly people in this county. Spending hundreds of millions on kids' play spaces is a waste of money! It's better to repair senior centers (경로당) with that budget!"
+3. You must evaluate the user's latest statement and calculate a score change (score_delta):
+   - [Condition 1]: Connecting the project logically with local community issues like "regional extinction (지역 소멸)", "population outflow prevention (인구 유출 방지)", or public benefits -> +20 points.
+   - [Condition 2]: Citing concrete statistics or successful case studies from other municipalities -> +15 points.
+   - [Condition 3]: Using a highly polite and formal register in Korean (하십시오체, such as ~ㅂ니다, ~습니다, ~합니까) consistently -> +10 points.
+   - [Penalty]: Whining emotionally, complaining "we have a right to play!", or criticizing why money only goes to seniors -> -15 points.
+4. If they do not trigger any condition, provide a small standard response (score_delta is 0 or slightly positive, e.g. +5, depending on how reasonable their point is).
+5. First message was: "어허, 학생이 군 의원실까지는 어쩐 일인가? 청소년 문화시설 예산? 그거 예산 낭비라는 지적이 많아서 이번에 삭감할 생각인데 말이야..."
+6. You must return a strict JSON response. Do not output anything else.
+
+Response JSON Schema:
+{
+  "reply": "Your in-character response as Assemblyman Na A-kkil, in natural Korean. (Always conservative, slightly skeptical, but becomes softer as score increases.) If the total cumulative persuasion score reaches 90 or above, agree to pass the budget with a warm, encouraging closing remark.",
+  "scoreChange": <integer: the score delta computed for this turn. Must be one of: 20, 15, 10, -15, or combination like 30, 35, 45, or negative, or 0/5 for regular turn>,
+  "feedback": "A short, encouraging tip in Korean pointing out which rules the student met or violated in this turn (e.g. '지역 소멸 방지 논리를 논리적으로 주장하셨습니다 (+20점)', '감정적으로 어르신들과 비교하며 떼를 써 의원의 심기를 건드렸습니다 (-15점)')"
+}
+`;
+
+            // Prepare prompt including history
+            const userPrompt = `
+Current persuasion score before this turn: ${persuasionScore}
+Dialogue History:
+${dialogueHistory.map(h => `${h.role === 'user' ? 'Student' : 'Assemblyman'}: ${h.text}`).join('\n')}
+
+Latest student input to evaluate: "${userMsg}"
+Return the evaluation in JSON format now.
+`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            reply: { type: "STRING" },
+                            scoreChange: { type: "INTEGER" },
+                            feedback: { type: "STRING" }
+                        },
+                        required: ["reply", "scoreChange", "feedback"]
+                    }
+                }
+            };
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            // Implement exponential backoff retry mechanism
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        return JSON.parse(text);
+                    }
+                } catch (err) {
+                    if (i === 4) throw err; // Final fail
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // Reset elements on click
+        resetBtn.addEventListener('click', resetGame);
+        modalCloseBtn.addEventListener('click', resetGame);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>어부의 날개 - 어촌 고령화 스마트 지원 플랫폼</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (어르신들이 알아보기 쉬운 라인 아이콘) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F0F4F8;
+        }
+        .heavy-title {
+            font-family: 'Black Han Sans', sans-serif;
+        }
+        /* 어르신들을 위한 고대비 포커스 효과 */
+        .btn-focus:active {
+            transform: scale(0.95);
+            background-color: #1E3A8A !important;
+        }
+    </style>
+</head>
+<body class="text-slate-900 pb-24">
+
+    <!-- 상단 헤더: 아주 크게, 한눈에 보이게 -->
+    <header class="bg-blue-600 text-white py-6 px-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white text-blue-600 p-2 rounded-full shadow-inner">
+                    <i data-lucide="anchor" class="w-8 h-8 md:w-10 md:h-10"></i>
+                </div>
+                <div>
+                    <h1 class="heavy-title text-2xl md:text-4xl tracking-wide">어부의 날개</h1>
+                    <p class="text-xs md:text-sm text-blue-100 font-bold">어르신을 위한 똑똑한 장비와 청년 일손 지원</p>
+                </div>
+            </div>
+            <!-- 긴급 전화 버튼 (가장 중요) -->
+            <a href="tel:1234-5678" class="bg-red-500 hover:bg-red-600 text-white font-extrabold px-4 py-3 rounded-xl flex items-center gap-2 shadow-md text-base md:text-xl transition-all btn-focus">
+                <i data-lucide="phone-call" class="w-6 h-6 animate-bounce"></i>
+                <span class="hidden sm:inline">전화 연결</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <main class="max-w-4xl mx-auto px-4 mt-6">
+
+        <!-- 음성 안내 바 -->
+        <div class="bg-yellow-100 border-2 border-yellow-400 rounded-2xl p-4 mb-6 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="bg-yellow-400 p-2 rounded-full">
+                    <i data-lucide="volume-2" class="w-7 h-7 text-yellow-950"></i>
+                </div>
+                <div>
+                    <p class="text-lg md:text-xl font-black text-yellow-900">글씨가 작아 보기 어려우신가요?</p>
+                    <p class="text-sm md:text-base text-yellow-800">아래 안내 시작 버튼을 누르면 소리로 알려드립니다.</p>
+                </div>
+            </div>
+            <button onclick="speakIntroduction()" class="bg-yellow-500 hover:bg-yellow-600 text-yellow-950 font-bold px-4 py-2 rounded-xl text-base md:text-lg shadow-sm whitespace-nowrap btn-focus">
+                안내 시작
+            </button>
+        </div>
+
+        <!-- 핵심 기능 1: 원터치 헬프 신청 버튼 (가장 크게 배치) -->
+        <section class="mb-8">
+            <h2 class="text-2xl md:text-3xl font-black mb-4 flex items-center gap-2">
+                <span class="bg-blue-600 text-white text-base md:text-lg px-2 py-1 rounded">1단계</span> 
+                도움이 필요할 때 꾹 누르세요!
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- 일손 요청 카드 버튼 -->
+                <button onclick="openRequestModal('일손 보조 (그물 당기기, 조업 돕기)')" class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-3xl p-6 md:p-8 shadow-xl text-left hover:opacity-95 transition-all btn-focus">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-emerald-100 text-emerald-800 p-4 rounded-2xl">
+                            <i data-lucide="users" class="w-10 h-10 md:w-12 md:h-12"></i>
+                        </div>
+                        <span class="bg-emerald-900 bg-opacity-30 text-white font-extrabold px-4 py-1.5 rounded-full text-sm md:text-base">제일 쉬운 신청</span>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-black mb-2">"오늘 일손이 부족해요"</h3>
+                    <p class="text-emerald-100 text-base md:text-lg leading-relaxed">그물 당기기, 조업 준비, 수확물 나르기 등 청년들의 손길이 필요할 때 누르세요.</p>
+                </button>
+
+                <!-- 장비 교육 및 수리 버튼 -->
+                <button onclick="openRequestModal('기계 사용법 교육 및 기술 지원')" class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl p-6 md:p-8 shadow-xl text-left hover:opacity-95 transition-all btn-focus">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-indigo-100 text-indigo-800 p-4 rounded-2xl">
+                            <i data-lucide="cpu" class="w-10 h-10 md:w-12 md:h-12"></i>
+                        </div>
+                        <span class="bg-indigo-900 bg-opacity-30 text-white font-extrabold px-4 py-1.5 rounded-full text-sm md:text-base">장비 도움말</span>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-black mb-2">"기계 사용이 어려워요"</h3>
+                    <p class="text-indigo-100 text-base md:text-lg leading-relaxed">로봇 수트 조작이 서투르거나 스마트폰 조작법, 드론 화면이 안 나올 때 청년 가이드를 부릅니다.</p>
+                </button>
+
+            </div>
+        </section>
+
+        <!-- 핵심 기능 2: 스마트 장비 예약 대여소 -->
+        <section class="mb-8">
+            <h2 class="text-2xl md:text-3xl font-black mb-4 flex items-center gap-2">
+                <span class="bg-blue-600 text-white text-base md:text-lg px-2 py-1 rounded">2단계</span> 
+                허리가 편해지는 무료 스마트 장비
+            </h2>
+            <p class="text-gray-600 text-lg mb-4">정부와 지자체 지원으로 전액 무료 대여가 가능합니다. 원하시는 기계를 선택해 주세요.</p>
+            
+            <div class="space-y-4">
+                
+                <!-- 장비 1: 웨어러블 로봇 수트 -->
+                <div class="bg-white rounded-2xl p-5 border-2 border-slate-200 shadow-md flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-full md:w-1/4 bg-blue-50 p-4 rounded-xl flex justify-center items-center">
+                        <!-- 입는 로봇 시각화 아이콘 -->
+                        <div class="text-blue-600 text-center">
+                            <i data-lucide="accessibility" class="w-16 h-16 mx-auto"></i>
+                            <span class="text-xs font-bold block mt-1">척추 보호 안전인증</span>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/4 text-center md:text-left">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-black px-3 py-1 rounded-full">인기 최고</span>
+                        <h3 class="text-2xl font-black text-slate-800 mt-2">입는 허리 보조 로봇 (무료)</h3>
+                        <p class="text-slate-600 text-base md:text-lg mt-1">
+                            그물을 들어 올리거나 무거운 상자를 나를 때 허리에 가는 힘을 25kg 이상 줄여주어 허리 아픔을 막아줍니다.
+                        </p>
+                    </div>
+                    <div class="w-full md:w-1/4">
+                        <button onclick="selectDevice('입는 허리 보조 로봇')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xl py-4 rounded-xl shadow btn-focus">
+                            이것 빌리기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 장비 2: 무선 양식장 관측 드론 -->
+                <div class="bg-white rounded-2xl p-5 border-2 border-slate-200 shadow-md flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-full md:w-1/4 bg-blue-50 p-4 rounded-xl flex justify-center items-center">
+                        <div class="text-blue-600 text-center">
+                            <i data-lucide="orbit" class="w-16 h-16 mx-auto"></i>
+                            <span class="text-xs font-bold block mt-1">간편 화면 연동</span>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/4 text-center md:text-left">
+                        <span class="bg-slate-100 text-slate-800 text-sm font-black px-3 py-1 rounded-full">인력 대체</span>
+                        <h3 class="text-2xl font-black text-slate-800 mt-2">스마트 양식장 관측 드론</h3>
+                        <p class="text-slate-600 text-base md:text-lg mt-1">
+                            배를 타고 직접 멀리 나가지 않아도 물속과 양식장 안전 상태를 스마트폰 화면으로 편하게 살펴볼 수 있습니다.
+                        </p>
+                    </div>
+                    <div class="w-full md:w-1/4">
+                        <button onclick="selectDevice('스마트 양식장 관측 드론')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xl py-4 rounded-xl shadow btn-focus">
+                            이것 빌리기
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 장비 3: 자동 그물 인양기 -->
+                <div class="bg-white rounded-2xl p-5 border-2 border-slate-200 shadow-md flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-full md:w-1/4 bg-blue-50 p-4 rounded-xl flex justify-center items-center">
+                        <div class="text-blue-600 text-center">
+                            <i data-lucide="refresh-cw" class="w-16 h-16 mx-auto"></i>
+                            <span class="text-xs font-bold block mt-1">자동 감김 기술</span>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/4 text-center md:text-left">
+                        <span class="bg-orange-100 text-orange-800 text-sm font-black px-3 py-1 rounded-full">안전 필수</span>
+                        <h3 class="text-2xl font-black text-slate-800 mt-2">전동 자동 그물 당김 기계</h3>
+                        <p class="text-slate-600 text-base md:text-lg mt-1">
+                            손으로 힘겹게 당기던 무거운 그물을 버튼만 누르면 안전하고 빠르게 자동으로 끌어 올려줍니다.
+                        </p>
+                    </div>
+                    <div class="w-full md:w-1/4">
+                        <button onclick="selectDevice('전동 자동 그물 당김 기계')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xl py-4 rounded-xl shadow btn-focus">
+                            이것 빌리기
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 정보 섹션: 자녀 및 지자체 소식통 -->
+        <section class="bg-white rounded-3xl p-6 border-2 border-blue-100 shadow-lg mb-8">
+            <h3 class="text-2xl font-black mb-3 text-blue-900 flex items-center gap-2">
+                <i data-lucide="megaphone" class="w-8 h-8 text-blue-600"></i>
+                어르신 건강 및 수당 소식
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-700 text-base md:text-lg">
+                <div class="bg-slate-50 p-4 rounded-xl">
+                    <p class="font-extrabold text-blue-700">🩺 65세 이상 무료 척추 검진</p>
+                    <p class="text-sm mt-1 text-slate-600">이번 달 30일까지 보건소에서 허리 보호대 무료 지급과 뼈 건강 검진을 해드립니다.</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl">
+                    <p class="font-extrabold text-blue-700">💰 어촌 인력 바우처 카드 신청</p>
+                    <p class="text-sm mt-1 text-slate-600">일손 구인 시 인건비의 80%를 지원해 주는 나라 바우처 카드를 면사무소에서 발급하세요.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 우리 동네 실시간 청년 기술단 활동 현황 -->
+        <section class="mb-8">
+            <h3 class="text-2xl font-black mb-4 flex items-center gap-2">
+                <i data-lucide="map-pin" class="text-red-500 w-8 h-8"></i>
+                실시간 우리 동네 도우미 현황
+            </h3>
+            <div class="bg-white rounded-2xl p-5 shadow-inner border border-slate-200">
+                <div class="flex items-center justify-between border-b pb-3 mb-3">
+                    <span class="text-lg font-bold text-slate-700">📍 충남 태안군 고남면 마을</span>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">작동 중</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-base md:text-lg">
+                        <span class="text-slate-600">🙋‍♂️ 대기 중인 든든한 청년 봉사자:</span>
+                        <span class="font-extrabold text-blue-600">8명 대기 중</span>
+                    </div>
+                    <div class="flex items-center justify-between text-base md:text-lg">
+                        <span class="text-slate-600">🦾 오늘 대여 중인 보조 기계:</span>
+                        <span class="font-extrabold text-slate-800">14대 작동 중</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- [신규 추가] 따뜻한 고객센터 섹션 -->
+        <section id="customer-center" class="bg-white rounded-3xl p-6 border-2 border-orange-200 shadow-lg mb-8">
+            <h3 class="text-2xl md:text-3xl font-black mb-4 text-orange-900 flex items-center gap-2">
+                <i data-lucide="help-circle" class="w-8 h-8 text-orange-500"></i>
+                따뜻한 고객센터 (무엇이든 물어보세요)
+            </h3>
+            <p class="text-slate-600 text-lg mb-6">글씨가 잘 안 보이시거나 궁금한 점이 있으시면 편하게 눌러보세요.</p>
+
+            <!-- 빠른 대화형 버튼 구성 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <a href="tel:1234-5678" class="bg-orange-500 hover:bg-orange-600 text-white font-extrabold p-5 rounded-2xl flex items-center justify-center gap-3 shadow-md text-xl transition-all btn-focus">
+                    <i data-lucide="phone-call" class="w-8 h-8"></i>
+                    <span>상담원과 직접 통화</span>
+                </a>
+                <button onclick="speakFaqGuidance()" class="bg-blue-100 hover:bg-blue-200 text-blue-900 font-extrabold p-5 rounded-2xl flex items-center justify-center gap-3 shadow-md text-xl transition-all btn-focus">
+                    <i data-lucide="volume-2" class="w-8 h-8"></i>
+                    <span>질문들 소리로 한번에 듣기</span>
+                </button>
+            </div>
+
+            <!-- 자주 묻는 질문 (FAQ 아코디언) -->
+            <div class="space-y-4 mb-8">
+                <h4 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="text-blue-600 w-6 h-6"></i>
+                    자주 하시는 질문 (누르면 답이 보여요)
+                </h4>
+                
+                <div class="border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                    <button onclick="toggleFaq(1)" class="w-full bg-slate-50 hover:bg-slate-100 p-5 text-left flex justify-between items-center text-lg md:text-xl font-black text-slate-800">
+                        <span>Q. 진짜 다 공짜로 빌려주는 건가요?</span>
+                        <i id="faq-icon-1" data-lucide="chevron-down" class="w-6 h-6 transition-transform"></i>
+                    </button>
+                    <div id="faq-answer-1" class="hidden p-5 bg-white border-t border-slate-100 text-base md:text-lg text-slate-600 leading-relaxed">
+                        네, 맞습니다! 지자체와 정부 어촌 상생 지원 사업으로 운영되므로, 65세 이상 어르신이라면 <strong>치료용 수트 및 최신 스마트 장비 대여가 100% 무료</strong>입니다.
+                    </div>
+                </div>
+
+                <div class="border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                    <button onclick="toggleFaq(2)" class="w-full bg-slate-50 hover:bg-slate-100 p-5 text-left flex justify-between items-center text-lg md:text-xl font-black text-slate-800">
+                        <span>Q. 기계 조작법을 전혀 몰라도 빌릴 수 있나요?</span>
+                        <i id="faq-icon-2" data-lucide="chevron-down" class="w-6 h-6 transition-transform"></i>
+                    </button>
+                    <div id="faq-answer-2" class="hidden p-5 bg-white border-t border-slate-100 text-base md:text-lg text-slate-600 leading-relaxed">
+                        걱정하지 마세요! 장비를 빌려 가실 때 <strong>청년 가이드가 직접 댁이나 조업 현장으로 찾아가서 작동법을 친절히 시연하고 교육</strong>해 드립니다.
+                    </div>
+                </div>
+
+                <div class="border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                    <button onclick="toggleFaq(3)" class="w-full bg-slate-50 hover:bg-slate-100 p-5 text-left flex justify-between items-center text-lg md:text-xl font-black text-slate-800">
+                        <span>Q. 장비가 일하다가 고장 나면 어떻게 하나요?</span>
+                        <i id="faq-icon-3" data-lucide="chevron-down" class="w-6 h-6 transition-transform"></i>
+                    </button>
+                    <div id="faq-answer-3" class="hidden p-5 bg-white border-t border-slate-100 text-base md:text-lg text-slate-600 leading-relaxed">
+                        아닙니다! 작업 중 발생하는 기계 오작동이나 노후로 인한 고장은 <strong>지자체 예산으로 전액 무상 지원 및 수리</strong>해 드립니다. 안심하고 편하게 사용하세요.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 간편 문의 남기기 (전화 연락망 확보) -->
+            <div class="bg-orange-50 rounded-2xl p-5 border border-orange-200">
+                <h4 class="text-xl font-black text-orange-950 mb-3 flex items-center gap-2">
+                    <i data-lucide="message-square" class="text-orange-600"></i>
+                    글로 질문 남기기
+                </h4>
+                <p class="text-slate-600 text-sm mb-4">여기에 성함과 번호를 적어주시면 청년 가이드가 빠르게 전화를 드립니다.</p>
+                <form id="inquiryForm" onsubmit="submitSimpleInquiry(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-1">성함을 적어주세요</label>
+                        <input type="text" id="inquiryName" required placeholder="예: 김선장" class="w-full border-2 border-slate-300 rounded-xl p-3 text-lg focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-1">전화번호를 적어주세요</label>
+                        <input type="tel" id="inquiryPhone" required placeholder="예: 010-1234-5678" class="w-full border-2 border-slate-300 rounded-xl p-3 text-lg focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-1">궁금하신 점을 적어주세요</label>
+                        <textarea id="inquiryContent" required rows="3" placeholder="예: 무거운 그물 기계도 빌려주나요? 언제 오나요?" class="w-full border-2 border-slate-300 rounded-xl p-3 text-lg focus:border-orange-500 focus:outline-none"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xl py-4 rounded-xl shadow btn-focus">
+                        질문 남기기 완료
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 하단 간편 네비게이션: 어르신용 빅메뉴 (고객센터 버튼 추가하여 4단 구성) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-blue-500 py-3 px-4 shadow-2xl z-40">
+        <div class="max-w-4xl mx-auto flex justify-around">
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center text-blue-600 font-extrabold text-base btn-focus">
+                <i data-lucide="home" class="w-8 h-8"></i>
+                <span>처음으로</span>
+            </button>
+            <a href="tel:1234-5678" class="flex flex-col items-center text-red-600 font-extrabold text-base btn-focus">
+                <i data-lucide="phone" class="w-8 h-8"></i>
+                <span>전화하기</span>
+            </a>
+            <button onclick="openRequestModal('기타 긴급 도움 요청')" class="flex flex-col items-center text-emerald-600 font-extrabold text-base btn-focus">
+                <i data-lucide="user-check" class="w-8 h-8"></i>
+                <span>도움 요청</span>
+            </button>
+            <!-- 신규 추가된 고객센터 바로가기 버튼 -->
+            <button onclick="scrollToCustomerCenter()" class="flex flex-col items-center text-orange-600 font-extrabold text-base btn-focus">
+                <i data-lucide="help-circle" class="w-8 h-8"></i>
+                <span>고객센터</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 팝업 모달 1: 일손/기술 간편 신청 모달 -->
+    <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative">
+            <button onclick="closeRequestModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="check-circle" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-3xl font-black text-slate-900">간편하게 신청하세요</h3>
+                <p id="modalCategory" class="text-blue-600 font-bold text-lg mt-1"></p>
+            </div>
+
+            <form id="simpleForm" onsubmit="submitSimpleRequest(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xl font-bold text-slate-800 mb-2">1. 성함을 입력해 주세요</label>
+                    <input type="text" id="userName" required placeholder="예: 김선장" class="w-full border-2 border-slate-300 rounded-2xl p-4 text-xl focus:border-blue-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xl font-bold text-slate-800 mb-2">2. 연락받으실 전화번호</label>
+                    <input type="tel" id="userPhone" required placeholder="예: 010-1234-5678" class="w-full border-2 border-slate-300 rounded-2xl p-4 text-xl focus:border-blue-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xl font-bold text-slate-800 mb-2">3. 사시는 동네 이름</label>
+                    <input type="text" id="userAddress" required placeholder="예: 태안군 고남리 어촌계" class="w-full border-2 border-slate-300 rounded-2xl p-4 text-xl focus:border-blue-600 focus:outline-none">
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-2xl py-5 rounded-2xl shadow-lg mt-4 btn-focus">
+                    신청 완료하기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 팝업 모달 2: 예약/신청 확인 완료 메시지 창 -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl">
+            <div class="bg-emerald-100 text-emerald-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="party-popper" class="w-12 h-12"></i>
+            </div>
+            <h3 class="text-3xl font-black text-slate-900 mb-2">접수 완료!</h3>
+            <p id="confirmMessage" class="text-slate-600 text-lg md:text-xl leading-relaxed mb-6"></p>
+            <button onclick="closeConfirmModal()" class="w-full bg-blue-600 text-white font-extrabold text-xl py-4 rounded-xl shadow btn-focus">
+                네, 알겠습니다
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lucide 아이콘 초기 활성화
+        lucide.createIcons();
+
+        // 1. 신청 모달 열기/닫기
+        let currentCategory = '';
+        function openRequestModal(category) {
+            currentCategory = category;
+            document.getElementById('modalCategory').innerText = `[분야: ${category}]`;
+            document.getElementById('requestModal').classList.remove('hidden');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.add('hidden');
+            document.getElementById('simpleForm').reset();
+        }
+
+        // 2. 장비 즉시 대여 기능 (모달로 즉시 접수 처리)
+        function selectDevice(deviceName) {
+            openRequestModal(`${deviceName} 대여`);
+        }
+
+        // 3. 간편 폼 제출 핸들링
+        function submitSimpleRequest(event) {
+            event.preventDefault();
+            const name = document.getElementById('userName').value;
+            const phone = document.getElementById('userPhone').value;
+            const address = document.getElementById('userAddress').value;
+
+            // 신청 완료 후 보여줄 텍스트
+            const message = `<strong>${name}</strong> 어르신 안심하세요!<br><span class="text-blue-600 font-extrabold">${currentCategory}</span> 신청이 정상 접수되었습니다. <br><br> 입력하신 번호 <strong>(${phone})</strong>로 20분 안에 전담 청년 가이드가 직접 전화를 드립니다.`;
+            
+            closeRequestModal();
+            
+            document.getElementById('confirmMessage').innerHTML = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+
+            // 성공 음성 안내 실행
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(`${name} 어르신, 신청이 완료되었습니다. 이십 분 안에 청년 가이드가 전화를 드리겠습니다.`);
+                utterance.lang = 'ko-KR';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        // [신규 추가] 고객센터로 화면 부드럽게 스크롤 이동
+        function scrollToCustomerCenter() {
+            const el = document.getElementById('customer-center');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // [신규 추가] FAQ 아코디언 토글 및 개별 소리 읽어주기 기능
+        function toggleFaq(id) {
+            const answer = document.getElementById(`faq-answer-${id}`);
+            const icon = document.getElementById(`faq-icon-${id}`);
+            
+            // 모든 답변을 일단 닫음 (깔끔한 UI 유지)
+            for (let i = 1; i <= 3; i++) {
+                if (i !== id) {
+                    document.getElementById(`faq-answer-${i}`).classList.add('hidden');
+                    document.getElementById(`faq-icon-${i}`).style.transform = 'rotate(0deg)';
+                }
+            }
+
+            if (answer.classList.contains('hidden')) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+                
+                // 목소리로 답변 읽어주기
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); // 이전 재생음 중단
+                    const text = answer.innerText;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ko-KR';
+                    utterance.rate = 0.85; // 어르신 맞춤형 조금 느린 배속
+                    window.speechSynthesis.speak(utterance);
+                }
+            } else {
+                answer.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+            }
+        }
+
+        // [신규 추가] FAQ 전체 요약 소리로 들려주기
+        function speakFaqGuidance() {
+            if ('speechSynthesis' in window) {
+                const text = "자주 하시는 질문 요약 안내입니다. 첫째, 모든 스마트 기기와 근력 지원 로봇 슈트 대여는 무료입니다. 둘째, 기계 조작법을 전혀 몰라도 전담 청년 가이드가 직접 조업 장소로 찾아가 작동법을 시연하고 가르쳐 드립니다. 셋째, 사용 중 고장 나거나 작동 오류가 있더라도 무상으로 복구 및 수리해 드리니 절대 걱정 마세요.";
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("이 기기는 목소리 기능을 지원하지 않습니다.");
+            }
+        }
+
+        // [신규 추가] 고객센터 문의 글 남기기 제출 핸들링
+        function submitSimpleInquiry(event) {
+            event.preventDefault();
+            const name = document.getElementById('inquiryName').value;
+            const phone = document.getElementById('inquiryPhone').value;
+            const content = document.getElementById('inquiryContent').value;
+
+            const message = `<strong>${name}</strong> 어르신 안심하세요!<br><br>남겨주신 문의가 고객센터로 접수되었습니다.<br>어르신의 전화번호 <strong>(${phone})</strong>로 20분 안에 안내 전화가 걸려옵니다.`;
+            
+            // 폼 입력 비우기
+            document.getElementById('inquiryForm').reset();
+            
+            document.getElementById('confirmMessage').innerHTML = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+
+            // 성공 음성 안내 실행
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(`${name} 어르신, 문의사항 접수가 완료되었습니다. 담당 선생님이 바로 연락해 드리겠습니다.`);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 4. TTS (음성 읽어주기 기능)
+        function speakIntroduction() {
+            if ('speechSynthesis' in window) {
+                // 한글 TTS 지원용 안내 멘트
+                const text = "안녕하세요! 어부의 날개 도우미입니다. 이곳에서는 몸이 찌뿌둥하거나 허리가 아프실 때 사용하는 최신 수트 장비를 무상으로 빌려드리며, 일손이 필요한 경우 언제든 청년들이 직접 찾아가 도와드립니다. 화면에 초록색 큰 버튼이나 보라색 큰 버튼을 눌러주시면 간편하게 사람을 부르실 수 있습니다. 언제든 주저 말고 신청하세요.";
+                
+                // 만약 재생 중인 음성이 있다면 중단
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9; // 조금 천천히 말하기
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("죄송합니다. 이 기기에서는 말하기 서비스를 지원하지 않습니다.");
+            }
+        }
+    </script>
+</body>
+</html>

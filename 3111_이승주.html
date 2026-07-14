@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태안 해피 택시 (Taean Happy Taxi)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for cute icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Dongle & Gowun Dodum for friendly hand-drawn Tomodachi Life style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <!-- Tone.js for cute sound effects and procedural gibberish voices -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            background-color: #f7eedb;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .retro-border {
+            border: 4px solid #4a3728;
+            box-shadow: 6px 6px 0px #4a3728;
+        }
+        .btn-retro {
+            border: 3px solid #4a3728;
+            box-shadow: 4px 4px 0px #4a3728;
+            transition: all 0.1s ease;
+        }
+        .btn-retro:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #4a3728;
+        }
+        /* Tomodachi Life Speech Bubble */
+        .speech-bubble {
+            position: relative;
+            background: #ffffff;
+            border: 4px solid #4a3728;
+            border-radius: 1.5rem;
+        }
+        .speech-bubble::after, .speech-bubble::before {
+            top: 100%;
+            left: 15%;
+            border: solid transparent;
+            content: "";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+        .speech-bubble::after {
+            border-color: rgba(255, 255, 255, 0);
+            border-top-color: #ffffff;
+            border-width: 15px;
+            margin-left: -15px;
+        }
+        .speech-bubble::before {
+            border-color: rgba(74, 55, 40, 0);
+            border-top-color: #4a3728;
+            border-width: 20px;
+            margin-left: -20px;
+        }
+        /* Custom scrollbar for shop */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f7eedb;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a3728;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-6">
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="w-full max-w-2xl bg-[#fffcf0] retro-border rounded-3xl overflow-hidden flex flex-col relative aspect-[4/3] md:aspect-auto md:min-h-[620px]">
+        
+        <!-- Header (Stats Bar) -->
+        <header class="bg-[#ffd254] border-b-4 border-[#4a3728] px-4 py-3 flex justify-between items-center z-10">
+            <div class="flex items-center gap-2">
+                <span class="text-xl md:text-2xl font-bold text-[#4a3728] flex items-center gap-1">
+                    🚕 태안 해피 택시
+                </span>
+            </div>
+            <div class="flex items-center gap-4 text-[#4a3728] font-bold text-sm md:text-base">
+                <div class="flex items-center gap-1 bg-[#fff] px-3 py-1 rounded-full border-2 border-[#4a3728]">
+                    <span class="text-yellow-600">🪙</span>
+                    <span id="stat-money">500</span>원
+                </div>
+                <div class="flex items-center gap-1 bg-[#fff] px-3 py-1 rounded-full border-2 border-[#4a3728]">
+                    <span class="text-red-500">❤️</span>
+                    <span id="stat-satisfaction">10</span> LP
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Window -->
+        <main class="flex-grow relative flex flex-col justify-between overflow-hidden">
+            
+            <!-- 1. INTRO START SCREEN -->
+            <section id="screen-intro" class="absolute inset-0 bg-[#fbf5e6] flex flex-col items-center justify-center p-6 text-center z-40 transition-all duration-300">
+                <div class="animate-bounce mb-4 text-6xl">🚕</div>
+                <h1 class="text-4xl md:text-5xl font-black text-[#4a3728] mb-2 tracking-wide" style="font-family: 'Dongle', sans-serif;">태안 해피 택시</h1>
+                <p class="text-[#6d513d] max-w-md text-sm md:text-base mb-6 leading-relaxed">
+                    "버스가 안 와서 읍내 가기 참 힘드네유..."<br>
+                    대중교통이 불편한 태안 구석구석의 소중한 이웃들을 돕는<br>
+                    따뜻하고 소소한 힐링 택시 배달/운송 작전!
+                </p>
+                <div class="bg-amber-100 border-2 border-amber-300 p-3 rounded-xl mb-6 max-w-sm text-xs text-amber-800">
+                    💡 <b>플레이 방법:</b> 화살표 키나 화면 터치로 택시를 움직여 장애물을 피하고 안전하게 목적지까지 주민을 모셔다 드리세요!
+                </div>
+                <button onclick="startGame()" class="btn-retro bg-[#ffd254] text-[#4a3728] text-xl font-bold py-3 px-8 rounded-2xl hover:bg-[#ffc629]">
+                    영업 시작하기! ✨
+                </button>
+            </section>
+
+            <!-- 2. TA_AN VILLAGE SELECT MAP SCREEN -->
+            <section id="screen-map" class="hidden absolute inset-0 bg-[#e3f4fc] flex flex-col p-4 z-20">
+                <div class="text-center mb-2">
+                    <h2 class="text-lg md:text-xl font-bold text-[#4a3728] bg-white inline-block px-4 py-1 rounded-full border-2 border-[#4a3728]">
+                        🗺️ 오늘의 지원 요청 지역 (태안군)
+                    </h2>
+                    <p class="text-xs text-blue-800 mt-1">도움이 필요한 마을 주민들의 사연을 확인하고 수락해 주세요!</p>
+                </div>
+                
+                <!-- Simple Interactive Map of Taean -->
+                <div class="relative flex-grow bg-emerald-50 border-4 border-[#4a3728] rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-inner">
+                    <!-- Visual Map Representation Left -->
+                    <div class="w-full md:w-3/5 h-48 md:h-full relative bg-[#bae6fd] p-2 flex items-center justify-center overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-[#4a3728]">
+                        <!-- Hand drawn elements representation -->
+                        <div class="absolute inset-4 bg-[#f0fdf4] rounded-full filter blur-xl opacity-80"></div>
+                        <!-- Shorelines / Mudflats representation -->
+                        <div class="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-[#fef08a] opacity-60"></div>
+                        
+                        <!-- Map Marker buttons -->
+                        <div id="map-markers-container" class="absolute inset-0">
+                            <!-- Populated dynamically in JS -->
+                        </div>
+                    </div>
+
+                    <!-- Mission Details Board Right -->
+                    <div class="w-full md:w-2/5 h-auto bg-[#fffef7] p-3 flex flex-col justify-between overflow-y-auto">
+                        <div id="mission-card-content" class="text-center md:text-left">
+                            <p class="text-gray-400 text-sm py-8 text-center">지도 위의 도움 요청(!) 마커를 선택해 주세요.</p>
+                        </div>
+                        <div class="mt-2">
+                            <button id="btn-accept-mission" disabled onclick="acceptMission()" class="w-full btn-retro bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded-xl cursor-not-allowed">
+                                의뢰 수락하고 이동하기 🚕
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex justify-between items-center mt-3">
+                    <span class="text-xs text-[#6d513d]">꾸미기 상점에서 차량 성능과 외관을 업그레이드할 수 있습니다.</span>
+                    <button onclick="openShop()" class="btn-retro bg-[#ffd254] text-[#4a3728] font-bold py-2 px-4 rounded-xl text-sm flex items-center gap-1">
+                        🛍️ 택시 꾸미기 상점
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. TOMODACHI LIFE DIALOGUE SCREEN (Quirky Character interaction) -->
+            <section id="screen-dialogue" class="hidden absolute inset-0 bg-[#fff] flex flex-col justify-between p-6 z-30">
+                <!-- Background pattern -->
+                <div class="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50 pointer-events-none"></div>
+
+                <!-- Top bar indicator -->
+                <div class="z-10 flex justify-between items-center">
+                    <span id="dialogue-village-tag" class="text-xs font-bold text-white bg-amber-600 px-3 py-1 rounded-full border-2 border-[#4a3728]">
+                        소원리 만리포 마을
+                    </span>
+                    <span class="text-xs text-gray-400">Tomodachi Talk v1.0</span>
+                </div>
+
+                <!-- Character Presentation area (Tomodachi apartment style) -->
+                <div class="z-10 flex-grow flex flex-col items-center justify-center gap-4 my-4">
+                    <!-- Character Avatar Container -->
+                    <div class="relative w-32 h-32 md:w-40 md:h-40 bg-[#f3f4f6] rounded-full border-4 border-[#4a3728] overflow-hidden flex items-center justify-center shadow-lg">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-sky-200 to-amber-100"></div>
+                        <!-- Avatar Display dynamic face elements -->
+                        <div id="passenger-avatar-box" class="relative z-10 transform scale-125">
+                            <!-- Populated by JS (SVG pieces) -->
+                        </div>
+                    </div>
+                    
+                    <!-- Passenger Name Tag -->
+                    <div id="passenger-name-tag" class="text-lg font-bold text-[#4a3728] bg-[#fdf2e9] border-2 border-[#4a3728] px-4 py-0.5 rounded-full">
+                        김옥분 할머니 (78)
+                    </div>
+
+                    <!-- Interactive Tomodachi-style dialogue balloon -->
+                    <div class="speech-bubble w-full max-w-md p-4 min-h-[90px] flex items-center justify-center">
+                        <p id="dialogue-speech-text" class="text-base md:text-lg text-[#4a3728] font-bold text-center leading-snug">
+                            "아이구, 택시 기사 총각 왔는가... 바지락을 오늘까지 수협에 내야 허는디 고마워유."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Control Button -->
+                <div class="z-10 flex justify-center">
+                    <button id="btn-dialogue-action" onclick="advanceDialogue()" class="btn-retro bg-[#ffd254] text-[#4a3728] text-lg font-bold py-2.5 px-10 rounded-2xl hover:bg-[#ffc629]">
+                        출발하셔유! 🚕💨
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4. ACTIVE GAMEPLAY (DRIVING ACTION SCREEN) -->
+            <section id="screen-gameplay" class="hidden absolute inset-0 bg-[#cbd5e1] flex flex-col z-20">
+                <!-- Status/Progress Bar HUD -->
+                <div class="bg-white border-b-2 border-[#4a3728] px-4 py-2 flex justify-between items-center text-xs md:text-sm font-bold z-10">
+                    <div class="flex items-center gap-1 text-red-500">
+                        <span>❤️ 손님 피로도:</span>
+                        <div class="w-24 bg-gray-200 rounded-full h-3 border border-[#4a3728] overflow-hidden">
+                            <div id="patience-bar" class="bg-red-500 h-full w-full transition-all duration-100"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-700">📍 목적지까지:</span>
+                        <span id="distance-text">100m</span>
+                    </div>
+                </div>
+
+                <!-- Canvas Driving Field -->
+                <div class="flex-grow relative overflow-hidden bg-slate-100">
+                    <canvas id="driving-canvas" class="block w-full h-full bg-[#1e293b]"></canvas>
+
+                    <!-- Crash Warning Flasher -->
+                    <div id="crash-overlay" class="hidden absolute inset-0 bg-red-600/30 pointer-events-none flex items-center justify-center">
+                        <span class="text-white text-3xl font-extrabold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] animate-ping">💥 아야!! 💥</span>
+                    </div>
+
+                    <!-- On-screen controller buttons for touch-screen mobile devices -->
+                    <div class="absolute bottom-4 left-4 right-4 flex justify-between md:hidden pointer-events-none z-20">
+                        <button id="btn-left" class="pointer-events-auto w-14 h-14 rounded-full bg-white/90 border-4 border-[#4a3728] text-2xl text-[#4a3728] font-bold active:bg-amber-100 shadow-lg flex items-center justify-center">
+                            ◀
+                        </button>
+                        <button id="btn-right" class="pointer-events-auto w-14 h-14 rounded-full bg-white/90 border-4 border-[#4a3728] text-2xl text-[#4a3728] font-bold active:bg-amber-100 shadow-lg flex items-center justify-center">
+                            ▶
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. DECORATION & UPGRADE SHOP SCREEN -->
+            <section id="screen-shop" class="hidden absolute inset-0 bg-[#faf6e8] flex flex-col justify-between p-4 z-30">
+                <div class="flex justify-between items-center mb-2 border-b-2 border-dashed border-[#4a3728] pb-2">
+                    <h2 class="text-lg md:text-xl font-bold text-[#4a3728] flex items-center gap-1">
+                        🛍️ 태안 정비소 & 차량 꾸미기
+                    </h2>
+                    <button onclick="closeShop()" class="btn-retro bg-[#ff6b6b] text-white px-3 py-1 text-xs rounded-lg font-bold">
+                        닫기 ✖
+                    </button>
+                </div>
+
+                <!-- Interactive Taxi Showcase -->
+                <div class="bg-white border-2 border-[#4a3728] rounded-2xl p-3 flex flex-col items-center justify-center relative shadow-sm h-32 md:h-40">
+                    <div class="absolute top-2 left-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">나의 현재 해피 택시</div>
+                    
+                    <!-- SVG Interactive Taxi Preview -->
+                    <div class="scale-125 transform mt-2 flex justify-center items-center">
+                        <div id="taxi-preview-element" class="relative">
+                            <!-- Rendered dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization Options list -->
+                <div class="flex-grow my-3 overflow-y-auto pr-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        
+                        <!-- Section: Color -->
+                        <div class="bg-amber-50/50 p-2 border-2 border-[#4a3728] rounded-xl">
+                            <h3 class="text-xs font-bold text-amber-900 mb-2">🚗 바디 도색</h3>
+                            <div class="grid grid-cols-2 gap-1.5 text-xs">
+                                <button onclick="buyCustom('color', 'yellow', 0)" class="p-2 border border-gray-300 rounded bg-yellow-400 text-[#4a3728] font-bold flex justify-between items-center">
+                                    <span>노랑 (기본)</span>
+                                    <span>보유</span>
+                                </button>
+                                <button onclick="buyCustom('color', 'sky', 200)" id="shop-color-sky" class="p-2 border border-gray-300 rounded bg-sky-400 text-white font-bold flex justify-between items-center">
+                                    <span>바다 블루</span>
+                                    <span>🪙200</span>
+                                </button>
+                                <button onclick="buyCustom('color', 'pink', 300)" id="shop-color-pink" class="p-2 border border-gray-300 rounded bg-pink-400 text-white font-bold flex justify-between items-center">
+                                    <span>안면도 노을</span>
+                                    <span>🪙300</span>
+                                </button>
+                                <button onclick="buyCustom('color', 'black', 400)" id="shop-color-black" class="p-2 border border-gray-300 rounded bg-zinc-800 text-white font-bold flex justify-between items-center">
+                                    <span>태안 명품 블랙</span>
+                                    <span>🪙400</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Section: Roof Decoration -->
+                        <div class="bg-amber-50/50 p-2 border-2 border-[#4a3728] rounded-xl">
+                            <h3 class="text-xs font-bold text-amber-900 mb-2">🐤 루프 액세서리</h3>
+                            <div class="grid grid-cols-2 gap-1.5 text-xs">
+                                <button onclick="buyCustom('acc', 'none', 0)" class="p-2 border border-gray-300 rounded bg-gray-100 text-gray-700 font-bold flex justify-between items-center">
+                                    <span>해제</span>
+                                    <span>보유</span>
+                                </button>
+                                <button onclick="buyCustom('acc', 'duck', 150)" id="shop-acc-duck" class="p-2 border border-gray-300 rounded bg-amber-100 text-amber-800 font-bold flex justify-between items-center">
+                                    <span>러버덕 🐤</span>
+                                    <span>🪙150</span>
+                                </button>
+                                <button onclick="buyCustom('acc', 'flower', 250)" id="shop-acc-flower" class="p-2 border border-gray-300 rounded bg-emerald-50 text-emerald-800 font-bold flex justify-between items-center">
+                                    <span>새싹 잎 🌱</span>
+                                    <span>🪙250</span>
+                                </button>
+                                <button onclick="buyCustom('acc', 'crown', 500)" id="shop-acc-crown" class="p-2 border border-gray-300 rounded bg-yellow-50 text-yellow-800 font-bold flex justify-between items-center">
+                                    <span>황금 왕관 👑</span>
+                                    <span>🪙500</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Section: Performance Upgrades -->
+                        <div class="bg-amber-50/50 p-2 border-2 border-[#4a3728] rounded-xl col-span-1 md:col-span-2">
+                            <h3 class="text-xs font-bold text-amber-900 mb-2">⚙️ 차량 성능 강화</h3>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <button onclick="buyCustom('perf', 'patience', 300)" id="shop-perf-patience" class="p-2.5 border border-gray-300 rounded bg-rose-50 text-rose-800 font-bold flex flex-col items-center">
+                                    <span class="text-sm">🛋️ 편안한 쿠션 침대 시트</span>
+                                    <span class="text-[10px] text-gray-500 font-normal">손님 피로도가 25% 덜 까입니다</span>
+                                    <span class="mt-1 bg-rose-200 px-2 py-0.5 rounded-full font-bold">🪙 300</span>
+                                </button>
+                                <button onclick="buyCustom('perf', 'speed', 350)" id="shop-perf-speed" class="p-2.5 border border-gray-300 rounded bg-indigo-50 text-indigo-800 font-bold flex flex-col items-center">
+                                    <span class="text-sm">🚀 터보 하이패스 엔진</span>
+                                    <span class="text-[10px] text-gray-500 font-normal">최대 주행 속도가 증가합니다</span>
+                                    <span class="mt-1 bg-indigo-200 px-2 py-0.5 rounded-full font-bold">🪙 350</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Footer tip -->
+                <div class="text-center">
+                    <p class="text-[10px] text-[#4a3728] bg-amber-100 rounded-lg py-1">💡 획득한 돈(🪙)과 주민 만족도(LP)를 많이 쌓을수록 더 특별한 파츠들이 입고됩니다!</p>
+                </div>
+            </section>
+
+            <!-- 6. MISSION SUMMARY SCREEN (Pop-up styled) -->
+            <section id="screen-summary" class="hidden absolute inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+                <div class="bg-white rounded-3xl border-4 border-[#4a3728] w-full max-w-sm p-6 text-center shadow-2xl relative transform scale-100 transition-all">
+                    
+                    <div id="summary-success-icon" class="text-5xl mb-2">🎉</div>
+                    <h3 id="summary-title" class="text-2xl font-bold text-[#4a3728] mb-1">배달 성공해유!</h3>
+                    <p id="summary-desc" class="text-sm text-gray-600 mb-6">"아유 고맙소 기사님. 한숨 덜었슈!"</p>
+
+                    <!-- Reward detail rows -->
+                    <div class="bg-[#fcfbf7] border-2 border-[#4a3728] rounded-2xl p-4 mb-6 space-y-3 text-sm font-bold text-[#4a3728]">
+                        <div class="flex justify-between items-center">
+                            <span>💵 운행 기본 수당</span>
+                            <span class="text-amber-600" id="sum-money">+150원</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>❤️ 주민 만족도 (LP)</span>
+                            <span class="text-rose-500" id="sum-satisfaction">+3 LP</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-200 pt-2 text-xs font-normal text-gray-400">
+                            <span>손님 피로 잔여도</span>
+                            <span id="sum-patience">80%</span>
+                        </div>
+                    </div>
+
+                    <button onclick="closeSummaryAndGoMap()" class="w-full btn-retro bg-[#ffd254] text-[#4a3728] text-lg font-bold py-3 rounded-2xl">
+                        확인 (마을 지도로) 🗺️
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Message toast popup inside game -->
+        <div id="toast-message" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#4a3728] text-white text-xs px-4 py-2 rounded-full border-2 border-white z-50 shadow-lg text-center font-bold">
+            메시지가 표시되는 창입니다.
+        </div>
+    </div>
+
+    <!-- Bottom developer info & manual controls hint -->
+    <div class="mt-4 text-center text-xs text-[#6d513d] space-y-1 max-w-md">
+        <p>🎮 <b>키보드 제어:</b> 왼쪽 방향키(◀) / 오른쪽 방향키(▶) 또는 [A], [D] 키를 누르세요.</p>
+        <p>🎨 <i>태안군 실거주 소외지 도로를 아기자기하게 재해석한 기획 시뮬레이션입니다.</i></p>
+    </div>
+
+    <script>
+        // Tone.js cute procedural game audio
+        let synthEngine = null;
+        let synthGibberish = null;
+        let isMuted = false;
+
+        function initAudio() {
+            try {
+                // Background quiet engine sound
+                synthEngine = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.1, decay: 0.2, sustain: 0.4, release: 0.5 }
+                }).toDestination();
+                synthEngine.volume.value = -25; // Quiet background hum
+
+                // Cute high synth for gibberish talking
+                synthGibberish = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.05, decay: 0.1, sustain: 0, release: 0.1 }
+                }).toDestination();
+                synthGibberish.volume.value = -10;
+            } catch(e) {
+                console.log("Audio contexts couldn't start automatically:", e);
+            }
+        }
+
+        function playGibberishSound() {
+            if (!synthGibberish) return;
+            // Generate standard "Tomodachi" Nintendo style random high pitch babble notes
+            const notes = ["C5", "D5", "E5", "F5", "G5", "A5", "B5"];
+            const randomNote = notes[Math.floor(Math.random() * notes.length)];
+            const duration = "16n";
+            try {
+                synthGibberish.triggerAttackRelease(randomNote, duration);
+            } catch (err) {}
+        }
+
+        function playBeep(high = true) {
+            if (!synthGibberish) return;
+            try {
+                synthGibberish.triggerAttackRelease(high ? "G6" : "C4", "8n");
+            } catch (err) {}
+        }
+
+        // Game DB: Missions representing remote locations in Taean
+        const MISSIONS = [
+            {
+                id: 1,
+                village: "원북면 신두리 모래언덕",
+                passenger: {
+                    name: "남명우 옹 (82)",
+                    intro: "모래바람 부는 날에는 무릎이 쑤신디 마침 잘 왔슈! 근처 약국에 약 타러 가야 허는디 버스가 하루 두 대밖에 없어 고생혔네유.",
+                    outro: "아이고 젊은이 덕분에 무사히 왔네유! 조심해서 가셔유.",
+                    avatar: { hair: '#9ca3af', eyes: '•_•', blush: true, hat: 'straw' }
+                },
+                distance: 120,
+                difficulty: "쉬움",
+                rewardMoney: 180,
+                rewardLP: 3,
+                reqLP: 0,
+                bgColor: "#fef08a", // sand dunes feel
+                obstacles: ["crab", "pothole"]
+            },
+            {
+                id: 2,
+                village: "안면도 깊은 솔밭길",
+                passenger: {
+                    name: "지정숙 여사 (71)",
+                    intro: "안면 고추 농사 수확 철인데 고장 난 경운기 고치러 읍내 가야 혀. 얼른 내 짐칸에 고추 박스 싣고 달려 줍쇼!",
+                    outro: "고추 박스 상하지 않게 얌전히 운전 잘 허는구만! 여기 일삯이유.",
+                    avatar: { hair: '#4b5563', eyes: '^.^', blush: true, hat: 'flower' }
+                },
+                distance: 180,
+                difficulty: "보통",
+                rewardMoney: 240,
+                rewardLP: 5,
+                reqLP: 5,
+                bgColor: "#86efac", // green forest feel
+                obstacles: ["tractor", "pothole", "deer"]
+            },
+            {
+                id: 3,
+                village: "소원면 파도리 갯마을",
+                passenger: {
+                    name: "박동수 아재 (65)",
+                    intro: "이봐유! 바다 물때 맞춰서 만리포 선착장까지 가야 배를 타는디, 내 사륜바이크가 퍼졌슈. 나 좀 빨리 태워주소!",
+                    outro: "아이구 고마워유! 배 안 놓치고 무사히 일 나갈 수 있겠슈!",
+                    avatar: { hair: '#374151', eyes: '🕶️_🕶️', blush: false, hat: 'cap' }
+                },
+                distance: 220,
+                difficulty: "어려움",
+                rewardMoney: 320,
+                rewardLP: 7,
+                reqLP: 12,
+                bgColor: "#bae6fd", // ocean wave feel
+                obstacles: ["crab", "pothole", "wildboar"]
+            },
+            {
+                id: 4,
+                village: "고남면 최남단 영목포구",
+                passenger: {
+                    name: "할머니 정끝순 (88)",
+                    intro: "아이고 우리 손주가 대전서 태안터미널까지 내려왔다는디 영목항 구석이라 갈 편이 없어 동동 굴렀슈. 손주 만나러 가자우!",
+                    outro: "고마워유! 우리 귀여운 손주 얼굴 보니 이제야 소원이 풀리네유. 이거 가져가유.",
+                    avatar: { hair: '#e5e7eb', eyes: '◉_◉', blush: true, hat: 'none' }
+                },
+                distance: 260,
+                difficulty: "매우 어려움",
+                rewardMoney: 450,
+                rewardLP: 10,
+                reqLP: 22,
+                bgColor: "#fda4af", // deep sunset feel
+                obstacles: ["tractor", "pothole", "deer", "wildboar"]
+            }
+        ];
+
+        // Game State Engine
+        let state = {
+            money: 300,
+            satisfaction: 0,
+            ownedColors: ['yellow'],
+            ownedAccs: ['none'],
+            equippedColor: 'yellow',
+            equippedAcc: 'none',
+            hasPatienceUpgrade: false,
+            hasSpeedUpgrade: false,
+            selectedMissionId: null,
+            activeMission: null,
+            dialogueStep: 0, // 0: intro, 1: outro
+        };
+
+        // Driving Game Loop & Canvas context
+        let canvas = document.getElementById('driving-canvas');
+        let ctx = canvas.getContext('2d');
+        let keys = {};
+        let animationId = null;
+
+        // Player physics
+        let player = {
+            x: 0,
+            y: 0,
+            width: 45,
+            height: 70,
+            speedX: 0,
+            targetSpeedX: 0,
+            maxSpeed: 5,
+        };
+
+        let obstacles = [];
+        let scenery = [];
+        let roadOffset = 0;
+        let distanceDriven = 0;
+        let totalDistance = 1000; // units
+        let levelIsActive = false;
+        let passengerPatience = 100;
+        let backgroundScrollSpeed = 3;
+
+        window.onload = function() {
+            // Setup mobile input bindings
+            setupMobileInputs();
+            // Render initial shop elements
+            updateShopUI();
+            // Start loading state
+            loadStats();
+            // Render map
+            renderMap();
+        };
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        function loadStats() {
+            document.getElementById('stat-money').textContent = state.money;
+            document.getElementById('stat-satisfaction').textContent = state.satisfaction;
+            updateShopUI();
+        }
+
+        function saveStats() {
+            document.getElementById('stat-money').textContent = state.money;
+            document.getElementById('stat-satisfaction').textContent = state.satisfaction;
+        }
+
+        function startGame() {
+            // Trigger audio initialize on first click
+            Tone.start();
+            initAudio();
+            playBeep(true);
+            
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-map').classList.remove('hidden');
+            showToast("🚗 태안 해피 택시 영업을 시작합니다!");
+        }
+
+        function drawAvatarSVG(avatar) {
+            // Creates dynamic funny stylized face SVGs matching 'Tomodachi Life' aesthetic
+            let hairMarkup = '';
+            if (avatar.hair) {
+                hairMarkup = `<circle cx="50" cy="45" r="32" fill="${avatar.hair}" />
+                             <rect x="25" y="15" width="50" height="25" fill="${avatar.hair}" rx="8" />`;
+            }
+
+            let hatMarkup = '';
+            if (avatar.hat === 'straw') {
+                hatMarkup = `<ellipse cx="50" cy="22" rx="36" ry="10" fill="#fef08a" stroke="#4a3728" stroke-width="2"/>
+                             <path d="M30,22 Q50,-10 70,22 Z" fill="#eab308" stroke="#4a3728" stroke-width="2"/>`;
+            } else if (avatar.hat === 'flower') {
+                hatMarkup = `<circle cx="50" cy="18" r="8" fill="#f43f5e"/>
+                             <circle cx="44" cy="12" r="5" fill="#ec4899"/>
+                             <circle cx="56" cy="12" r="5" fill="#ec4899"/>
+                             <circle cx="50" cy="25" r="4" fill="#34d399"/>`;
+            } else if (avatar.hat === 'cap') {
+                hatMarkup = `<path d="M 20 28 A 20 20 0 0 1 80 28" fill="#3b82f6" stroke="#4a3728" stroke-width="2" />
+                             <rect x="50" y="24" width="36" height="5" fill="#2563eb" rx="2" stroke="#4a3728" stroke-width="1.5" />`;
+            }
+
+            let blushMarkup = avatar.blush ? `<ellipse cx="32" cy="58" rx="6" ry="3" fill="#f87171" opacity="0.6"/>
+                                              <ellipse cx="68" cy="58" rx="6" ry="3" fill="#f87171" opacity="0.6"/>` : '';
+
+            return `
+                <svg width="100" height="100" viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Base Hair back -->
+                    ${hairMarkup}
+                    <!-- Face Base -->
+                    <circle cx="50" cy="52" r="26" fill="#fed7aa" stroke="#4a3728" stroke-width="3" />
+                    <!-- Eyes & Mouth -->
+                    <text x="50" y="55" font-family="sans-serif" font-weight="bold" font-size="14" fill="#4a3728" text-anchor="middle" letter-spacing="4">${avatar.eyes}</text>
+                    <!-- Blush -->
+                    ${blushMarkup}
+                    <path d="M44,61 Q50,68 56,61" fill="none" stroke="#4a3728" stroke-width="3" stroke-linecap="round"/>
+                    <!-- Hat -->
+                    ${hatMarkup}
+                </svg>
+            `;
+        }
+
+        function renderMap() {
+            const container = document.getElementById('map-markers-container');
+            container.innerHTML = '';
+
+            // Layout coordinates mapped visual-friendly on 2D map
+            const coords = [
+                { id: 1, top: '25%', left: '35%' }, // Sinduri
+                { id: 2, top: '55%', left: '48%' }, // Anmyeondo
+                { id: 3, top: '40%', left: '20%' }, // Padori
+                { id: 4, top: '80%', left: '70%' }, // Yeongmok
+            ];
+
+            MISSIONS.forEach(mission => {
+                const mapPos = coords.find(c => c.id === mission.id);
+                if (!mapPos) return;
+
+                const isLocked = state.satisfaction < mission.reqLP;
+
+                // Create marker container
+                const markerBtn = document.createElement('button');
+                markerBtn.style.top = mapPos.top;
+                markerBtn.style.left = mapPos.left;
+                markerBtn.className = `absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group transition-all duration-300`;
+                
+                // Active / Locked visuals
+                const activeColor = isLocked ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:scale-110';
+                
+                markerBtn.innerHTML = `
+                    <div class="relative flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center font-extrabold text-white shadow-lg ${activeColor}">
+                            ${isLocked ? '🔒' : '❗'}
+                        </div>
+                        <div class="absolute -bottom-6 bg-[#4a3728] text-white text-[9px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shadow-sm border border-white">
+                            ${mission.village.split(" ")[1] || mission.village}
+                        </div>
+                    </div>
+                `;
+
+                if (!isLocked) {
+                    markerBtn.onclick = () => selectMission(mission.id);
+                } else {
+                    markerBtn.onclick = () => {
+                        playBeep(false);
+                        showToast(`🔒 마을 소통 만족도 ${mission.reqLP} LP 이상이어야 열립니다!`);
+                    };
+                }
+
+                container.appendChild(markerBtn);
+            });
+        }
+
+        function selectMission(id) {
+            playBeep(true);
+            state.selectedMissionId = id;
+            const mission = MISSIONS.find(m => m.id === id);
+            
+            // Highlight container card
+            const detailContainer = document.getElementById('mission-card-content');
+            
+            detailContainer.innerHTML = `
+                <div class="space-y-2">
+                    <span class="inline-block text-[10px] bg-red-100 text-red-700 font-extrabold px-2 py-0.5 rounded border border-red-300">
+                        소외 지수 높은 지역 🏡
+                    </span>
+                    <h3 class="text-lg font-extrabold text-[#4a3728]">${mission.village}</h3>
+                    
+                    <div class="flex items-center gap-2 bg-yellow-50 p-2 rounded-xl border border-yellow-200 text-xs">
+                        <span class="text-lg">👴👵</span>
+                        <div class="text-left">
+                            <p class="font-bold">신청 이웃: ${mission.passenger.name}</p>
+                            <p class="text-gray-500 truncate max-w-[200px]">"${mission.passenger.intro.substring(0, 20)}..."</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <div class="bg-blue-50 p-1.5 rounded-lg text-[#4a3728] text-center">
+                            <span class="block text-[9px] text-blue-500">지급 상금</span>
+                            <span class="font-bold">🪙 ${mission.rewardMoney}원</span>
+                        </div>
+                        <div class="bg-rose-50 p-1.5 rounded-lg text-[#4a3728] text-center">
+                            <span class="block text-[9px] text-rose-500">획득 만족도</span>
+                            <span class="font-bold">❤️ +${mission.rewardLP} LP</span>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-right font-bold text-gray-400 pt-1">
+                        목적 주행거리: ${mission.distance}km | 난이도: <span class="text-amber-600">${mission.difficulty}</span>
+                    </div>
+                </div>
+            `;
+
+            // Enable Accept Button
+            const acceptBtn = document.getElementById('btn-accept-mission');
+            acceptBtn.disabled = false;
+            acceptBtn.className = "w-full btn-retro bg-[#ffd254] hover:bg-[#ffc629] text-[#4a3728] font-bold py-2 px-4 rounded-xl";
+        }
+
+        function acceptMission() {
+            if (!state.selectedMissionId) return;
+            const mission = MISSIONS.find(m => m.id === state.selectedMissionId);
+            state.activeMission = mission;
+            
+            // Initialize dialogue state
+            state.dialogueStep = 0;
+            
+            document.getElementById('screen-map').classList.add('hidden');
+            document.getElementById('screen-dialogue').classList.remove('hidden');
+
+            // Set dialog details
+            document.getElementById('dialogue-village-tag').textContent = mission.village;
+            document.getElementById('passenger-name-tag').textContent = mission.passenger.name;
+            document.getElementById('passenger-avatar-box').innerHTML = drawAvatarSVG(mission.passenger.avatar);
+            
+            // Print typewriter effect dialogue
+            typeWriter(mission.passenger.intro, "dialogue-speech-text");
+            
+            document.getElementById('btn-dialogue-action').textContent = "태안 해피택시, 출발할게유! 🚕";
+        }
+
+        // Typewriter effect mimicking playful Tomodachi voice
+        let typewriterTimeout;
+        function typeWriter(text, elementId) {
+            clearTimeout(typewriterTimeout);
+            const element = document.getElementById(elementId);
+            element.textContent = "";
+            let i = 0;
+            
+            function nextChar() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    
+                    // Procedural sound effects
+                    if (Math.random() > 0.4) {
+                        playGibberishSound();
+                    }
+                    
+                    typewriterTimeout = setTimeout(nextChar, 40);
+                }
+            }
+            nextChar();
+        }
+
+        function advanceDialogue() {
+            if (state.dialogueStep === 0) {
+                // Intro done, now starting driving gameplay
+                playBeep(true);
+                document.getElementById('screen-dialogue').classList.add('hidden');
+                document.getElementById('screen-gameplay').classList.remove('hidden');
+                startDrivingLevel();
+            } else {
+                // Outro conversation is done, collect rewards
+                collectMissionRewards();
+            }
+        }
+
+        function startDrivingLevel() {
+            levelIsActive = true;
+            passengerPatience = 100;
+            distanceDriven = 0;
+            totalDistance = state.activeMission.distance * 10; // scale up for playable length
+            obstacles = [];
+            scenery = [];
+            player.x = canvas.width / 2 - player.width / 2;
+            player.speedX = 0;
+            player.targetSpeedX = 0;
+
+            // Handle speed upgrades
+            player.maxSpeed = state.hasSpeedUpgrade ? 8 : 5.5;
+
+            // Resize canvas to match dynamic container height/width
+            resizeCanvas();
+
+            // Populate some initial beautiful roadside scenery (Trees, Rocks, Shore houses)
+            for (let i = 0; i < 6; i++) {
+                spawnScenery(Math.random() * canvas.height);
+            }
+
+            // Keyboard listeners
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            // Audio hum active
+            if (synthEngine) {
+                try {
+                    synthEngine.triggerAttack("F2");
+                } catch(e){}
+            }
+
+            // Main driving animation cycle loop
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.parentNode.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            // Put player in appropriate lane
+            player.y = canvas.height - player.height - 30;
+            player.x = canvas.width / 2 - player.width / 2;
+        }
+
+        window.addEventListener('resize', () => {
+            if (levelIsActive) {
+                resizeCanvas();
+            }
+        });
+
+        // Keyboard handles
+        function handleKeyDown(e) {
+            keys[e.key] = true;
+            if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+                player.targetSpeedX = -player.maxSpeed;
+            }
+            if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+                player.targetSpeedX = player.maxSpeed;
+            }
+        }
+
+        function handleKeyUp(e) {
+            keys[e.key] = false;
+            if (!keys["ArrowLeft"] && !keys["a"] && !keys["A"] && !keys["ArrowRight"] && !keys["d"] && !keys["D"]) {
+                player.targetSpeedX = 0;
+            }
+        }
+
+        // On-screen touch setup
+        function setupMobileInputs() {
+            const leftBtn = document.getElementById('btn-left');
+            const rightBtn = document.getElementById('btn-right');
+
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.targetSpeedX = -player.maxSpeed;
+            });
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                player.targetSpeedX = 0;
+            });
+
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.targetSpeedX = player.maxSpeed;
+            });
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                player.targetSpeedX = 0;
+            });
+        }
+
+        function spawnScenery(forcedY = -40) {
+            const side = Math.random() > 0.5 ? 'left' : 'right';
+            const width = 30 + Math.random() * 40;
+            const x = side === 'left' 
+                ? Math.random() * (canvas.width * 0.15) 
+                : canvas.width - (Math.random() * (canvas.width * 0.15)) - width;
+
+            // Pick a cute hand drawn SVG/Emoji style background representation
+            const types = ['🌲', '🏡', '🌾', '⛵', '🌊'];
+            const randomType = types[Math.floor(Math.random() * types.length)];
+
+            scenery.push({
+                x: x,
+                y: forcedY,
+                emoji: randomType,
+                size: 24 + Math.random() * 16,
+                speed: backgroundScrollSpeed
+            });
+        }
+
+        function spawnObstacle() {
+            // Determine coordinate lanes
+            const roadWidth = canvas.width * 0.65;
+            const leftBound = canvas.width * 0.17;
+            const x = leftBound + Math.random() * (roadWidth - 40);
+
+            // Get available level obstacle list
+            const allowedTypes = state.activeMission.obstacles;
+            const type = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+
+            let obstacleObj = {
+                x: x,
+                y: -50,
+                width: 38,
+                height: 38,
+                speedY: backgroundScrollSpeed + (Math.random() * 1.5),
+                type: type,
+                angle: 0,
+                spinSpeed: Math.random() * 0.04 - 0.02
+            };
+
+            // Custom adjustments based on obstacle properties
+            if (type === 'tractor') {
+                obstacleObj.width = 45;
+                obstacleObj.height = 45;
+                obstacleObj.speedY = backgroundScrollSpeed - 0.8; // Tractors are slow!
+            } else if (type === 'crab') {
+                obstacleObj.width = 28;
+                obstacleObj.height = 28;
+                obstacleObj.speedY = backgroundScrollSpeed + 1; // Crabs scurry down fast!
+            }
+
+            obstacles.push(obstacleObj);
+        }
+
+        function gameLoop() {
+            if (!levelIsActive) return;
+
+            updatePhysics();
+            drawCanvas();
+
+            // Check level finish condition
+            if (distanceDriven >= totalDistance) {
+                finishDrivingLevel(true);
+                return;
+            }
+
+            // Check failed patience condition
+            if (passengerPatience <= 0) {
+                finishDrivingLevel(false);
+                return;
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function updatePhysics() {
+            // Smooth horizontal movement interpolation
+            player.speedX += (player.targetSpeedX - player.speedX) * 0.2;
+            player.x += player.speedX;
+
+            // Constrain player movement inside road width
+            const leftBoundary = canvas.width * 0.16;
+            const rightBoundary = canvas.width * 0.84 - player.width;
+            if (player.x < leftBoundary) player.x = leftBoundary;
+            if (player.x > rightBoundary) player.x = rightBoundary;
+
+            // Increment progression
+            distanceDriven += backgroundScrollSpeed * 0.3;
+            document.getElementById('distance-text').textContent = `${Math.max(0, Math.ceil((totalDistance - distanceDriven) / 10))}km`;
+
+            // Tick down passenger patience gradually over time
+            const baseFatigue = 0.05;
+            // Patience reduction multiplier if upgraded
+            const decayFactor = state.hasPatienceUpgrade ? 0.75 : 1.0;
+            passengerPatience -= baseFatigue * decayFactor;
+            document.getElementById('patience-bar').style.width = `${passengerPatience}%`;
+
+            // Scroll background road textures
+            roadOffset = (roadOffset + backgroundScrollSpeed) % 40;
+
+            // Handle spawn rates based on frame cycles
+            if (Math.random() < 0.04) {
+                spawnScenery();
+            }
+            if (Math.random() < 0.018) {
+                spawnObstacle();
+            }
+
+            // Update backgrounds
+            scenery.forEach(item => {
+                item.y += backgroundScrollSpeed;
+            });
+            // Cleanup out-of-screen scenery elements
+            scenery = scenery.filter(item => item.y < canvas.height + 40);
+
+            // Update obstacles
+            obstacles.forEach(obs => {
+                obs.y += obs.speedY;
+                obs.angle += obs.spinSpeed;
+
+                // Simple Box collision calculations
+                if (
+                    player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y
+                ) {
+                    // Trigger collision!
+                    triggerCollision(obs);
+                }
+            });
+            // Filter out of bound obstacles
+            obstacles = obstacles.filter(obs => obs.y < canvas.height + 50);
+        }
+
+        function triggerCollision(obstacle) {
+            // Filter hit obstacle instantly to avoid double triggers
+            obstacles = obstacles.filter(obs => obs !== obstacle);
+
+            // Damage passenger patience severely
+            passengerPatience = Math.max(0, passengerPatience - 18);
+            document.getElementById('patience-bar').style.width = `${passengerPatience}%`;
+
+            // Auditive and visual warning triggers
+            playBeep(false);
+            if (synthEngine) {
+                try {
+                    synthEngine.triggerAttackRelease("D1", "4n");
+                } catch(e){}
+            }
+
+            // Show screen visual flash impact
+            const crashOverlay = document.getElementById('crash-overlay');
+            crashOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                crashOverlay.classList.add('hidden');
+            }, 500);
+
+            showToast("💥 앗! 장애물에 부딪혔슈! 살살 몰아주셔유!");
+        }
+
+        function drawCanvas() {
+            // Draw Background environment base
+            ctx.fillStyle = state.activeMission.bgColor || '#cbd5e1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Road edges/Grass borders
+            ctx.fillStyle = '#475569';
+            // Main Road Lane Fill
+            ctx.fillRect(canvas.width * 0.15, 0, canvas.width * 0.70, canvas.height);
+
+            // Draw beautiful shore/shoulder lines
+            ctx.fillStyle = '#fef08a'; // Sand shoulders
+            ctx.fillRect(canvas.width * 0.15 - 8, 0, 8, canvas.height);
+            ctx.fillRect(canvas.width * 0.85, 0, 8, canvas.height);
+
+            // Draw Dashed white divider lane lines
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 20]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, -roadOffset);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+
+            // Draw roadside decorative sceneries
+            scenery.forEach(item => {
+                ctx.font = `${item.size}px sans-serif`;
+                ctx.textAlign = "center";
+                ctx.fillText(item.emoji, item.x, item.y);
+            });
+
+            // Draw dynamic game obstacles
+            obstacles.forEach(obs => {
+                ctx.save();
+                ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
+                ctx.rotate(obs.angle);
+
+                // Assign visually fitting emojis
+                let emojiStr = '🥔';
+                if (obs.type === 'pothole') emojiStr = '🕳️';
+                else if (obs.type === 'tractor') emojiStr = '🚜';
+                else if (obs.type === 'crab') emojiStr = '🦀';
+                else if (obs.type === 'deer') emojiStr = '🦌';
+                else if (obs.type === 'wildboar') emojiStr = '🐗';
+
+                ctx.font = `${obs.width * 1.1}px Arial`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(emojiStr, 0, 0);
+
+                ctx.restore();
+            });
+
+            // Draw the Player Taxi representation dynamically using Canvas
+            drawPlayerTaxi();
+        }
+
+        // Render fully customizable Taxi visuals based on purchased properties
+        function drawPlayerTaxi() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+
+            // Color palette maps
+            const colorMap = {
+                yellow: '#fbbf24',
+                sky: '#38bdf8',
+                pink: '#f472b6',
+                black: '#1e293b'
+            };
+            const taxiColor = colorMap[state.equippedColor] || '#fbbf24';
+
+            // Draw main taxi body
+            ctx.fillStyle = taxiColor;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, player.width, player.height, 12);
+            ctx.fill();
+            ctx.strokeStyle = '#4a3728';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Tires
+            ctx.fillStyle = '#374151';
+            ctx.fillRect(-4, 8, 4, 16);
+            ctx.fillRect(player.width, 8, 4, 16);
+            ctx.fillRect(-4, player.height - 24, 4, 16);
+            ctx.fillRect(player.width, player.height - 24, 4, 16);
+
+            // Front Windshield Glass window
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath();
+            ctx.roundRect(4, 12, player.width - 8, 14, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // Inside passengers indicator dots
+            ctx.fillStyle = '#4a3728';
+            ctx.beginPath();
+            ctx.arc(player.width / 3, 20, 3, 0, Math.PI * 2);
+            ctx.arc(player.width * 2 / 3, 20, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Rear Window
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(6, player.height - 18, player.width - 12, 6);
+
+            // Roof Sign / Taxi CAP
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.width / 2 - 12, player.height / 2 - 4, 24, 8);
+            ctx.strokeStyle = '#4a3728';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(player.width / 2 - 12, player.height / 2 - 4, 24, 8);
+            // Write "TAXI" label
+            ctx.fillStyle = '#ef4444';
+            ctx.font = "bold 6px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("TAXI", player.width / 2, player.height / 2);
+
+            // Add equipped Roof decorations
+            if (state.equippedAcc === 'duck') {
+                ctx.font = "16px sans-serif";
+                ctx.fillText("🐤", player.width / 2, player.height / 2 - 14);
+            } else if (state.equippedAcc === 'flower') {
+                ctx.font = "16px sans-serif";
+                ctx.fillText("🌱", player.width / 2, player.height / 2 - 14);
+            } else if (state.equippedAcc === 'crown') {
+                ctx.font = "16px sans-serif";
+                ctx.fillText("👑", player.width / 2, player.height / 2 - 14);
+            }
+
+            ctx.restore();
+        }
+
+        function finishDrivingLevel(success) {
+            levelIsActive = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            // Turn off engine audio noise
+            if (synthEngine) {
+                try {
+                    synthEngine.triggerRelease();
+                } catch(e){}
+            }
+
+            document.getElementById('screen-gameplay').classList.add('hidden');
+            
+            if (success) {
+                playBeep(true);
+                // Switch back to dialogue for outro speech before scoring
+                state.dialogueStep = 1;
+                document.getElementById('screen-dialogue').classList.remove('hidden');
+
+                // Outro Dialogue adjustments
+                document.getElementById('dialogue-village-tag').textContent = `${state.activeMission.village} 도착!`;
+                document.getElementById('dialogue-speech-text').textContent = "";
+                
+                typeWriter(state.activeMission.passenger.outro, "dialogue-speech-text");
+                document.getElementById('btn-dialogue-action').textContent = "수고하셨어유! 정산하기 🪙";
+            } else {
+                playBeep(false);
+                // Failed driving delivery (patience depleted)
+                document.getElementById('screen-map').classList.remove('hidden');
+                showToast("😢 손님의 멀미와 인내심이 바닥났습니다! 운전을 조금 더 천천히 다정하게 해주셔유.");
+            }
+        }
+
+        function collectMissionRewards() {
+            // Close dialogue screen
+            document.getElementById('screen-dialogue').classList.add('hidden');
+            
+            const mission = state.activeMission;
+            
+            // Calculate final scores based on remainder patience
+            const bonusMoney = Math.floor((passengerPatience / 100) * 50);
+            const totalEarnedMoney = mission.rewardMoney + bonusMoney;
+            const earnedLP = mission.rewardLP;
+
+            state.money += totalEarnedMoney;
+            state.satisfaction += earnedLP;
+
+            saveStats();
+
+            // Populate success summary popup card
+            document.getElementById('summary-success-icon').textContent = "🎉";
+            document.getElementById('summary-title').textContent = "배달 완수혔슈!";
+            document.getElementById('summary-desc').textContent = `"${mission.passenger.name} 님이 편안하게 모셔다 드린 것에 감사해 하십니다!"`;
+            document.getElementById('sum-money').textContent = `+${totalEarnedMoney}원 (보너스 포함)`;
+            document.getElementById('sum-satisfaction').textContent = `+${earnedLP} LP`;
+            document.getElementById('sum-patience').textContent = `${Math.ceil(passengerPatience)}%`;
+
+            document.getElementById('screen-summary').classList.remove('hidden');
+        }
+
+        function closeSummaryAndGoMap() {
+            playBeep(true);
+            document.getElementById('screen-summary').classList.add('hidden');
+            document.getElementById('screen-map').classList.remove('hidden');
+            
+            // Re-render and lock checks
+            renderMap();
+        }
+
+        function openShop() {
+            playBeep(true);
+            document.getElementById('screen-map').classList.add('hidden');
+            document.getElementById('screen-shop').classList.remove('hidden');
+            
+            updateShopUI();
+        }
+
+        function closeShop() {
+            playBeep(true);
+            document.getElementById('screen-shop').classList.add('hidden');
+            document.getElementById('screen-map').classList.remove('hidden');
+        }
+
+        function updateShopUI() {
+            // Renders selected visual taxi in preview
+            drawShopPreview();
+
+            // Check dynamic item locks/own state inside buttons
+            updateItemButtonState('color', 'sky', 200, 'shop-color-sky');
+            updateItemButtonState('color', 'pink', 300, 'shop-color-pink');
+            updateItemButtonState('color', 'black', 400, 'shop-color-black');
+
+            updateItemButtonState('acc', 'duck', 150, 'shop-acc-duck');
+            updateItemButtonState('acc', 'flower', 250, 'shop-acc-flower');
+            updateItemButtonState('acc', 'crown', 500, 'shop-acc-crown');
+
+            // Perf button state
+            const cushionBtn = document.getElementById('shop-perf-patience');
+            if (state.hasPatienceUpgrade) {
+                cushionBtn.innerHTML = "🛋️ 편안한 쿠션 침대 시트<br><span class='text-[10px] text-green-600 font-bold'>[장착 및 강화 완료]</span>";
+                cushionBtn.disabled = true;
+                cushionBtn.className = "p-2.5 border border-green-300 rounded bg-green-50 text-green-800 font-bold flex flex-col items-center cursor-not-allowed";
+            }
+            const speedBtn = document.getElementById('shop-perf-speed');
+            if (state.hasSpeedUpgrade) {
+                speedBtn.innerHTML = "🚀 터보 하이패스 엔진<br><span class='text-[10px] text-green-600 font-bold'>[장착 및 강화 완료]</span>";
+                speedBtn.disabled = true;
+                speedBtn.className = "p-2.5 border border-green-300 rounded bg-green-50 text-green-800 font-bold flex flex-col items-center cursor-not-allowed";
+            }
+        }
+
+        function updateItemButtonState(category, id, cost, elementId) {
+            const btn = document.getElementById(elementId);
+            if (!btn) return;
+
+            let owned = false;
+            let equipped = false;
+
+            if (category === 'color') {
+                owned = state.ownedColors.includes(id);
+                equipped = state.equippedColor === id;
+            } else if (category === 'acc') {
+                owned = state.ownedAccs.includes(id);
+                equipped = state.equippedAcc === id;
+            }
+
+            if (equipped) {
+                btn.innerHTML = `<span>장착 완료! 🟢</span>`;
+                btn.className = "p-2 border-2 border-emerald-500 rounded bg-emerald-100 text-emerald-800 font-bold flex justify-between items-center";
+            } else if (owned) {
+                btn.innerHTML = `<span>보유중 (선택)</span>`;
+                btn.className = "p-2 border border-blue-400 rounded bg-blue-50 text-blue-800 font-bold flex justify-between items-center";
+            } else {
+                btn.innerHTML = `<span>장착하기</span> <span>🪙${cost}</span>`;
+                btn.className = "p-2 border border-amber-300 rounded bg-[#fffdf5] text-amber-900 font-bold flex justify-between items-center hover:bg-amber-100";
+            }
+        }
+
+        function buyCustom(category, value, cost) {
+            let isOwned = false;
+            if (category === 'color') isOwned = state.ownedColors.includes(value);
+            else if (category === 'acc') isOwned = state.ownedAccs.includes(value);
+
+            if (isOwned) {
+                // Instantly equip without paying
+                playBeep(true);
+                if (category === 'color') state.equippedColor = value;
+                if (category === 'acc') state.equippedAcc = value;
+                showToast("🎨 택시 스타일을 변경했습니다!");
+            } else {
+                // Attempt to purchase
+                if (category === 'perf') {
+                    // Unique permanent performance upgrades logic
+                    if (state.money < cost) {
+                        playBeep(false);
+                        showToast("🪙 돈이 모자라유! 의뢰를 완수해 돈을 벌고 오셔유.");
+                        return;
+                    }
+                    playBeep(true);
+                    state.money -= cost;
+                    if (value === 'patience') state.hasPatienceUpgrade = true;
+                    if (value === 'speed') state.hasSpeedUpgrade = true;
+                    showToast("🛠️ 차량 성능 업그레이드 완료!");
+                } else {
+                    if (state.money < cost) {
+                        playBeep(false);
+                        showToast("🪙 돈이 부족해서 살 수 없슈!");
+                        return;
+                    }
+                    playBeep(true);
+                    state.money -= cost;
+                    if (category === 'color') {
+                        state.ownedColors.push(value);
+                        state.equippedColor = value;
+                    } else if (category === 'acc') {
+                        state.ownedAccs.push(value);
+                        state.equippedAcc = value;
+                    }
+                    showToast("🎁 새 부품을 구매하여 장착했습니다!");
+                }
+            }
+
+            saveStats();
+            updateShopUI();
+        }
+
+        function drawShopPreview() {
+            const previewContainer = document.getElementById('taxi-preview-element');
+            
+            // Re-render the side view vector layout taxi matching state styles
+            const colorMap = {
+                yellow: '#fbbf24',
+                sky: '#38bdf8',
+                pink: '#f472b6',
+                black: '#1e293b'
+            };
+            const col = colorMap[state.equippedColor] || '#fbbf24';
+
+            let accEmoji = '';
+            if (state.equippedAcc === 'duck') accEmoji = '🐤';
+            else if (state.equippedAcc === 'flower') accEmoji = '🌱';
+            else if (state.equippedAcc === 'crown') accEmoji = '👑';
+
+            previewContainer.innerHTML = `
+                <div class="relative w-40 h-20 flex flex-col items-center justify-end">
+                    <!-- Accessory float -->
+                    <div class="absolute -top-1 left-[55px] text-2xl z-10 animate-bounce" style="animation-duration: 2s;">
+                        ${accEmoji}
+                    </div>
+
+                    <!-- Side-profile Taxi Shape -->
+                    <div class="relative w-36 h-12 bg-[#4a3728] rounded-xl flex flex-col justify-end p-0.5">
+                        <div class="w-full h-full rounded-lg relative flex justify-between items-end" style="background-color: ${col};">
+                            
+                            <!-- Windshield & Glass cabins side profile -->
+                            <div class="absolute bottom-6 left-6 w-20 h-6 bg-[#cbd5e1] border-2 border-[#4a3728] rounded-t-lg flex">
+                                <div class="w-1/2 border-r border-[#4a3728]"></div>
+                            </div>
+
+                            <!-- Taxi cap on side center -->
+                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-white border-2 border-[#4a3728] px-2 text-[6px] font-bold text-red-500 rounded">
+                                TAXI
+                            </div>
+
+                            <!-- Yellow headlights side -->
+                            <div class="w-3 h-2 bg-yellow-300 rounded-l absolute left-0 bottom-2 border border-[#4a3728]"></div>
+                            <!-- Tail light side -->
+                            <div class="w-2 h-3 bg-red-500 rounded-r absolute right-0 bottom-1.5 border border-[#4a3728]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Wheels bottom layout -->
+                    <div class="w-32 flex justify-between px-3 -mt-2 z-10">
+                        <div class="w-6 h-6 rounded-full bg-zinc-800 border-2 border-white flex items-center justify-center">
+                            <div class="w-2.5 h-2.5 rounded-full bg-gray-400"></div>
+                        </div>
+                        <div class="w-6 h-6 rounded-full bg-zinc-800 border-2 border-white flex items-center justify-center">
+                            <div class="w-2.5 h-2.5 rounded-full bg-gray-400"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

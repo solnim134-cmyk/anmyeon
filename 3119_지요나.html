@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>갯벌에서 살아남기: 야간 해루질러의 운명 3D</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 아이콘 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Do Hyeon & Noto Sans KR) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #02070c; /* 깊은 밤바다의 청적색 */
+            color: #f1f5f9;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .title-font {
+            font-family: 'Do Hyeon', sans-serif;
+        }
+        /* 터치 및 캔버스 스타일링 */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* 조준점(Reticle) 효과 - 데스크톱 조작감 극대화 */
+        .reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(45, 212, 191, 0.5); /* 바다색 청록 조준선 */
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 30;
+            transition: all 0.15s ease;
+        }
+        .reticle::after {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 4px;
+            background-color: #2dd4bf;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body class="w-screen h-screen p-0 m-0 overflow-hidden select-none">
+
+    <!-- 게임 중앙 컨테이너 (전체 화면 데스크톱 뷰포트 지원) -->
+    <div id="game-viewport" class="relative w-full h-full bg-[#020b12] overflow-hidden flex flex-col justify-between">
+        
+        <!-- 인트로 화면 (데스크톱 최적화 2단 분할 레이아웃) -->
+        <div id="screen-intro" class="absolute inset-0 z-50 flex flex-col justify-between p-8 bg-gradient-to-br from-[#031525] via-[#09151c] to-[#010408] overflow-y-auto">
+            <!-- 헤더 타이틀 부근 -->
+            <div class="text-center md:text-left md:flex md:items-center md:justify-between border-b border-teal-950/60 pb-6">
+                <div>
+                    <div class="text-teal-400 font-bold tracking-widest text-xs mb-2 uppercase flex items-center justify-center md:justify-start gap-2">
+                        <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+                        실감형 1인칭 3D 야간 해루질 안전 캠페인 시뮬레이터 (웹 버젼)
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl title-font text-cyan-400 tracking-wider leading-tight">
+                        갯벌에서 살아남기
+                        <span class="text-teal-100 text-xl sm:text-2xl inline-block ml-3 opacity-90 font-sans font-bold">: 야간 해루질러의 운명 3D</span>
+                    </h1>
+                </div>
+                <div class="mt-4 md:mt-0 text-slate-400 text-xs md:text-sm md:text-right max-w-md">
+                    "주위를 직접 둘러보고 살아남을 단서를 수색하세요.<br class="hidden md:inline">
+                    실시간으로 차오르는 물길 속에서 육지로 가는 단서를 찾아내야 합니다."
+                </div>
+            </div>
+
+            <div class="w-full max-w-5xl mx-auto mt-4 px-2">
+                <button onclick="openSafetyModal()" class="w-full py-3 bg-teal-950/80 hover:bg-teal-900 border border-teal-500/30 text-teal-300 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-book-open text-cyan-400"></i> 어민·관광객 필수! 갯벌 지역 상생 및 고립 예방 백과 열기
+                </button>
+            </div>
+
+            <!-- 메인 가이드 콘텐츠 (좌측 가이드, 우측 키보드 작동법) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto py-8 max-w-5xl mx-auto w-full">
+                <!-- 가이드 1: 안전 수칙 설명 -->
+                <div class="bg-[#0b1c24]/85 border border-teal-900/40 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="text-cyan-400 font-bold text-base mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i> 조작 및 탐색 지침
+                        </div>
+                        <ul class="text-sm text-teal-100/80 space-y-3.5 list-disc pl-5">
+                            <li>화면을 <strong>드래그(마우스/트랙패드)</strong>하거나 키보드 방향키로 1인칭 시점을 조작합니다.</li>
+                            <li>손전등 불빛이 닿는 곳에 있는 물체나 빛나는 단서를 <strong>클릭</strong>하여 상호작용합니다.</li>
+                            <li>실제 상황과 같이 아이템을 전략적으로 챙겨야 위기 대처가 가능합니다.</li>
+                            <li>불필요한 욕심(가득 찬 조과통)은 생존 대피 속도를 현저히 늦춥니다.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 가이드 2: 크롬북/데스크톱용 키보드 단축키 안내 -->
+                <div class="bg-[#0b1c24]/85 border border-teal-900/40 p-6 rounded-2xl">
+                    <div class="text-cyan-400 font-bold text-base mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-keyboard"></i> 크롬북 단축키 완벽 지원
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-teal-100/80">
+                        <div class="flex items-center gap-2.5 bg-black/40 p-3 rounded-xl border border-teal-950">
+                            <span class="px-2 py-1 bg-teal-900 border border-teal-500/30 rounded text-xs font-mono text-white">W / ↑</span>
+                            <span>손전등 위로</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 bg-black/40 p-3 rounded-xl border border-teal-950">
+                            <span class="px-2 py-1 bg-teal-900 border border-teal-500/30 rounded text-xs font-mono text-white">S / ↓</span>
+                            <span>손전등 아래로</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 bg-black/40 p-3 rounded-xl border border-teal-950">
+                            <span class="px-2 py-1 bg-teal-900 border border-teal-500/30 rounded text-xs font-mono text-white">A / ←</span>
+                            <span>시선 왼쪽 회전</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 bg-black/40 p-3 rounded-xl border border-teal-950">
+                            <span class="px-2 py-1 bg-teal-900 border border-teal-500/30 rounded text-xs font-mono text-white">D / →</span>
+                            <span>시선 오른쪽 회전</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>트랙패드 드래그가 어색하다면, 키보드 방향키를 누르며 탐색해보세요!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 시작 버튼 배치 (스크롤 안전지대 확보) -->
+            <div class="w-full max-w-md mx-auto pt-4">
+                <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-slate-950 font-extrabold text-lg rounded-xl shadow-lg transition-all transform active:scale-95 touch-target title-font tracking-wider">
+                    <i class="fa-solid fa-play mr-2"></i>3D 시뮬레이터 시작 (PC/크롬북 최적화)
+                </button>
+            </div>
+        </div>
+
+        <!-- 게임 플레이 상단 헤더 (플로팅 바 형태) -->
+        <div id="game-header" class="hidden absolute top-4 left-4 right-4 z-40 px-6 py-4 bg-[#020b12]/90 border border-teal-950 rounded-2xl flex items-center justify-between pointer-events-auto shadow-xl backdrop-blur-md">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+                <span id="stage-badge" class="text-sm text-cyan-400 font-bold tracking-widest uppercase">STAGE 1</span>
+            </div>
+
+            <!-- 중간 실시간 미션 가이드 메시지 (상시 노출되도록 헤더에 편입) -->
+            <div class="hidden md:flex flex-col items-center max-w-md text-center">
+                <h3 id="mission-title" class="text-cyan-400 font-black text-sm">장비 수색</h3>
+                <p id="mission-desc" class="text-xs text-slate-300 mt-1">테이블을 둘러보고, 필수 도구 3가지를 클릭해 담으세요.</p>
+            </div>
+
+            <!-- 실시간 생존 타이머 -->
+            <div class="flex items-center gap-3 bg-black/60 px-4 py-2 rounded-full border border-teal-900/60">
+                <i class="fa-solid fa-clock-rotate-left text-cyan-400 text-sm"></i>
+                <span class="text-xs text-slate-400">밀물 범람까지:</span>
+                <span id="global-timer" class="text-base font-black font-mono text-cyan-400">03:00</span>
+            </div>
+        </div>
+
+        <!-- 3D 렌더 영역 및 HUD 인터페이스 -->
+        <div id="screen-game" class="hidden relative w-full h-full flex flex-col justify-between overflow-hidden">
+            <!-- 3D 렌더링 컨테이너 -->
+            <div id="canvas-container" class="absolute inset-0 z-10 w-full h-full"></div>
+            
+            <!-- 조준 레티클 (조작 힌트) -->
+            <div class="reticle"></div>
+
+            <!-- 모바일 미션 가이드 패널 (작은 뷰포트 대응용) -->
+            <div class="md:hidden absolute top-20 left-4 right-4 z-30 bg-[#050f14]/90 border border-teal-950 p-3 rounded-xl pointer-events-none text-center">
+                <h3 id="mission-title-mobile" class="text-cyan-400 font-bold text-xs">장비 수색</h3>
+                <p id="mission-desc-mobile" class="text-[11px] text-slate-300 mt-1">테이블을 드래그하여 필수 도구 3가지를 클릭해 담으세요.</p>
+            </div>
+
+            <!-- 하단 인벤토리 HUD 및 긴급 상호작용 지면 -->
+            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-xl px-4 flex flex-col gap-3">
+                <!-- 인벤토리 슬롯 (Stage 1에서 선택한 아이템이 들어옴) -->
+                <div class="flex justify-between gap-3 bg-[#030d14]/95 border border-teal-950 p-3 rounded-2xl backdrop-blur-md shadow-2xl">
+                    <div id="hud-slot-vest" class="relative flex-1 h-14 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-600 transition-all">
+                        <i class="fa-solid fa-life-ring text-lg mb-0.5"></i>
+                        <span class="text-[9px] scale-90 font-bold">구명조끼</span>
+                    </div>
+                    <div id="hud-slot-phone" onclick="usePhoneGPS()" class="relative flex-1 h-14 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-600 transition-all cursor-pointer hover:border-cyan-500/50">
+                        <i class="fa-solid fa-mobile-screen text-lg mb-0.5"></i>
+                        <span class="text-[9px] scale-90 font-bold">해로드 GPS</span>
+                    </div>
+                    <div id="hud-slot-whistle" onclick="blowWhistle()" class="relative flex-1 h-14 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-600 transition-all cursor-pointer hover:border-teal-500/50">
+                        <i class="fa-solid fa-volume-high text-lg mb-0.5"></i>
+                        <span class="text-[9px] scale-90 font-bold">안전호루라기</span>
+                    </div>
+                    <div id="hud-slot-bucket" onclick="discardBucket()" class="relative flex-1 h-14 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-600 transition-all cursor-pointer hover:border-rose-500/50">
+                        <i class="fa-solid fa-bucket text-lg mb-0.5"></i>
+                        <span class="text-[9px] scale-90 font-bold">조과통</span>
+                        <!-- 버릴 수 있음을 알리는 표시 -->
+                        <div id="bucket-discard-badge" class="hidden absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded-full animate-bounce">버리기</div>
+                    </div>
+                    <div id="hud-slot-salt" class="relative flex-1 h-14 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-600 transition-all">
+                        <i class="fa-solid fa-mortar-pestle text-lg mb-0.5"></i>
+                        <span class="text-[9px] scale-90 font-bold">맛소금</span>
+                    </div>
+                </div>
+
+                <!-- 갯골 탈출전용 비주얼 터치 패드 (Stage 4에서 나타남) -->
+                <div id="escape-touchpad" class="hidden bg-teal-950/90 border border-teal-500/30 p-4 rounded-2xl flex flex-col items-center gap-3 text-center animate-pulse shadow-xl">
+                    <div class="text-xs text-teal-400 font-bold"><i class="fa-solid fa-circle-exclamation"></i> 갯골 수렁에 빠져 몸이 무겁습니다! 움직이려 할수록 가라앉습니다!</div>
+                    <div class="flex gap-3 w-full">
+                        <button onclick="performMudEscape('lean')" id="btn-lean" class="flex-1 py-3 bg-teal-800 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition-all shadow-md">1. 상체 뒤로 누워 체중 분산</button>
+                        <button onclick="performMudEscape('pedal')" id="btn-pedal" class="flex-1 py-3 bg-gray-800 text-gray-500 text-xs font-bold rounded-lg cursor-not-allowed transition-all shadow-md" disabled>2. 자전거 페달 구르기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 게임 엔딩 결과 화면 (넓은 대화면 최적화 분할 레이아웃) -->
+        <div id="screen-ending" class="hidden absolute inset-0 z-50 flex flex-col justify-between p-8 bg-[#03090e] overflow-y-auto">
+            <div class="text-center mt-4">
+                <span id="ending-badge" class="inline-block px-4 py-1.5 text-xs font-bold rounded-full mb-3">BAD ENDING</span>
+                <h1 id="ending-title" class="text-3xl md:text-5xl title-font text-white leading-tight">결과 타이틀</h1>
+                <p id="ending-desc" class="text-slate-300 text-sm md:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
+                    실패 또는 성공 상세 안내
+                </p>
+            </div>
+
+            <!-- 데스크톱용 와이드 세이프티 가이드 섹션 (2단 구조) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 max-w-5xl mx-auto w-full">
+                <!-- 핵심 생존 규칙 교육 박스 -->
+                <div id="campaign-education-box" class="bg-[#071821] border border-teal-950 p-6 rounded-2xl text-left">
+                    <h3 class="text-cyan-400 font-bold text-sm mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        야간 갯벌 생존 및 어촌 상생 5대 수칙!
+                    </h3>
+                    <ul class="text-xs md:text-sm text-slate-300 space-y-3">
+                        <li class="flex items-start gap-2.5">
+                            <span class="bg-teal-500/20 text-teal-300 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">1</span>
+                            <span>**구명조끼**와 **안전벨트를 멘 가슴장화**를 꼭 바르게 착용하세요. 벨트 미착용 가슴장화는 물 침수 시 하반신을 가라앉히는 덫이 됩니다.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="bg-teal-500/20 text-teal-300 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">2</span>
+                            <span>서해안 **대조기(사리) 기간**에는 밀물이 육지 러닝 속도보다 빠릅니다. 안내 알람 즉시 즉각 퇴거하세요.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="bg-teal-500/20 text-teal-300 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">3</span>
+                            <span>원클릭 위치 조난 신고 전송 및 안전 이표 경로 파악이 가능한 해경 추천 앱 **'해로드(HaeRoad)'**를 가동하세요.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="bg-teal-500/20 text-teal-300 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">4</span>
+                            <span>갯골 정체 시 위로 다리를 무리하게 빼려 마시고, **즉시 눕듯이 체중을 넓게 분산**해 자전거 페달 밟듯 밀어내며 빠져나오세요.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="bg-teal-500/20 text-teal-300 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">5</span>
+                            <span>어민들의 생계 터전인 **어촌계 공동 면허양식장 구역**에 무단 침입해 수산물을 불법 채취하는 행위를 절대로 금지합니다.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 서약 캠페인 및 참여 정보 입력 -->
+                <div class="bg-[#0b1a23] border border-teal-900/50 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-cyan-400 font-bold text-sm mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-file-signature"></i>
+                            생존 약속 서약 서명
+                        </h3>
+                        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                            나와 내 소중한 가족을 위해 밤바다 안전 약속에 서명해주세요. 서명하신 분들을 추첨하여 해양안전 굿즈 및 경품 기프티콘을 드립니다.
+                        </p>
+                    </div>
+
+                    <div id="safe-vow-form" class="bg-[#050f14] p-4 rounded-xl border border-cyan-500/20 text-center">
+                        <p class="text-xs text-cyan-400 font-bold mb-3">🌊 안전 해루질 서약 동참하고 경품 응모하기</p>
+                        <div class="flex gap-2 justify-center">
+                            <input id="user-phone-input" type="text" placeholder="이름 및 연락처 입력" class="bg-black border border-teal-950 text-xs px-3 py-2.5 rounded text-white flex-1 focus:outline-none focus:border-cyan-400">
+                            <button onclick="submitCampaignForm()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded">서약 제출</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 제어 단 버튼 그리드 -->
+            <div class="grid grid-cols-2 gap-4 max-w-md mx-auto w-full mb-4">
+                <button onclick="shareGame()" class="py-3.5 bg-gray-950 border border-teal-950 text-slate-200 text-sm font-semibold rounded-xl hover:bg-gray-900 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-share-nodes text-cyan-400"></i> 캠페인 공유
+                </button>
+                <button onclick="restartGame()" class="py-3.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white text-sm font-bold rounded-xl hover:from-teal-500 hover:to-teal-600 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> 다시 도전하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 하단 전도 지자체 로고 / 카피라이트 영역 -->
+        <div class="z-40 bg-[#040c12] py-3 px-6 text-center border-t border-teal-950/80 text-xs text-teal-700 flex items-center justify-between">
+            <span>대한민국 해양경찰청 x 안전어촌협회</span>
+            <span>Copyright 2026. All rights reserved.</span>
+        </div>
+    </div>
+
+    <!-- 토스트 피드백 메시지 -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-cyan-400 text-slate-950 px-4 py-2.5 rounded-full font-bold text-xs shadow-xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info"></i>
+        <span id="toast-text">안내 메시지</span>
+    </div>
+
+    <!-- 갯벌 지역 상생 및 안전 필수 지식 모달 -->
+    <div id="safety-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#0b1c24] border border-teal-500/30 w-full max-w-2xl rounded-2xl p-6 relative max-h-[85vh] overflow-y-auto shadow-2xl">
+            <button onclick="closeSafetyModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="border-b border-teal-950 pb-3 mb-4">
+                <h3 class="text-xl sm:text-2xl title-font text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-teal-400"></i> 갯벌 종사자·어민·관광객의 생명줄: 갯벌 필수 안전 지식
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">사소한 부주의가 생명을 뺏고 지역 갈등을 유발합니다. 반드시 숙지해 주세요.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-300">
+                <div class="bg-black/40 p-4 rounded-xl border border-teal-950">
+                    <h4 class="font-bold text-cyan-300 flex items-center gap-2 mb-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 1. 대조기(사리) 밀물 속도의 위험성
+                    </h4>
+                    <p class="leading-relaxed text-slate-400 text-xs">
+                        달과 지구의 일직선 배열로 만조 수위가 극대화되는 시기(사리)에는 서해안 갯벌 밀물 유입 속도가 <strong>시속 12~15km(사람 러닝 속도 이상)</strong>에 달합니다. 눈에 물이 보이기 시작하면 육지 대피가 절대 불가능하므로, 경보 발효 전 즉각 철수하십시오.
+                    </p>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-teal-950">
+                    <h4 class="font-bold text-cyan-300 flex items-center gap-2 mb-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 2. 가슴장화벨트의 '익사 덫' 현상
+                    </h4>
+                    <p class="leading-relaxed text-slate-400 text-xs">
+                        가슴장화는 외부 물을 차단하지만, 벨트를 허리에 단단히 매지 않고 물에 빠질 경우 가슴장화 내부로 엄청난 양의 물이 쏟아져 들어갑니다. 이렇게 유입된 해수는 하반신을 무거운 납덩이처럼 고정해 <strong>자력 수영 및 탈출을 절대 불가능하게 만드니</strong> 구명조끼 결합과 벨트 조임은 의무입니다.
+                    </p>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-teal-950">
+                    <h4 class="font-bold text-cyan-300 flex items-center gap-2 mb-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 3. 노둣길 고립의 매커니즘
+                    </h4>
+                    <p class="leading-relaxed text-slate-400 text-xs">
+                        바다 갈라짐 도로는 일반 길과 다르게 물이 밀려올 때 <strong>길 가장자리 저지대부터 물길이 먼저 가로막힙니다.</strong> 운전석 시야에는 길이 멀쩡해 보일지라도, 앞뒤 진출입로가 순식간에 차단되어 꼼짝없이 차량 채 고립되므로 노둣길 진입 시 물때표 엄수가 생명입니다.
+                    </p>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-teal-950">
+                    <h4 class="font-bold text-cyan-300 flex items-center gap-2 mb-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 4. 어촌계 양식장 상생 수칙
+                    </h4>
+                    <p class="leading-relaxed text-slate-400 text-xs">
+                        공유수면처럼 보여도 상당 구역은 어촌계 공동체가 오랜 시간 치패를 뿌려 가꾼 <strong>면허 양식장(사유지)</strong>입니다. 비어업인의 야간 무단 불법 채취는 어업인과의 큰 분쟁 요인이며, 절도죄 및 수산자원관리법 위반에 따라 처벌받을 수 있는 중범죄입니다.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-6 flex gap-3">
+                <button onclick="closeSafetyModal()" class="flex-1 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-slate-950 font-extrabold rounded-xl text-sm transition-all shadow-md">
+                    지식을 숙지했으며 안전을 서약합니다
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, spotlight;
+        let objectsToClick = []; // 레이캐스터 클릭 전용 대상 객체들
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let rotationTarget = null; // 1인칭 회전 타겟
+        let listenersInitialized = false; // 이벤트 리스너 중복 방지 플래그
+        let animationFrameId = null; // 애니메이션 루프 ID 추적용
+        let raycaster, mouse; // 3D 클릭 대상 분석용 전역 변수 선언
+
+        let dragStartPos = { x: 0, y: 0 };
+        let dragStartTime = 0;
+
+        let audioCtx = null;
+        let heartRateInterval = null;
+
+        const gameState = {
+            currentStage: 1,
+            selectedItems: [], // vest, phone, whistle, bucket, salt
+            currentTime: 180,
+            timerInterval: null,
+            fogActive: false,
+            mudEscapeStep: 0, // 0: stuck, 1: leaned, 2: pedaled, 3: escaped
+            waterLevel: -3.0,
+            waterMesh: null,
+            phoneActive: false,
+            laserLine: null,
+            beaconMesh: null,
+            villageMesh: null,
+            buddyMesh: null,
+            buddyFound: false,
+            buddyRescued: false,
+            itemsInScene: {},
+            tideSignsFound: {
+                stream: false,
+                crab: false,
+                foam: false
+            }
+        };
+
+        // UI 캐시
+        const elIntro = document.getElementById('screen-intro');
+        const elGame = document.getElementById('screen-game');
+        const elEnding = document.getElementById('screen-ending');
+        const elHeader = document.getElementById('game-header');
+        const elTimerText = document.getElementById('global-timer');
+        const canvasContainer = document.getElementById('canvas-container');
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(450, now + 0.1);
+                osc.frequency.setValueAtTime(600, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'fail') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'splash') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'whistle_sound') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.linearRampToValueAtTime(1500, now + 0.15);
+                osc.frequency.linearRampToValueAtTime(1200, now + 0.3);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
+        function startHeartbeat(bpm = 70) {
+            stopHeartbeat();
+            if (!audioCtx) return;
+            const interval = (60 / bpm) * 1000;
+
+            heartRateInterval = setInterval(() => {
+                if (audioCtx.state === 'suspended') return;
+                const now = audioCtx.currentTime;
+                // 첫번째 쿵
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(60, now);
+                osc1.frequency.exponentialRampToValueAtTime(10, now + 0.15);
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+
+                // 두번째 쾅
+                setTimeout(() => {
+                    if (!audioCtx) return;
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(55, audioCtx.currentTime);
+                    osc2.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.2);
+                    gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc2.start(audioCtx.currentTime);
+                    osc2.stop(audioCtx.currentTime + 0.2);
+                }, 200);
+            }, interval);
+        }
+
+        function stopHeartbeat() {
+            if (heartRateInterval) {
+                clearInterval(heartRateInterval);
+                heartRateInterval = null;
+            }
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = text;
+            toast.style.opacity = '1';
+            toast.style.pointerEvents = 'auto';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.pointerEvents = 'none';
+            }, 3500);
+        }
+
+        function init3D() {
+            // Scene 생성
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x02070c);
+            
+            // 어둡고 푸른색의 해무(Fog) 설정
+            scene.fog = new THREE.FogExp2(0x02070c, 0.05);
+
+            // 1인칭 카메라
+            camera = new THREE.PerspectiveCamera(60, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 0); // 플레이어 눈높이 (1.6m)
+
+            // Vector2 형태로 회전 타겟 초기화
+            rotationTarget = new THREE.Vector2(0, 0);
+            
+            // Renderer 설정
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            const width = canvasContainer.clientWidth || window.innerWidth;
+            const height = canvasContainer.clientHeight || window.innerHeight;
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            canvasContainer.appendChild(renderer.domElement);
+
+            // 밤바다 미세 환경광
+            const ambientLight = new THREE.AmbientLight(0x132d3e, 0.25);
+            scene.add(ambientLight);
+
+            // 1인칭 손전등 (SpotLight)
+            spotlight = new THREE.SpotLight(0xfffcd6, 4.5, 18, Math.PI / 5, 0.5, 1);
+            spotlight.castShadow = true;
+            spotlight.shadow.mapSize.width = 1024;
+            spotlight.shadow.mapSize.height = 1024;
+            camera.add(spotlight);
+            spotlight.position.set(0, 0, 0);
+            
+            const spotlightTarget = new THREE.Object3D();
+            spotlightTarget.position.set(0, 0, -1);
+            camera.add(spotlightTarget);
+            spotlight.target = spotlightTarget;
+
+            scene.add(camera);
+
+            // 레이캐스터 전역 변수 대입
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // 리스너가 중복 등록되지 않도록 1회만 바인딩
+            if (!listenersInitialized) {
+                window.addEventListener('resize', onWindowResize);
+
+                // 마우스 드래그 조작 제어 등록 (시선 이동)
+                canvasContainer.addEventListener('mousedown', onMouseDown);
+                canvasContainer.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+
+                canvasContainer.addEventListener('touchstart', onTouchStart, { passive: true });
+                canvasContainer.addEventListener('touchmove', onTouchMove, { passive: true });
+                window.addEventListener('touchend', onTouchEnd);
+
+                canvasContainer.addEventListener('click', onCanvasClick);
+
+                // PC/Chromebook용 키보드 조작 기능 추가
+                window.addEventListener('keydown', onKeyDown);
+
+                listenersInitialized = true;
+            }
+        }
+
+        // 키보드 조작 입력 감지 함수 (WASD / 방향키)
+        function onKeyDown(e) {
+            if (!rotationTarget) return;
+            const rotStep = 0.05; // 한 번 회전할 때의 라디안 변화량
+            switch(e.key) {
+                case 'w':
+                case 'W':
+                case 'ArrowUp':
+                    rotationTarget.x += rotStep;
+                    break;
+                case 's':
+                case 'S':
+                case 'ArrowDown':
+                    rotationTarget.x -= rotStep;
+                    break;
+                case 'a':
+                case 'A':
+                case 'ArrowLeft':
+                    rotationTarget.y += rotStep;
+                    break;
+                case 'd':
+                case 'D':
+                case 'ArrowRight':
+                    rotationTarget.y -= rotStep;
+                    break;
+            }
+            // 수직 회전 범위 제한 (하늘 너무 위나 발끝 너무 아래를 보지 못하게 함)
+            rotationTarget.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, rotationTarget.x));
+        }
+
+        function onMouseDown(e) {
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+            dragStartPos = { x: e.clientX, y: e.clientY };
+            dragStartTime = Date.now();
+        }
+
+        function onMouseMove(e) {
+            if (!isDragging || !rotationTarget) return;
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+
+            rotationTarget.y -= deltaX * 0.003;
+            rotationTarget.x -= deltaY * 0.003;
+            rotationTarget.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, rotationTarget.x));
+
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                dragStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                dragStartTime = Date.now();
+            }
+        }
+
+        function onTouchMove(e) {
+            if (!isDragging || e.touches.length !== 1 || !rotationTarget) return;
+            const deltaX = e.touches[0].clientX - previousMousePosition.x;
+            const deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+            rotationTarget.y -= deltaX * 0.005;
+            rotationTarget.x -= deltaY * 0.005;
+            rotationTarget.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, rotationTarget.x));
+
+            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+
+        function onTouchEnd() {
+            isDragging = false;
+        }
+
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            const width = canvasContainer.clientWidth || window.innerWidth;
+            const height = canvasContainer.clientHeight || window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function findInteractiveParent(object) {
+            let current = object;
+            while (current) {
+                if (current.userData && current.userData.type) {
+                    return current;
+                }
+                current = current.parent;
+            }
+            return null;
+        }
+
+        function onCanvasClick(e) {
+            initAudio();
+            
+            // 드래그 진행 중이었을 경우 클릭으로 판정하지 않음 (트랙패드 오작동 방지)
+            const dragDuration = Date.now() - dragStartTime;
+            const dragDistance = Math.hypot(e.clientX - dragStartPos.x, e.clientY - dragStartPos.y);
+            if (dragDuration > 250 || dragDistance > 8) {
+                return;
+            }
+
+            if (!renderer || !camera) return;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objectsToClick, true);
+
+            if (intersects.length > 0) {
+                const hitObj = intersects[0].object;
+                const interactiveObj = findInteractiveParent(hitObj);
+                if (interactiveObj) {
+                    handleObjectClick(interactiveObj);
+                }
+            }
+        }
+
+        function handleObjectClick(obj) {
+            playSound('click');
+            const type = obj.userData.type;
+
+            if (gameState.currentStage === 1) {
+                // 가방 수색 기믹 (통합된 toggleItem 함수 호출로 에러 차단)
+                if (type === 'vest' || type === 'phone' || type === 'whistle' || type === 'bucket' || type === 'salt') {
+                    toggleItem(type);
+                } else if (type === 'gate') {
+                    submitStage1();
+                }
+            } else if (gameState.currentStage === 2) {
+                // 밀물 전조현상 수색 (안전한 자식 노드 메터리얼 탐색으로 에러 차단)
+                if (type === 'sign_stream') {
+                    if (!gameState.tideSignsFound.stream) {
+                        gameState.tideSignsFound.stream = true;
+                        showToast("🔍 [물길 흐름 발견] 마른 뻘 위에 갑자기 바닷물 물길이 흐르기 시작합니다!");
+                        if (obj.material) obj.material.color.setHex(0x2dd4bf); // 밝게 강조
+                        checkStage2Clear();
+                    }
+                } else if (type === 'sign_crab') {
+                    if (!gameState.tideSignsFound.crab) {
+                        gameState.tideSignsFound.crab = true;
+                        showToast("🔍 [칠게 대피 목격] 칠게들이 집 밖으로 나와 급격히 육지 방향으로 기어가고 있습니다!");
+                        // 그룹인 경우 하위 요소를 안전하게 순회하여 색상 변경
+                        obj.traverse(child => {
+                            if (child.material) child.material.color.setHex(0xa3e635);
+                        });
+                        checkStage2Clear();
+                    }
+                } else if (type === 'sign_foam') {
+                    if (!gameState.tideSignsFound.foam) {
+                        gameState.tideSignsFound.foam = true;
+                        showToast("🔍 [차가운 바다 거품] 물에 젖은 거품들이 발밑으로 빠르게 밀려들기 시작합니다!");
+                        if (obj.material) obj.material.color.setHex(0xfef08a);
+                        checkStage2Clear();
+                    }
+                }
+            } else if (gameState.currentStage === 3) {
+                // 이표 클릭시 안개 극복
+                if (type === 'beacon') {
+                    showToast("안전 이표에 도달했습니다! 지반이 단단하고 밀물이 미치지 않는 최적의 거점입니다.");
+                    playSound('success');
+                    setStage(4);
+                }
+            } else if (gameState.currentStage === 5) {
+                // 동료 구조 기믹
+                if (type === 'buddy') {
+                    if (!gameState.buddyRescued) {
+                        rescueBuddy();
+                    }
+                }
+            } else if (gameState.currentStage === 6) {
+                // 등대 클릭 시 질주
+                if (type === 'village') {
+                    runTowardsVillage();
+                }
+            }
+        }
+
+        function clear3DObjects() {
+            objectsToClick.forEach(obj => {
+                scene.remove(obj);
+            });
+            objectsToClick = [];
+            
+            if (gameState.laserLine) {
+                scene.remove(gameState.laserLine);
+                gameState.laserLine = null;
+            }
+
+            // 스테이지 오작동 방지용 잔여 메쉬 참조 명시적 청소
+            gameState.beaconMesh = null;
+            gameState.villageMesh = null;
+            gameState.buddyMesh = null;
+        }
+
+        function setStage(stageNum) {
+            gameState.currentStage = stageNum;
+            clear3DObjects();
+
+            const badge = document.getElementById('stage-badge');
+            
+            // 데스크톱 / 모바일 가이드 요소 모두 호환
+            const titleDesk = document.getElementById('mission-title');
+            const descDesk = document.getElementById('mission-desc');
+            const titleMob = document.getElementById('mission-title-mobile');
+            const descMob = document.getElementById('mission-desc-mobile');
+
+            const touchpad = document.getElementById('escape-touchpad');
+
+            badge.textContent = `STAGE ${stageNum}`;
+            touchpad.classList.add('hidden');
+
+            const setupMissionText = (titleStr, descStr) => {
+                if (titleDesk) titleDesk.textContent = titleStr;
+                if (descDesk) descDesk.textContent = descStr;
+                if (titleMob) titleMob.textContent = titleStr;
+                if (descMob) descMob.textContent = descStr;
+            };
+
+            if (stageNum === 1) {
+                setupMissionText("장비 수색", "테이블을 둘러보고, 필수 도구 3가지를 클릭해 담으세요. 앞에 활성화된 관문을 클릭해 갯벌로 나아갑니다.");
+                buildStage1Scene();
+            } else if (stageNum === 2) {
+                setupMissionText("밀물 전조 현상 수색", "밤갯벌에서 물이 차오르고 있다는 3가지 자연의 경고(물길, 칠게의 움직임, 바다거품)를 1인칭으로 찾아내어 클릭해 보세요!");
+                buildStage2Scene();
+            } else if (stageNum === 3) {
+                setupMissionText("칠흑의 해무", "한 치 앞도 보이지 않는 안개가 덮쳤습니다! 방향키나 마우스로 주변을 둘러보며 깜빡이는 청록색 안전 비콘(이표)을 찾아 클릭하세요.");
+                buildStage3Scene();
+            } else if (stageNum === 4) {
+                setupMissionText("위험천만 갯골", "서두르다 갯골 수렁에 하반신이 갇혔습니다! 무리하게 잡아뽑으려 하면 무중력 압력으로 더 빨려 들어갑니다. 체중을 분산해 빠져나오세요.");
+                buildStage4Scene();
+            } else if (stageNum === 5) {
+                setupMissionText("조난당한 동료 구조", "안개 너머에서 다급하게 도움을 요청하는 동료의 목소리가 들립니다! 불빛을 비추어 동료의 실루엣을 찾아 다가가 구조해 주십시오.");
+                buildStage5Scene();
+            } else if (stageNum === 6) {
+                setupMissionText("밀물 대탈출", "밀물이 턱끝까지 차오릅니다! 저 멀리 등대의 유도 지시등을 향해 질주하세요. 동료를 챙겨 함께 탈출하면 대성공입니다!");
+                buildStage6Scene();
+            }
+        }
+
+        function buildStage1Scene() {
+            scene.fog.density = 0.04;
+            camera.position.set(0, 1.2, 2.5);
+            if (rotationTarget) rotationTarget.set(-0.2, 0);
+
+            // 테이블 지반
+            const tableGeo = new THREE.BoxGeometry(3, 0.1, 1.5);
+            const tableMat = new THREE.MeshStandardMaterial({ color: 0x2c1a11, roughness: 0.8 });
+            const table = new THREE.Mesh(tableGeo, tableMat);
+            table.position.set(0, 0.4, 0);
+            table.receiveShadow = true;
+            scene.add(table);
+            objectsToClick.push(table);
+
+            // 아이템 1: 구명조끼
+            const vestGeo = new THREE.TorusGeometry(0.18, 0.05, 8, 24);
+            const vestMat = new THREE.MeshStandardMaterial({ color: 0xff4500, roughness: 0.4, emissive: 0x330d00 });
+            const vest = new THREE.Mesh(vestGeo, vestMat);
+            vest.position.set(-0.9, 0.55, 0.1);
+            vest.rotation.x = Math.PI / 2;
+            vest.userData = { type: 'vest' };
+            scene.add(vest);
+            objectsToClick.push(vest);
+            gameState.itemsInScene['vest'] = vest;
+
+            // 아이템 2: 스마트폰
+            const phoneGeo = new THREE.BoxGeometry(0.12, 0.02, 0.22);
+            const phoneMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.2 });
+            const phone = new THREE.Mesh(phoneGeo, phoneMat);
+            phone.position.set(-0.3, 0.5, 0.2);
+            phone.userData = { type: 'phone' };
+            scene.add(phone);
+            objectsToClick.push(phone);
+            gameState.itemsInScene['phone'] = phone;
+
+            const screenGeo = new THREE.PlaneGeometry(0.1, 0.18);
+            const screenMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+            const screen = new THREE.Mesh(screenGeo, screenMat);
+            screen.position.set(0, 0.011, 0);
+            screen.rotation.x = -Math.PI / 2;
+            screen.userData = { type: 'phone' };
+            phone.add(screen);
+
+            // 아이템 3: 안전 호루라기
+            const whistleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.15, 12);
+            const whistleMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1 });
+            const whistle = new THREE.Mesh(whistleGeo, whistleMat);
+            whistle.position.set(0.15, 0.5, 0.1);
+            whistle.rotation.z = Math.PI / 2;
+            whistle.userData = { type: 'whistle' };
+            scene.add(whistle);
+            objectsToClick.push(whistle);
+            gameState.itemsInScene['whistle'] = whistle;
+
+            // 아이템 4: 조과통
+            const bucketGeo = new THREE.CylinderGeometry(0.15, 0.1, 0.25, 16);
+            const bucketMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.6 });
+            const bucket = new THREE.Mesh(bucketGeo, bucketMat);
+            bucket.position.set(0.6, 0.6, 0);
+            bucket.userData = { type: 'bucket' };
+            scene.add(bucket);
+            objectsToClick.push(bucket);
+            gameState.itemsInScene['bucket'] = bucket;
+
+            // 아이템 5: 맛소금 통
+            const saltGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.16, 12);
+            const saltMat = new THREE.MeshStandardMaterial({ color: 0xefefef, roughness: 0.9 });
+            const salt = new THREE.Mesh(saltGeo, saltMat);
+            salt.position.set(1.1, 0.55, -0.2);
+            salt.userData = { type: 'salt' };
+            scene.add(salt);
+            objectsToClick.push(salt);
+            gameState.itemsInScene['salt'] = salt;
+
+            // 해루질 퇴로 게이트 (문을 상징하는 에메랄드 야광체)
+            const gateGeo = new THREE.BoxGeometry(0.6, 1.2, 0.1);
+            const gateMat = new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x005522, roughness: 0.5 });
+            const gate = new THREE.Mesh(gateGeo, gateMat);
+            gate.position.set(0, 1.1, -1.8);
+            gate.userData = { type: 'gate' };
+            scene.add(gate);
+            objectsToClick.push(gate);
+
+            // 게이트 상부 조명 텍스트 유도구
+            const glowGeo = new THREE.SphereGeometry(0.06, 8, 8);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            glow.position.set(0, 1.9, -1.8);
+            glow.userData = { type: 'gate' };
+            scene.add(glow);
+            objectsToClick.push(glow);
+        }
+
+        function toggleItem(itemId) {
+            const index = gameState.selectedItems.indexOf(itemId);
+            const itemMesh = gameState.itemsInScene[itemId];
+            const hudSlot = document.getElementById(`hud-slot-${itemId}`);
+
+            if (index > -1) {
+                // 장착 해제
+                gameState.selectedItems.splice(index, 1);
+                if (hudSlot) {
+                    hudSlot.classList.remove('bg-teal-950/50', 'border-teal-400', 'text-teal-400');
+                    hudSlot.classList.add('bg-gray-900/50', 'border-gray-800', 'text-gray-600');
+                }
+                if (itemMesh) itemMesh.scale.set(1, 1, 1);
+            } else {
+                // 장착 진행 (가방 한도: 3개)
+                if (gameState.selectedItems.length >= 3) {
+                    showToast("장비 가방 한계 초과! 생존 필수 안전 장비 3종만 담는 것을 권장합니다.");
+                    return;
+                }
+                gameState.selectedItems.push(itemId);
+                if (hudSlot) {
+                    hudSlot.classList.remove('bg-gray-900/50', 'border-gray-800', 'text-gray-600');
+                    hudSlot.classList.add('bg-teal-950/50', 'border-teal-400', 'text-teal-400');
+                }
+                if (itemMesh) itemMesh.scale.set(1.2, 1.2, 1.2);
+            }
+        }
+
+        function submitStage1() {
+            if (gameState.selectedItems.length === 0) {
+                showToast("최소 1개의 생존 도구를 챙겨야 연안 갯벌에 진입할 수 있습니다!");
+                return;
+            }
+            playSound('success');
+            setStage(2);
+        }
+
+        function buildStage2Scene() {
+            camera.position.set(0, 1.6, 0);
+            if (rotationTarget) rotationTarget.set(0.2, 0);
+
+            // 갯벌 대지
+            const mudGeo = new THREE.PlaneGeometry(100, 100);
+            const mudMat = new THREE.MeshStandardMaterial({ color: 0x0d1622, roughness: 0.95 });
+            const mud = new THREE.Mesh(mudGeo, mudMat);
+            mud.rotation.x = -Math.PI / 2;
+            mud.position.y = 0;
+            mud.receiveShadow = true;
+            scene.add(mud);
+            objectsToClick.push(mud);
+
+            // 초기 안개 엷게 설정
+            scene.fog.density = 0.03;
+
+            // 전조현상 1: 실개천 물길 (약간 왼편 전방)
+            const streamGeo = new THREE.BoxGeometry(0.3, 0.02, 3);
+            const streamMat = new THREE.MeshStandardMaterial({ color: 0x1b2d3c, roughness: 0.1 });
+            const stream = new THREE.Mesh(streamGeo, streamMat);
+            stream.position.set(-1.5, 0.01, -3);
+            stream.rotation.y = Math.PI / 6;
+            stream.userData = { type: 'sign_stream' };
+            scene.add(stream);
+            objectsToClick.push(stream);
+
+            // 전조현상 2: 칠게 무리 대피 (우측 바닥)
+            const crabGroup = new THREE.Group();
+            crabGroup.position.set(2, 0.02, -2.5);
+            crabGroup.userData = { type: 'sign_crab' };
+            
+            for (let i = 0; i < 5; i++) {
+                const crabGeo = new THREE.BoxGeometry(0.12, 0.06, 0.08);
+                const crabMat = new THREE.MeshStandardMaterial({ color: 0x3d3229 });
+                const crabMesh = new THREE.Mesh(crabGeo, crabMat);
+                crabMesh.position.set((Math.random() - 0.5) * 0.8, 0.03, (Math.random() - 0.5) * 0.8);
+                crabGroup.add(crabMesh);
+            }
+            scene.add(crabGroup);
+            objectsToClick.push(crabGroup);
+
+            // 전조현상 3: 밀려드는 흰 바다 거품 (우측 후방 바닥)
+            const foamGeo = new THREE.SphereGeometry(0.2, 8, 8);
+            const foamMat = new THREE.MeshStandardMaterial({ color: 0x3a4f5c, roughness: 0.9 });
+            const foam = new THREE.Mesh(foamGeo, foamMat);
+            foam.position.set(2.5, 0.05, 1.5);
+            foam.scale.set(2, 0.2, 1);
+            foam.userData = { type: 'sign_foam' };
+            scene.add(foam);
+            objectsToClick.push(foam);
+
+            gameState.tideSignsFound = { stream: false, crab: false, foam: false };
+            showToast("🔍 야간 갯벌 안으로 진입했습니다. 손전등을 비추어 물때가 바뀌고 있는 3가지 전조현상을 찾아 클릭하세요!");
+        }
+
+        function checkStage2Clear() {
+            if (gameState.tideSignsFound.stream && gameState.tideSignsFound.crab && gameState.tideSignsFound.foam) {
+                playSound('success');
+                showToast("자연의 모든 위험 신호를 포착했습니다! 곧 깊은 해무가 몰려오니 서둘러 이표를 수색해 이동해야 합니다.");
+                setTimeout(() => {
+                    setStage(3);
+                }, 3000);
+            }
+        }
+
+        function buildStage3Scene() {
+            camera.position.set(0, 1.6, 0);
+            if (rotationTarget) rotationTarget.set(0, 0);
+
+            // 갯벌 대지
+            const mudGeo = new THREE.PlaneGeometry(100, 100);
+            const mudMat = new THREE.MeshStandardMaterial({ color: 0x0a1016, roughness: 0.95 });
+            const mud = new THREE.Mesh(mudGeo, mudMat);
+            mud.rotation.x = -Math.PI / 2;
+            mud.position.y = 0;
+            mud.receiveShadow = true;
+            scene.add(mud);
+            objectsToClick.push(mud);
+
+            scene.fog.density = 0.12; // 지독한 해무
+
+            // 사방 360도 임의의 우측 뒤편에 안전 이표 비콘 배치
+            const angle = Math.PI * 1.25; 
+            const radius = 9.0;
+            const beaconX = Math.cos(angle) * radius;
+            const beaconZ = Math.sin(angle) * radius;
+
+            const towerGeo = new THREE.CylinderGeometry(0.05, 0.1, 3.5, 8);
+            const towerMat = new THREE.MeshStandardMaterial({ color: 0x1e2e38, roughness: 0.8 });
+            const tower = new THREE.Mesh(towerGeo, towerMat);
+            tower.position.set(beaconX, 1.75, beaconZ);
+            scene.add(tower);
+            objectsToClick.push(tower);
+
+            // 청록 반짝이 발광 비콘 신호체
+            const signalGeo = new THREE.SphereGeometry(0.18, 12, 12);
+            const signalMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+            const signal = new THREE.Mesh(signalGeo, signalMat);
+            signal.position.set(beaconX, 3.6, beaconZ);
+            signal.userData = { type: 'beacon' };
+            scene.add(signal);
+            objectsToClick.push(signal);
+            gameState.beaconMesh = signal;
+
+            const boardGeo = new THREE.BoxGeometry(0.5, 0.4, 0.1);
+            const boardMat = new THREE.MeshBasicMaterial({ color: 0x2dd4bf });
+            const board = new THREE.Mesh(boardGeo, boardMat);
+            board.position.set(beaconX, 2.5, beaconZ);
+            board.rotation.y = -angle;
+            board.userData = { type: 'beacon' };
+            scene.add(board);
+            objectsToClick.push(board);
+
+            showToast("⚠️ 안개가 엄청나게 심해졌습니다! 화면을 둘러보고 깜빡이는 청록색 안전 이표를 수색해 클릭하세요.");
+        }
+
+        // 해로드 GPS 가이드 사용 기믹
+        function usePhoneGPS() {
+            if (gameState.currentStage !== 3) return;
+            if (!gameState.selectedItems.includes('phone')) {
+                showToast("스마트폰을 배낭에 챙기지 않아 GPS 지도를 활성화할 수 없습니다!");
+                return;
+            }
+
+            if (gameState.phoneActive) return;
+            gameState.phoneActive = true;
+            playSound('success');
+            showToast("🗺️ '해로드 앱' 가동! 인근 유도 이표 방향으로 바닥에 안내 레이저 선이 생성되었습니다.");
+
+            const points = [];
+            points.push(new THREE.Vector3(0, 0.05, 0));
+            points.push(new THREE.Vector3(gameState.beaconMesh.position.x, 0.05, gameState.beaconMesh.position.z));
+
+            const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x2dd4bf, linewidth: 3 });
+            gameState.laserLine = new THREE.Line(lineGeo, lineMat);
+            scene.add(gameState.laserLine);
+        }
+
+        function buildStage4Scene() {
+            scene.fog.density = 0.05;
+            camera.position.set(0, 0.7, 0); // 눈높이 대폭 하강
+            if (rotationTarget) rotationTarget.set(0.6, 0); // 머드 쪽으로 시선 강제 하향
+
+            const mudGeo = new THREE.PlaneGeometry(100, 100);
+            const mudMat = new THREE.MeshStandardMaterial({ color: 0x05090d, roughness: 0.99 });
+            const mud = new THREE.Mesh(mudGeo, mudMat);
+            mud.rotation.x = -Math.PI / 2;
+            mud.position.y = 0;
+            mud.receiveShadow = true;
+            scene.add(mud);
+
+            const trapGeo = new THREE.SphereGeometry(0.6, 12, 12);
+            const trapMat = new THREE.MeshStandardMaterial({ color: 0x020508, roughness: 1.0 });
+            const trap = new THREE.Mesh(trapGeo, trapMat);
+            trap.scale.set(2, 0.4, 2);
+            trap.position.set(0, 0.1, -0.4);
+            scene.add(trap);
+
+            document.getElementById('escape-touchpad').classList.remove('hidden');
+            gameState.mudEscapeStep = 0;
+            
+            showToast("⚠️ 위험! 발밑이 허물어지며 깊은 갯골 진흙 수렁에 압착 고립되었습니다!");
+        }
+
+        // 갯골 탈출 상호작용
+        function performMudEscape(action) {
+            initAudio();
+            const btnLean = document.getElementById('btn-lean');
+            const btnPedal = document.getElementById('btn-pedal');
+
+            if (action === 'lean' && gameState.mudEscapeStep === 0) {
+                gameState.mudEscapeStep = 1;
+                playSound('success');
+                showToast("몸의 균형을 뒤로 넓게 눕혀 압산 작용을 극대화했습니다! 이제 다리를 움직여 탈출하세요.");
+                
+                if (rotationTarget) rotationTarget.x = -0.4; // 뒤로 눕는 시선 보정
+                camera.position.set(0, 0.8, 0.3);
+
+                btnLean.classList.add('bg-gray-800', 'text-gray-500', 'cursor-not-allowed');
+                btnLean.disabled = true;
+
+                btnPedal.classList.remove('bg-gray-800', 'text-gray-500', 'cursor-not-allowed');
+                btnPedal.classList.add('bg-teal-800', 'text-white');
+                btnPedal.disabled = false;
+            } else if (action === 'pedal' && gameState.mudEscapeStep === 1) {
+                gameState.mudEscapeStep = 2;
+                playSound('splash');
+                showToast("자전거 페달을 구르듯 뻘에 공기를 주입하여 완벽하게 수렁을 밀어냈습니다!");
+                
+                setTimeout(() => {
+                    playSound('success');
+                    camera.position.set(0, 1.6, 0);
+                    if (rotationTarget) rotationTarget.set(0, 0);
+                    setStage(5);
+                }, 1500);
+            }
+        }
+
+        function buildStage5Scene() {
+            scene.fog.density = 0.08;
+            camera.position.set(0, 1.6, 0);
+            if (rotationTarget) rotationTarget.set(0, 0);
+
+            // 갯벌 대지
+            const mudGeo = new THREE.PlaneGeometry(100, 100);
+            const mudMat = new THREE.MeshStandardMaterial({ color: 0x081018, roughness: 0.95 });
+            const mud = new THREE.Mesh(mudGeo, mudMat);
+            mud.rotation.x = -Math.PI / 2;
+            mud.position.y = 0;
+            mud.receiveShadow = true;
+            scene.add(mud);
+            objectsToClick.push(mud);
+
+            // 저 앞 방향 전방 멀리 조난당한 일행 실루엣 모델링 생성
+            const buddyX = 1.5;
+            const buddyZ = -6.5;
+
+            const buddyGroup = new THREE.Group();
+            buddyGroup.position.set(buddyX, 0, buddyZ);
+            buddyGroup.userData = { type: 'buddy' };
+
+            // 머리
+            const headGeo = new THREE.SphereGeometry(0.12, 8, 8);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 1.45;
+            buddyGroup.add(head);
+
+            // 몸체 (구명조끼 미착용 상태)
+            const bodyGeo = new THREE.CylinderGeometry(0.12, 0.15, 0.8, 8);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2d3748 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.95;
+            buddyGroup.add(body);
+
+            // 하반신 (진흙에 고립)
+            const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8);
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x1a202c });
+            const leg = new THREE.Mesh(legGeo, legMat);
+            leg.position.y = 0.3;
+            buddyGroup.add(leg);
+
+            // 도움 요청을 위한 어두운 야광 전등체
+            const signalGeo = new THREE.SphereGeometry(0.06, 8, 8);
+            const signalMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const signal = new THREE.Mesh(signalGeo, signalMat);
+            signal.position.set(-0.15, 1.3, 0.1);
+            buddyGroup.add(signal);
+
+            scene.add(buddyGroup);
+            objectsToClick.push(buddyGroup);
+            gameState.buddyMesh = buddyGroup;
+            gameState.buddyRescued = false;
+
+            showToast("📢 어디선가 '살려주세요!' 하는 애타는 소리와 비명소리가 들립니다! 손전등을 돌려 동료를 찾아 클릭하세요.");
+            
+            // 주기적 호루라기 소리 또는 도움 비명 시뮬레이션
+            if (audioCtx) {
+                setTimeout(() => {
+                    playSound('whistle_sound');
+                }, 1000);
+            }
+        }
+
+        // 호루라기 수동 발동으로 동료 탐색 위치 피드백 촉진
+        function blowWhistle() {
+            if (!gameState.selectedItems.includes('whistle')) {
+                showToast("호루라기를 소지하지 않았습니다!");
+                return;
+            }
+            playSound('whistle_sound');
+            showToast("😙 안전호루라기를 불자 멀리서 조난자가 '이쪽이에요!'하고 빛나는 화답 신호를 보냅니다!");
+            
+            if (gameState.buddyMesh) {
+                // 동료 위치를 나타내는 붉은 비콘 빛을 더 밝게 표시
+                const glowGeo = new THREE.SphereGeometry(0.15, 8, 8);
+                const glowMat = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+                const glow = new THREE.Mesh(glowGeo, glowMat);
+                glow.position.set(0, 1.8, 0);
+                gameState.buddyMesh.add(glow);
+            }
+        }
+
+        function rescueBuddy() {
+            gameState.buddyRescued = true;
+            playSound('success');
+            showToast("🤝 밀물에 고립될 뻔한 동료를 구출했습니다! 서로 몸을 밀착시키고 함께 해안선으로 향합니다.");
+            
+            // 동료를 카메라 동행 형태로 결합
+            scene.remove(gameState.buddyMesh);
+            
+            setTimeout(() => {
+                setStage(6);
+            }, 2500);
+        }
+
+        function buildStage6Scene() {
+            scene.fog.density = 0.06;
+            camera.position.set(0, 1.6, 0);
+            if (rotationTarget) rotationTarget.set(0, 0);
+
+            const mudGeo = new THREE.PlaneGeometry(100, 100);
+            const mudMat = new THREE.MeshStandardMaterial({ color: 0x05090d, roughness: 0.95 });
+            const mud = new THREE.Mesh(mudGeo, mudMat);
+            mud.rotation.x = -Math.PI / 2;
+            mud.position.y = 0;
+            mud.receiveShadow = true;
+            scene.add(mud);
+
+            // 서서히 차오를 해수면 (3D 물리 체감)
+            const waterGeo = new THREE.PlaneGeometry(120, 120);
+            const waterMat = new THREE.MeshStandardMaterial({ 
+                color: 0x0a3f5c, 
+                roughness: 0.1, 
+                metalness: 0.1,
+                transparent: true,
+                opacity: 0.65
+            });
+            gameState.waterMesh = new THREE.Mesh(waterGeo, waterMat);
+            gameState.waterMesh.rotation.x = -Math.PI / 2;
+            gameState.waterMesh.position.y = gameState.waterLevel;
+            scene.add(gameState.waterMesh);
+
+            // 탈출 목표 등대 타워 구조물
+            const angle = Math.PI * 1.5; 
+            const dist = 12.0;
+            const villX = Math.cos(angle) * dist;
+            const villZ = Math.sin(angle) * dist;
+
+            const villageGroup = new THREE.Group();
+            villageGroup.position.set(villX, 0, villZ);
+
+            const baseGeo = new THREE.CylinderGeometry(0.3, 0.4, 3, 12);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 1.5;
+            base.userData = { type: 'village' }; 
+            villageGroup.add(base);
+            objectsToClick.push(base);
+
+            const lightGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const lightMat = new THREE.MeshBasicMaterial({ color: 0x2dd4bf });
+            const light = new THREE.Mesh(lightGeo, lightMat);
+            light.position.y = 3.2;
+            light.userData = { type: 'village' };
+            villageGroup.add(light);
+            objectsToClick.push(light);
+
+            scene.add(villageGroup);
+            gameState.villageMesh = villageGroup;
+
+            if (gameState.selectedItems.includes('bucket')) {
+                document.getElementById('bucket-discard-badge').classList.remove('hidden');
+                showToast("⚠️ 조과물 가방 무게 때문에 이동속도가 대폭 경감됩니다! 살기 위해서 하단 조과통을 버리세요!");
+            }
+        }
+
+        function discardBucket() {
+            if (gameState.currentStage !== 6) return;
+            const index = gameState.selectedItems.indexOf('bucket');
+            if (index > -1) {
+                gameState.selectedItems.splice(index, 1);
+                document.getElementById('hud-slot-bucket').classList.remove('bg-teal-950/50', 'border-teal-400', 'text-teal-400');
+                document.getElementById('hud-slot-bucket').classList.add('bg-gray-900/50', 'border-gray-800', 'text-gray-600');
+                document.getElementById('bucket-discard-badge').classList.add('hidden');
+                playSound('splash');
+                showToast("욕심부리던 조과용 양동이를 던져버려 생존 기동력을 완벽하게 확보했습니다!");
+            }
+        }
+
+        function runTowardsVillage() {
+            if (gameState.selectedItems.includes('bucket')) {
+                triggerEnding('greedy_death');
+                return;
+            }
+
+            playSound('splash');
+            showToast("등대 불빛을 이정표 삼아 필사적으로 도약합니다!");
+            
+            setTimeout(() => {
+                const hasVest = gameState.selectedItems.includes('vest');
+                const savedBuddy = gameState.buddyRescued;
+
+                if (hasVest && savedBuddy) {
+                    triggerEnding('happy_ending'); // 최고의 엔딩
+                } else if (!hasVest && savedBuddy) {
+                    triggerEnding('risky_ending'); // 아슬아슬 탈출
+                } else {
+                    triggerEnding('drown_gap'); // 구명조끼 없음 고립
+                }
+            }, 1000);
+        }
+
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+
+            if (camera && rotationTarget) {
+                // 카메라 시선 회전 보간법 적용
+                camera.rotation.y += (rotationTarget.y - camera.rotation.y) * 0.15;
+                camera.rotation.x += (rotationTarget.x - camera.rotation.x) * 0.15;
+            }
+
+            // 비콘 신호체 반짝임 연출
+            if (gameState.beaconMesh) {
+                const time = Date.now() * 0.003;
+                gameState.beaconMesh.material.color.setRGB(
+                    0,
+                    0.5 + Math.sin(time) * 0.5,
+                    0.5 + Math.sin(time) * 0.5
+                );
+            }
+
+            // 밀물 서서히 상승하는 3D 표현
+            if (gameState.currentStage === 6 && gameState.waterMesh) {
+                gameState.waterLevel += 0.004; // 난이도 조절 상승 속도
+                gameState.waterMesh.position.y = gameState.waterLevel;
+
+                if (gameState.waterLevel >= 1.6) {
+                    triggerEnding('drown_gap');
+                }
+            }
+
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            playSound('click');
+            startHeartbeat(75);
+
+            elIntro.classList.add('hidden');
+            elGame.classList.remove('hidden');
+            elHeader.classList.remove('hidden');
+
+            init3D();
+            setStage(1);
+            startGlobalTimer();
+            animate();
+        }
+
+        function startGlobalTimer() {
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                gameState.currentTime--;
+
+                const min = Math.floor(gameState.currentTime / 60);
+                const sec = gameState.currentTime % 60;
+                elTimerText.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+
+                if (gameState.currentTime === 100) {
+                    startHeartbeat(100);
+                    showToast("연안 파도 밀려드는 풍량 소리가 귓가를 맴돕니다.");
+                } else if (gameState.currentTime === 50) {
+                    startHeartbeat(130);
+                    elTimerText.classList.add('animate-pulse');
+                }
+
+                if (gameState.currentTime <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    triggerEnding('timeover');
+                }
+            }, 1000);
+        }
+
+        function triggerEnding(endingType) {
+            stopHeartbeat();
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+
+            elGame.classList.add('hidden');
+            elHeader.classList.add('hidden');
+            elEnding.classList.remove('hidden');
+
+            const badge = document.getElementById('ending-badge');
+            const title = document.getElementById('ending-title');
+            const desc = document.getElementById('ending-desc');
+            const vowForm = document.getElementById('safe-vow-form');
+
+            vowForm.classList.add('hidden');
+
+            switch (endingType) {
+                case 'timeover':
+                    playSound('fail');
+                    badge.textContent = "TIME OVER BAD ENDING";
+                    badge.className = "inline-block px-4 py-1.5 text-xs font-bold bg-rose-600 text-white rounded-full mb-3";
+                    title.textContent = "차가운 서해 밤물 속으로 고립 침수";
+                    desc.innerHTML = `밀물 제한 시간을 사전에 파악하지 못해 대피가 너무 지체되었습니다. 안전 해루질은 사전에 **밀물 퇴거 알람**을 1시간 전으로 미리 맞춰두는 철저한 준비에서 출발합니다.`;
+                    break;
+
+                case 'drown_gap':
+                    playSound('fail');
+                    badge.textContent = "ACCIDENT ENDING";
+                    badge.className = "inline-block px-4 py-1.5 text-xs font-bold bg-rose-600 text-white rounded-full mb-3";
+                    title.textContent = "순식간에 발목을 덮친 급작스런 격류";
+                    desc.innerHTML = `물이 무릎에서 허리까지 올라오는 시간은 단 2~3분에 불과합니다. **구명조끼**의 안전 부력이 확보되지 않은 상태에서 갯골 수몰은 치명적인 인명사고로 귀결됩니다.`;
+                    break;
+
+                case 'greedy_death':
+                    playSound('fail');
+                    badge.textContent = "GREEDY ENDING";
+                    badge.className = "inline-block px-4 py-1.5 text-xs font-bold bg-rose-600 text-white rounded-full mb-3";
+                    title.textContent = "조과물에 저당 잡힌 귀하디 귀한 생명";
+                    desc.innerHTML = `조개를 가득 채운 무거운 조과통의 하중 때문에 퇴로 대피 속도가 현저히 느려져 침수되고 말았습니다. **탈출 신호 또는 알람 감지 즉시 조과 바구니와 장비는 무조건 포기**하고 자리를 벗어나십시오.`;
+                    break;
+
+                case 'risky_ending':
+                    playSound('success');
+                    badge.textContent = "RISKY SURVIVOR";
+                    badge.className = "inline-block px-4 py-1.5 text-xs font-bold bg-cyan-600 text-slate-950 rounded-full mb-3";
+                    title.textContent = "동료는 구했으나 만신창이로 탈출";
+                    desc.innerHTML = `동료와 조과통을 버리고 손을 맞잡아 극적으로 구조대와 등대선에 도달했습니다. 하지만 **구명조끼**의 준비 누락으로 긴장과 탈진을 유발해 병원으로 이송되었습니다. 사전에 구명장비를 장착했다면 더 안전했을 것입니다.`;
+                    vowForm.classList.remove('hidden');
+                    break;
+
+                case 'happy_ending':
+                    playSound('success');
+                    badge.textContent = "PERFECT SURVIVOR";
+                    badge.className = "inline-block px-4 py-1.5 text-xs font-bold bg-teal-500 text-slate-950 rounded-full mb-3";
+                    title.textContent = "나와 동료 모두를 살려낸 해루질의 영웅";
+                    desc.innerHTML = `완벽한 안전 신조를 이행했습니다! 가방 내 최적의 호루라기 수색 조율, 밀물 전조 관측과 즉각 대피, 갯골 고립 대처법, 그리고 소중한 일행까지 동행해 안전하게 뭍으로 돌아왔습니다. 당신은 해양 안전의 자랑스러운 마스터입니다!`;
+                    vowForm.classList.remove('hidden');
+                    break;
+            }
+        }
+
+        function restartGame() {
+            gameState.currentTime = 180;
+            gameState.selectedItems = [];
+            gameState.currentStage = 1;
+            gameState.waterLevel = -3.0;
+            gameState.phoneActive = false;
+            gameState.buddyFound = false;
+            gameState.buddyRescued = false;
+
+            const slots = ['vest', 'phone', 'whistle', 'bucket', 'salt'];
+            slots.forEach(slot => {
+                const element = document.getElementById(`hud-slot-${slot}`);
+                if (element) {
+                    element.className = "relative flex-1 h-14 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-600 transition-all";
+                }
+            });
+            document.getElementById('bucket-discard-badge').classList.add('hidden');
+
+            elEnding.classList.add('hidden');
+            elIntro.classList.remove('hidden');
+
+            // 중복 실행 중인 애니메이션 프레임 중지 및 3D 캔버스 정리
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            if (renderer) {
+                canvasContainer.innerHTML = '';
+                renderer.dispose();
+                renderer = null;
+            }
+        }
+
+        function submitCampaignForm() {
+            const val = document.getElementById('user-phone-input').value.trim();
+            if (!val) {
+                showToast("연락처를 남겨주세요!");
+                return;
+            }
+            playSound('success');
+            showToast("🎁 안전 해루질 실천 약속 서약이 접수되었습니다!");
+            document.getElementById('safe-vow-form').innerHTML = `
+                <div class="text-xs text-teal-400 font-bold py-2">
+                    <i class="fa-solid fa-square-check"></i> 성공적으로 공익 캠페인 약속 동참이 인증되었습니다. 늘 안전제일!
+                </div>
+            `;
+        }
+
+        function shareGame() {
+            playSound('click');
+            const url = window.location.href;
+            const temp = document.createElement('input');
+            temp.value = `[갯벌에서 살아남기 3D] 밤바다에 고립되었습니다. 당신은 1인칭 3D 칠흑 속에서 탈출할 수 있을까요? ${url}`;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("🔗 캠페인 참여 공유 주소가 클립보드에 무사히 복사되었습니다!");
+        }
+
+        function openSafetyModal() {
+            initAudio();
+            playSound('click');
+            document.getElementById('safety-modal').classList.remove('hidden');
+        }
+
+        function closeSafetyModal() {
+            playSound('success');
+            document.getElementById('safety-modal').classList.add('hidden');
+        }
+
+        window.onload = function() {
+            // 브라우저 초기화 완비 보증
+        };
+    </script>
+</body>
+</html>

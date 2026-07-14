@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>달려라 닥터 태안 - 사회문제 해결 미니게임</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&display=swap');
+        
+        body {
+            font-family: 'Gmarket Sans', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* 게임 화면 비율 유지 및 스크롤 방지 */
+        .game-container {
+            max-width: 480px;
+            height: 100vh;
+            max-height: 850px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 캔버스 픽셀 아트 선명하게 */
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* 애니메이션 효과 */
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse-danger {
+            animation: pulse-fast 0.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 flex justify-center items-center min-h-screen overflow-hidden">
+
+    <!-- 모바일 크기의 게임 컨테이너 -->
+    <div class="game-container w-full bg-slate-800 text-white flex flex-col justify-between shadow-2xl relative border-x border-slate-700">
+        
+        <!-- ================= [1] 인트로/홈 화면 ================= -->
+        <div id="screen-intro" class="absolute inset-0 z-30 flex flex-col justify-between p-6 bg-gradient-to-b from-blue-900 via-slate-900 to-emerald-950 overflow-y-auto">
+            <div class="text-center mt-4">
+                <span class="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> 지역소멸 위기 극복 캠페인
+                </span>
+                <h1 class="text-3xl font-extrabold mt-3 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-emerald-300 to-teal-200">
+                    달려라 닥터 태안
+                </h1>
+                <p class="text-xs text-slate-300 mt-1 font-light leading-relaxed">
+                    실제 태안은 응급실까지 차로 1시간이 걸립니다.<br>
+                    장애물을 넘어 태안 주민들의 골든타임을 지켜주세요!
+                </p>
+            </div>
+
+            <!-- 아트 및 콘셉트 일러스트레이션 -->
+            <div class="flex justify-center my-2 relative">
+                <svg class="w-32 h-32 text-emerald-400 opacity-90 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="80" stroke="currentColor" stroke-width="4" stroke-dasharray="10 5" class="animate-[spin_40s_linear_infinite]"/>
+                    <!-- 태안 바다 물결과 하트 펄스 -->
+                    <path d="M40 120 C 70 100, 130 140, 160 120" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M40 140 C 70 120, 130 160, 160 140" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+                    <!-- 구급차 실루엣 -->
+                    <rect x="70" y="80" width="60" height="35" rx="5" fill="#ffffff" />
+                    <rect x="110" y="83" width="18" height="15" fill="#38bdf8" />
+                    <circle cx="85" cy="115" r="8" fill="#334155" />
+                    <circle cx="115" cy="115" r="8" fill="#334155" />
+                    <path d="M75 97 H115" stroke="#ef4444" stroke-width="4"/>
+                    <!-- 적십자 마크 -->
+                    <path d="M92 90 H100 M96 86 V94" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <div class="space-y-3 mb-4">
+                <!-- 게임 방법 설명 -->
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-xl p-3 text-[11px] space-y-1.5">
+                    <div class="font-bold text-yellow-300 text-center mb-1">🎮 조작 방법 (터치 또는 키보드)</div>
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span><i class="fa-solid fa-arrow-up mr-2 text-emerald-400"></i>화면 위쪽 터치 / ↑ 키</span>
+                        <span class="font-bold">점프 (장애물 회피)</span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span><i class="fa-solid fa-arrow-down mr-2 text-emerald-400"></i>화면 아래쪽 터치 / ↓ 키</span>
+                        <span class="font-bold">슬라이딩 (공중 장애물 회피)</span>
+                    </div>
+                    <div class="border-t border-slate-700/50 pt-1 mt-1">
+                        <span class="text-rose-300 font-medium"><i class="fa-solid fa-heart-crack mr-1"></i> 빨간 장애물:</span> 부딪히면 골든타임 & 인구 차감!
+                    </div>
+                    <div>
+                        <span class="text-teal-300 font-medium"><i class="fa-solid fa-kit-medical mr-1"></i> 초록 아이템:</span> 획득 시 골든타임 & 인구 회복!
+                    </div>
+                </div>
+
+                <!-- 시작 버튼 명확화 및 애니메이션 부여 -->
+                <button id="btn-start" class="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-900/40 text-lg transition-transform transform active:scale-95 animate-[pulse_2s_infinite]">
+                    <i class="fa-solid fa-circle-play mr-2"></i> 게임 시작하기
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= [2] 스토리 / 문제 유도 로딩 화면 ================= -->
+        <div id="screen-loading" class="hidden absolute inset-0 z-40 flex flex-col justify-between p-8 bg-slate-950 text-center">
+            <div class="my-auto space-y-6">
+                <!-- 사이렌 등 앰뷸런스 긴장 연출 -->
+                <div class="flex justify-center">
+                    <div class="relative">
+                        <div class="absolute -inset-2 bg-red-600/30 rounded-full blur-xl animate-ping"></div>
+                        <i class="fa-solid fa-truck-medical text-red-500 text-5xl relative z-10"></i>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <span class="text-xs font-semibold text-rose-400 tracking-widest uppercase">Taean Medical Fact</span>
+                    <!-- 로딩 게이지 위의 현실 고발 한마디 -->
+                    <div class="min-h-[80px] flex items-center justify-center">
+                        <p id="loading-fact-text" class="text-base font-bold text-yellow-300 leading-relaxed px-2 transition-opacity duration-300">
+                            "실제 태안군은 응급 수술이 가능한 종합병원이 0개입니다."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 로딩 게이지 바 -->
+                <div class="space-y-2 max-w-xs mx-auto">
+                    <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-[1px] border border-slate-700">
+                        <div id="loading-progress" class="bg-gradient-to-r from-yellow-400 to-emerald-500 h-full rounded-full transition-all duration-100" style="width: 0%;"></div>
+                    </div>
+                    <span id="loading-percent" class="text-[10px] text-slate-500 font-mono tracking-wider">안전망 연결 중... 0%</span>
+                </div>
+            </div>
+            
+            <div class="text-[10px] text-slate-500 leading-normal border-t border-slate-900 pt-4">
+                이 캠페인은 태안군의 소중한 골든타임을 확보하고<br>지속 가능한 어촌을 지키기 위한 행동 유도 프로젝트입니다.
+            </div>
+        </div>
+
+        <!-- ================= [3] 실제 플레이 화면 ================= -->
+        <div id="screen-game" class="hidden absolute inset-0 z-10 flex flex-col">
+            
+            <!-- 상단 헤더: 실시간 인구 & 골든타임 UI -->
+            <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center z-20">
+                <!-- 인구수 전광판 -->
+                <div>
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">태안군 현재 인구</div>
+                    <div class="flex items-baseline space-x-1">
+                        <span id="ui-population" class="text-xl font-mono font-bold text-emerald-400">60,782</span>
+                        <span class="text-xs text-slate-400">명</span>
+                    </div>
+                </div>
+                
+                <!-- 골든타임 게이지 -->
+                <div class="w-1/2 flex flex-col items-end">
+                    <div class="flex justify-between w-full text-[10px] text-slate-400 font-semibold mb-1">
+                        <span>🚑 남은 골든타임</span>
+                        <span id="ui-time-text" class="font-mono text-rose-400">100%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3.5 overflow-hidden p-[2px] border border-slate-700">
+                        <div id="ui-time-bar" class="bg-gradient-to-r from-rose-500 to-red-500 h-full rounded-full transition-all duration-100" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 스코어 표시 및 긴급 경고 창 -->
+            <div class="absolute top-20 left-4 right-4 z-20 flex justify-between items-start pointer-events-none">
+                <div class="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block">이동 거리</span>
+                    <span id="ui-score" class="text-base font-bold font-mono text-yellow-300">0 m</span>
+                </div>
+                
+                <!-- 장애물 충돌 경고 알림 -->
+                <div id="ui-warning" class="hidden bg-red-600 text-white font-bold text-xs px-3 py-2 rounded-lg shadow-lg flex items-center space-x-2 animate-bounce">
+                    <i class="fa-solid fa-triangle-exclamation text-yellow-300"></i>
+                    <span id="warning-text">의료 인프라 부족 감속!</span>
+                </div>
+            </div>
+
+            <!-- 게임 캔버스 영역 (화면 전체 차지) -->
+            <div class="flex-1 bg-slate-950 relative overflow-hidden">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+                
+                <!-- 모바일 전용 터치 가이드 컨트롤러 (오버레이) -->
+                <div class="absolute inset-0 flex flex-col pointer-events-auto">
+                    <!-- 위쪽 절반: 점프 영역 -->
+                    <div id="touch-jump" class="flex-1 bg-transparent active:bg-emerald-500/5 flex items-center justify-start pl-4 transition-colors">
+                        <div class="bg-slate-900/40 p-2 rounded-full border border-slate-800 pointer-events-none text-slate-500 text-xs">
+                            <i class="fa-solid fa-arrow-up"></i> 화면 위쪽 터치시 [점프]
+                        </div>
+                    </div>
+                    <!-- 아래쪽 절반: 슬라이딩 영역 -->
+                    <div id="touch-slide" class="flex-1 bg-transparent active:bg-blue-500/5 flex items-center justify-start pl-4 transition-colors border-t border-dashed border-slate-800/10">
+                        <div class="bg-slate-900/40 p-2 rounded-full border border-slate-800 pointer-events-none text-slate-500 text-xs">
+                            <i class="fa-solid fa-arrow-down"></i> 화면 아래쪽 터치시 [숙이기]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= [4] 게임오버/결과 화면 ================= -->
+        <div id="screen-result" class="hidden absolute inset-0 z-30 flex flex-col justify-between p-6 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-950 overflow-y-auto">
+            
+            <div class="space-y-6 mt-4">
+                <div class="text-center">
+                    <span class="text-rose-400 font-bold tracking-widest text-xs uppercase"><i class="fa-solid fa-circle-stop mr-1"></i> 골든타임 종료</span>
+                    <h2 class="text-2xl font-black text-white mt-1">태안 수호 작전 결과</h2>
+                </div>
+
+                <!-- 최종 스코어 및 등급 카드 -->
+                <div class="bg-gradient-to-r from-slate-850 to-slate-800 border border-slate-700 rounded-2xl p-5 text-center shadow-inner relative overflow-hidden">
+                    <!-- 장식용 뒷배경 라이트 -->
+                    <div class="absolute -top-12 -left-12 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl"></div>
+                    <div class="absolute -bottom-12 -right-12 w-24 h-24 bg-rose-500/10 rounded-full blur-xl"></div>
+
+                    <span class="text-xs text-slate-400 font-semibold block">획득한 수호 등급</span>
+                    <h3 id="result-grade" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 mt-1">
+                        명예 닥터 태안
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-700/50">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">수호 거리</span>
+                            <span id="result-score" class="text-xl font-mono font-bold text-emerald-400">1,240 m</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">최종 유지 인구</span>
+                            <span id="result-pop" class="text-xl font-mono font-bold text-sky-400">60,420 명</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 사회문제 메시지 박스 -->
+                <div class="bg-rose-950/40 border border-rose-900/60 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center space-x-2 text-rose-400 font-bold text-sm">
+                        <i class="fa-solid fa-heart-pulse animate-pulse"></i>
+                        <span>알고 계셨나요? 태안의 슬픈 현실</span>
+                    </div>
+                    <p class="text-xs text-rose-100/90 leading-relaxed font-light">
+                        충청남도 태안군은 천혜의 자연경관을 갖추었지만, 현재 <strong class="text-rose-300">소멸 위기 지역</strong>입니다. 더욱 심각한 것은 군 내에 <strong class="text-rose-300 font-semibold">종합병원이 없어</strong> 위급 시 인근 대도시까지 이송하는 데 평균 1시간 골든타임을 허비해야 한다는 사실입니다.
+                    </p>
+                    <p class="text-[11px] text-slate-400">
+                        당신의 소중한 관심과 응원이 실제로 태안의 보건 인프라를 채우고, 주민들의 생명을 지키는 큰 힘이 됩니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 하단 행동유도(CTA) 및 공유 영역 -->
+            <div class="space-y-3 my-6">
+                <!-- 액션 버튼 1: 고향사랑기부제 (공익 기부 유도) -->
+                <button onclick="handleCTA('donation')" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-transform transform active:scale-95">
+                    <i class="fa-solid fa-hand-holding-heart text-lg"></i>
+                    <span>의료 인프라 후원하기 (고향사랑기부)</span>
+                </button>
+
+                <!-- 액션 버튼 2: 디지털 관광주민증 (방문자 인구 유도) -->
+                <button onclick="handleCTA('travelcard')" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-transform transform active:scale-95 text-sm">
+                    <i class="fa-solid fa-id-card text-lg"></i>
+                    <span>태안 '디지털 관광주민증' 신청하기</span>
+                </button>
+
+                <!-- 공유 및 재시작 듀얼 버튼 -->
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="shareGame()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl border border-slate-700 flex items-center justify-center space-x-2 text-sm transition-colors">
+                        <i class="fa-solid fa-share-nodes text-emerald-400"></i>
+                        <span>점수 공유하고 저장하기</span>
+                    </button>
+                    <button id="btn-restart" class="bg-slate-850 hover:bg-slate-800 text-white font-bold py-3 rounded-xl border border-slate-700 flex items-center justify-center space-x-2 text-sm transition-colors">
+                        <i class="fa-solid fa-rotate-right text-yellow-300"></i>
+                        <span>다시 도전하기</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 커스텀 알림 모달 -->
+        <div id="custom-modal" class="hidden absolute inset-0 bg-black/85 z-50 flex items-center justify-center p-6 transition-opacity duration-300">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center max-w-sm w-full space-y-4">
+                <div id="modal-icon" class="text-4xl text-emerald-400">
+                    <i class="fa-solid fa-check-circle"></i>
+                </div>
+                <h4 id="modal-title" class="text-lg font-bold text-white">성공적으로 복사되었습니다!</h4>
+                <p id="modal-desc" class="text-xs text-slate-400 leading-relaxed">원하는 곳에 링크를 붙여넣어 태안을 응원하고 소문을 내주세요.</p>
+                <button onclick="closeModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl transition-colors">확인</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- 게임 핵심 스크립트                                        -->
+    <!-- ======================================================= -->
+    <script>
+        // DOM 요소 선언
+        const screenIntro = document.getElementById('screen-intro');
+        const screenLoading = document.getElementById('screen-loading');
+        const screenGame = document.getElementById('screen-game');
+        const screenResult = document.getElementById('screen-result');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        
+        const uiPopulation = document.getElementById('ui-population');
+        const uiTimeBar = document.getElementById('ui-time-bar');
+        const uiTimeText = document.getElementById('ui-time-text');
+        const uiScore = document.getElementById('ui-score');
+        const uiWarning = document.getElementById('ui-warning');
+        const warningText = document.getElementById('warning-text');
+        
+        const resultGrade = document.getElementById('result-grade');
+        const resultScore = document.getElementById('result-score');
+        const resultPop = document.getElementById('result-pop');
+        
+        const customModal = document.getElementById('custom-modal');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+
+        const loadingFactText = document.getElementById('loading-fact-text');
+        const loadingProgress = document.getElementById('loading-progress');
+        const loadingPercent = document.getElementById('loading-percent');
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 게임 상태 제어 변수들
+        let isPlaying = false;
+        let score = 0;
+        let population = 60782; // 태안군 실제 근사 인구수 기준 시작
+        let goldenTime = 100; // 100% 시작
+        let gameSpeed = 5;
+        let frameCount = 0;
+        let player, obstacles, items, particles;
+        let animationFrameId;
+
+        // 색상 및 레이아웃 상수들
+        const GROUND_Y_RATIO = 0.8; // 바닥 높이 비율
+        let canvasWidth, canvasHeight;
+
+        // 로딩화면 노출용 지역 의료 현실 데이터 목록
+        const LOADING_FACTS = [
+            "실제 태안은 응급실까지 이송하는 데 평균 1시간이 걸립니다.",
+            "태안군 주민 3명 중 1명은 의료 소외계층인 고령층(65세 이상)입니다.",
+            "태안군 관내에는 응급 수술과 분만이 가능한 종합병원이 단 하나도 없습니다.",
+            "안심 케어 셔틀이나 닥터 헬기 같은 대체 의료 인프라 확충이 시급합니다.",
+            "밤새 열이 나는 아이들을 안심하고 데려갈 수 있는 소아과 전용 응급실이 필요합니다.",
+            "당신의 고향사랑 기부는 태안의 골든타임을 채워주는 확실한 보건 예산이 됩니다."
+        ];
+
+        // 태안 환경 맞춤형 데이터 목록 (장애물)
+        const OBSTACLE_TYPES = [
+            { text: "소아과 공백", color: "#f87171", type: "low" },
+            { text: "종합병원 없음", color: "#ef4444", type: "low" },
+            { text: "응급실 거리 1시간", color: "#dc2626", type: "high" },
+            { text: "실버케어 인력 부족", color: "#f87171", type: "low" }
+        ];
+
+        // 태안 환경 맞춤형 데이터 목록 (아이템)
+        const ITEM_TYPES = [
+            { text: "공공의료지원", color: "#34d399", desc: "원거리 진료망 구축" },
+            { text: "닥터헬기", color: "#10b981", desc: "응급 헬기 즉시 이송" },
+            { text: "안심 케어셔틀", color: "#059669", desc: "시골 이동 진료 버스" },
+            { text: "응급센터 신설", color: "#34d399", desc: "소아청소년과 전문 충원" }
+        ];
+
+        // 반응형 화면 리사이즈
+        function resizeCanvas() {
+            canvasWidth = canvas.parentElement.clientWidth;
+            canvasHeight = canvas.parentElement.clientHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            // 화면 크기 변경 시 점프 중이 아닌 플레이어를 항상 도로 위에 보정 배치
+            if (player && !player.isJumping) {
+                player.y = player.groundY;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- 플레이어 클래스 ---
+        class Player {
+            constructor() {
+                this.x = 50;
+                this.width = 65;
+                this.height = 40;
+                this.vy = 0;
+                this.gravity = 0.6;
+                this.jumpStrength = -13;
+                this.isJumping = false;
+                this.isSliding = false;
+                this.slideTimer = 0;
+                this.normalHeight = 40;
+                this.slideHeight = 22;
+                // 실시간 캔버스 높이에 비례하여 시작 위치 계산
+                this.y = this.groundY;
+            }
+
+            // 실시간 캔버스 높이에 비례하는 지면 높이 속성
+            get groundY() {
+                return canvasHeight * GROUND_Y_RATIO - this.height;
+            }
+
+            jump() {
+                if (!this.isJumping && !this.isSliding) {
+                    this.vy = this.jumpStrength;
+                    this.isJumping = true;
+                }
+            }
+
+            slide() {
+                if (!this.isJumping && !this.isSliding) {
+                    this.isSliding = true;
+                    this.height = this.slideHeight;
+                    this.y = this.groundY;
+                    this.slideTimer = 45; // 슬라이딩 지속 프레임수
+                }
+            }
+
+            update() {
+                // 중력 적용
+                if (this.isJumping) {
+                    this.vy += this.gravity;
+                    this.y += this.vy;
+                    if (this.y >= this.groundY) {
+                        this.y = this.groundY;
+                        this.vy = 0;
+                        this.isJumping = false;
+                    }
+                } else if (!this.isSliding) {
+                    // 점프나 슬라이딩이 아니면 실시간으로 지면에 고정 (창 크기 리사이즈 대응)
+                    this.y = this.groundY;
+                }
+
+                // 슬라이딩 카운트다운
+                if (this.isSliding) {
+                    this.slideTimer--;
+                    if (this.slideTimer <= 0) {
+                        this.isSliding = false;
+                        this.height = this.normalHeight;
+                        this.y = this.groundY;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 앰뷸런스 몸체 드로잉 (레트로 픽셀 느낌)
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 4);
+                ctx.fill();
+
+                // 앞유리창
+                ctx.fillStyle = "#38bdf8";
+                ctx.beginPath();
+                if (this.isSliding) {
+                    ctx.roundRect(this.x + this.width - 15, this.y + 2, 12, 10, 2);
+                } else {
+                    ctx.roundRect(this.x + this.width - 18, this.y + 4, 15, 15, 2);
+                }
+                ctx.fill();
+
+                // 적십자 로고 (의료 수호 상징)
+                ctx.strokeStyle = "#ef4444";
+                ctx.lineWidth = 3;
+                ctx.lineCap = "round";
+                const cx = this.x + (this.width / 2) - 5;
+                const cy = this.y + (this.height / 2);
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, cy);
+                ctx.lineTo(cx + 5, cy);
+                ctx.moveTo(cx, cy - 5);
+                ctx.lineTo(cx, cy + 5);
+                ctx.stroke();
+
+                // 붉은 사이렌 경보등 (반짝임 애니메이션)
+                if (frameCount % 10 < 5) {
+                    ctx.fillStyle = "#ef4444";
+                } else {
+                    ctx.fillStyle = "#38bdf8";
+                }
+                ctx.beginPath();
+                ctx.arc(this.x + 10, this.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 바퀴 드로잉
+                ctx.fillStyle = "#334155";
+                const wheelY = this.y + this.height - 2;
+                ctx.beginPath();
+                ctx.arc(this.x + 15, wheelY, 7, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width - 15, wheelY, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // --- 장애물 클래스 (의료 부족 장벽) ---
+        class Obstacle {
+            constructor() {
+                const info = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+                this.text = info.text;
+                this.color = info.color;
+                this.type = info.type; // 'low' (점프 회피용 바닥형) 또는 'high' (슬라이딩 회피용 공중형)
+                
+                this.width = 120;
+                this.height = 36;
+                this.x = canvasWidth + 20;
+                
+                if (this.type === "low") {
+                    this.y = canvasHeight * GROUND_Y_RATIO - this.height;
+                } else {
+                    this.y = canvasHeight * GROUND_Y_RATIO - 70; // 공중 장애물 높이
+                }
+            }
+
+            update() {
+                this.x -= gameSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                // 둥근 사각형 장애물 바디
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = 'rgba(239, 68, 68, 0.4)';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+                ctx.fill();
+                
+                // 테두리 경고선 연출
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // 텍스트 출력
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 11px 'Gmarket Sans'";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.text, this.x + this.width / 2, this.y + this.height / 2);
+                ctx.restore();
+            }
+        }
+
+        // --- 해결책 아이템 클래스 (의료 인프라 개선 수단) ---
+        class Item {
+            constructor() {
+                const info = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
+                this.text = info.text;
+                this.color = info.color;
+                
+                this.width = 110;
+                this.height = 34;
+                this.x = canvasWidth + 100;
+                // 바닥과 공중 중 무작위 배치
+                this.y = Math.random() > 0.5 ? 
+                    canvasHeight * GROUND_Y_RATIO - this.height - 10 : 
+                    canvasHeight * GROUND_Y_RATIO - 75;
+            }
+
+            update() {
+                this.x -= gameSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                // 친환경 그린/네온 둥근 사각형 바디
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+                ctx.fill();
+
+                // 아이콘 데코레이션
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 11px 'Gmarket Sans'";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("✚ " + this.text, this.x + this.width / 2, this.y + this.height / 2);
+                ctx.restore();
+            }
+        }
+
+        // --- 파티클 이펙트 클래스 (부딪히거나 먹었을 때 연출) ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 4 + 2;
+                this.speedX = Math.random() * 6 - 3;
+                this.speedY = Math.random() * -5 - 1;
+                this.gravity = 0.2;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.speedY += this.gravity;
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= 0.02;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // --- [NEW] 행동 유도 로딩 프로세스 ---
+        function runLoadingSequence(onComplete) {
+            // 인트로 및 결과창 닫기, 로딩창 노출
+            screenIntro.classList.add('hidden');
+            screenResult.classList.add('hidden');
+            screenGame.classList.add('hidden');
+            screenLoading.classList.remove('hidden');
+
+            let progress = 0;
+            let factIndex = 0;
+            
+            // 초기 팩트 텍스트 무작위 선택
+            loadingFactText.innerText = `"${LOADING_FACTS[Math.floor(Math.random() * LOADING_FACTS.length)]}"`;
+            
+            // 팩트 회전 교체 타이머 (1.2초마다 교환)
+            const factTimer = setInterval(() => {
+                loadingFactText.style.opacity = 0;
+                setTimeout(() => {
+                    const randomFact = LOADING_FACTS[Math.floor(Math.random() * LOADING_FACTS.length)];
+                    loadingFactText.innerText = `"${randomFact}"`;
+                    loadingFactText.style.opacity = 1;
+                }, 200);
+            }, 1200);
+
+            // 로딩 바 서서히 진행 (총 2.5초)
+            const progressTimer = setInterval(() => {
+                progress += 2;
+                loadingProgress.style.width = `${progress}%`;
+                loadingPercent.innerText = `안전망 연결 중... ${progress}%`;
+
+                if (progress >= 100) {
+                    clearInterval(progressTimer);
+                    clearInterval(factTimer);
+                    
+                    // 로딩 완수 후 실제 플레이화면으로 
+                    setTimeout(() => {
+                        screenLoading.classList.add('hidden');
+                        screenGame.classList.remove('hidden');
+                        onComplete();
+                    }, 200);
+                }
+            }, 50);
+        }
+
+        // --- 게임 리셋 및 초기화 ---
+        function initGame() {
+            resizeCanvas(); // 화면 크기 먼저 완벽히 계산 및 캔버스 적용
+            isPlaying = true;
+            score = 0;
+            population = 60782;
+            goldenTime = 100;
+            gameSpeed = 5;
+            frameCount = 0;
+
+            player = new Player();
+            player.y = player.groundY; // 명시적으로 지면에 스냅
+            obstacles = [];
+            items = [];
+            particles = [];
+
+            // UI 업데이트
+            uiTimeBar.style.width = '100%';
+            uiTimeBar.style.background = "linear-gradient(to right, #f43f5e, #ef4444)";
+            uiTimeText.innerText = "100%";
+            uiPopulation.innerText = population.toLocaleString();
+            uiScore.innerText = "0 m";
+            uiWarning.classList.add('hidden');
+        }
+
+        // --- 트리거 경고 이펙트 ---
+        function showWarning(text, isDanger = true) {
+            warningText.innerText = text;
+            uiWarning.classList.remove('hidden');
+            if (isDanger) {
+                uiWarning.className = "bg-red-600 text-white font-bold text-xs px-3 py-2 rounded-lg shadow-lg flex items-center space-x-2 animate-bounce";
+            } else {
+                uiWarning.className = "bg-emerald-600 text-white font-bold text-xs px-3 py-2 rounded-lg shadow-lg flex items-center space-x-2 animate-bounce";
+            }
+
+            setTimeout(() => {
+                uiWarning.classList.add('hidden');
+            }, 1200);
+        }
+
+        // --- 메인 게임 루프 ---
+        function update() {
+            if (!isPlaying) return;
+
+            frameCount++;
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // 난이도 상승 (거리당 비례 속도 상승)
+            if (frameCount % 300 === 0 && gameSpeed < 12) {
+                gameSpeed += 0.5;
+            }
+
+            // 실시간 점수(거리) 및 골든타임 자동 감소 계산
+            score += Math.floor(gameSpeed / 4);
+            uiScore.innerText = score.toLocaleString() + " m";
+
+            // 시간에 따른 골든타임의 자연 차감 (가벼운 압박감 유도)
+            goldenTime -= 0.03;
+            if (goldenTime <= 0) {
+                goldenTime = 0;
+                gameOver();
+                return;
+            }
+
+            // UI 연동 실시간 렌더링
+            uiTimeBar.style.width = `${goldenTime}%`;
+            uiTimeText.innerText = `${Math.floor(goldenTime)}%`;
+            if (goldenTime < 30) {
+                uiTimeBar.style.background = "#ef4444";
+                uiTimeText.className = "font-mono text-red-500 font-bold pulse-danger";
+            }
+
+            // 1. 배경선 드로잉 (바다 배경과 로컬 실루엣)
+            ctx.fillStyle = "#020617";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // 수평선 및 밤바다 파도 표현
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, canvasHeight * GROUND_Y_RATIO, canvasWidth, canvasHeight * (1 - GROUND_Y_RATIO));
+
+            // 태안 황도 바다 도로/지면 표현
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(0, canvasHeight * GROUND_Y_RATIO, canvasWidth, 12);
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, canvasHeight * GROUND_Y_RATIO + 12, canvasWidth, canvasHeight);
+
+            // 중앙 황색 차선
+            ctx.fillStyle = "#eab308";
+            const laneWidth = 35;
+            const laneGap = 20;
+            const dashOffset = (frameCount * gameSpeed) % (laneWidth + laneGap);
+            for (let x = -dashOffset; x < canvasWidth; x += laneWidth + laneGap) {
+                ctx.fillRect(x, canvasHeight * GROUND_Y_RATIO + 5, laneWidth, 2);
+            }
+
+            // 2. 플레이어 업데이트 및 렌더링
+            player.update();
+            player.draw();
+
+            // 3. 장애물(의료 공백) 생성 및 연산
+            if (frameCount % 120 === 0) {
+                if (Math.random() > 0.3) {
+                    obstacles.push(new Obstacle());
+                }
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.update();
+                obs.draw();
+
+                // 플레이어 충돌 검사
+                if (
+                    player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y
+                ) {
+                    // 폭파 파티클 이펙트 생성
+                    for (let p = 0; p < 12; p++) {
+                        particles.push(new Particle(obs.x + obs.width/2, obs.y + obs.height/2, obs.color));
+                    }
+                    
+                    // 패널티 적용
+                    goldenTime -= 15; // 골든타임 대폭 소모
+                    population -= Math.floor(Math.random() * 120 + 80); // 인구수 감소 연출
+                    uiPopulation.innerText = Math.max(50000, population).toLocaleString();
+
+                    showWarning(`🚨 ${obs.text} 피격! 골든타임 단축!`);
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+
+                // 화면 밖으로 나간 장애물 제거
+                if (obs.x + obs.width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // 4. 해결 아이템 생성 및 연산
+            if (frameCount % 180 === 40) {
+                items.push(new Item());
+            }
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                const itm = items[i];
+                itm.update();
+                itm.draw();
+
+                // 플레이어 획득 검사
+                if (
+                    player.x < itm.x + itm.width &&
+                    player.x + player.width > itm.x &&
+                    player.y < itm.y + itm.height &&
+                    player.y + player.height > itm.y
+                ) {
+                    // 수호 이펙트 파티클 생성
+                    for (let p = 0; p < 15; p++) {
+                        particles.push(new Particle(itm.x + itm.width/2, itm.y + itm.height/2, "#34d399"));
+                    }
+
+                    // 혜택 적용
+                    goldenTime = Math.min(100, goldenTime + 10); // 골든타임 회복
+                    population += Math.floor(Math.random() * 60 + 40); // 정주 인구 유입 연출
+                    uiPopulation.innerText = population.toLocaleString();
+
+                    showWarning(`💚 ${itm.text} 확보! 인구 수호!`, false);
+                    items.splice(i, 1);
+                    continue;
+                }
+
+                if (itm.x + itm.width < 0) {
+                    items.splice(i, 1);
+                }
+            }
+
+            // 5. 이펙트 파티클 업데이트
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(update);
+        }
+
+        // --- 게임오버 및 스코어 보드 연계 ---
+        function gameOver() {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrameId);
+
+            // 결과 화면 데이터 설정
+            resultScore.innerText = score.toLocaleString() + " m";
+            resultPop.innerText = Math.max(50000, population).toLocaleString() + " 명";
+
+            // 점수별 수호 등급 확정
+            let grade = "";
+            let gradeColor = "";
+            if (score >= 2500) {
+                grade = "태안 수호천사 (의료의 신)";
+                gradeColor = "linear-gradient(to right, #fbbf24, #f59e0b)";
+            } else if (score >= 1500) {
+                grade = "명예 태안 닥터";
+                gradeColor = "linear-gradient(to right, #34d399, #059669)";
+            } else if (score >= 800) {
+                grade = "태안의 든든한 파수꾼";
+                gradeColor = "linear-gradient(to right, #38bdf8, #0284c7)";
+            } else {
+                grade = "초보 안심 지키미";
+                gradeColor = "linear-gradient(to right, #94a3b8, #64748b)";
+            }
+            resultGrade.innerText = grade;
+            resultGrade.style.backgroundImage = gradeColor;
+
+            // 스크린 전환 애니메이션
+            screenGame.classList.add('hidden');
+            screenResult.classList.remove('hidden');
+        }
+
+        // --- 사용자 이벤트 핸들러 배치 ---
+        
+        // 점프 & 슬라이딩 트리거 함수
+        function triggerJump() {
+            if (isPlaying) player.jump();
+        }
+
+        function triggerSlide() {
+            if (isPlaying) player.slide();
+        }
+
+        // 터치 기반 트리거
+        document.getElementById('touch-jump').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerJump();
+        }, { passive: false });
+
+        document.getElementById('touch-slide').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerSlide();
+        }, { passive: false });
+
+        // 마우스 클릭 보정 (PC 테스트 목적)
+        document.getElementById('touch-jump').addEventListener('mousedown', triggerJump);
+        document.getElementById('touch-slide').addEventListener('mousedown', triggerSlide);
+
+        // 키보드 조작 처리
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying) return;
+            if (e.key === 'ArrowUp' || e.key === ' ') {
+                e.preventDefault();
+                player.jump();
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                player.slide();
+            }
+        });
+
+        // 씬 제어 이벤트 리스너 (로딩 연계)
+        btnStart.addEventListener('click', () => {
+            runLoadingSequence(() => {
+                initGame();
+                update();
+            });
+        });
+
+        btnRestart.addEventListener('click', () => {
+            runLoadingSequence(() => {
+                initGame();
+                update();
+            });
+        });
+
+        // --- CTA 클릭 및 기부/관광 연계 ---
+        function handleCTA(type) {
+            if (type === 'donation') {
+                openModal(
+                    "<i class='fa-solid fa-heart text-rose-500 animate-pulse'></i>",
+                    "태안 고향사랑기부 안내",
+                    "전액 세액공제 혜택과 다채로운 지역 특산품 답례품 혜택까지! 당신의 소중한 기부금은 전액 태안군의 부족한 보건소 장비 구축 및 전담 의료 인력 매칭 예산으로 안전하게 기부·사용됩니다."
+                );
+            } else if (type === 'travelcard') {
+                openModal(
+                    "<i class='fa-solid fa-plane-departure text-sky-400'></i>",
+                    "디지털 관광주민증 발급",
+                    "태안 디지털 관광주민증을 발급받으면 로컬 숙박, 감성 카페, 서핑 체험 요금이 즉시 할인됩니다! 단순한 당일치기 관광객을 넘어 태안을 든든하게 받치는 '생활 정주 인구'가 되어주세요."
+                );
+            }
+        }
+
+        // 카카오톡 및 타 소셜 미디어 가상 공유하기 기능 (클립보드 복사 & 저장)
+        function shareGame() {
+            const tempUrl = window.location.href;
+            const message = `🚑 [달려라 닥터 태안] 저는 인구수 소멸을 막고 ${score}m를 완주하여 [${resultGrade.innerText}] 등급을 획득했습니다!\n실제 응급실 도달 평균 1시간인 태안에 소중한 관심과 의료 인프라를 연결해주세요!\n▶ 참여하기: ${tempUrl}`;
+            
+            // iframe 환경에서도 클립보드 복사가 가능한 샌드박스 크로스 브라우징 보정
+            const textarea = document.createElement('textarea');
+            textarea.value = message;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            openModal(
+                "<i class='fa-solid fa-share-nodes text-yellow-400'></i>",
+                "수호 스코어 & 등급 저장 완료",
+                "당신의 멋진 달리기 점수와 태안 응원 메시지가 클립보드에 복사되었습니다! 카카오톡이나 SNS에 바로 공유(붙여넣기)하여 태안을 안팎으로 소문내고 구해주세요!"
+            );
+        }
+
+        // 모달 관리 헬퍼
+        function openModal(iconHtml, title, desc) {
+            modalIcon.innerHTML = iconHtml;
+            modalTitle.innerText = title;
+            modalDesc.innerText = desc;
+            customModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            customModal.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

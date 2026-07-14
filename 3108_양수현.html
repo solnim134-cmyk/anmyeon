@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태안 보물공간 구하기 타이쿤 PRO</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 아이콘 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Gothic Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Gothic A1', sans-serif;
+            background-color: #eefcf9;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .clean-item {
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .clean-item:active {
+            transform: scale(0.8);
+        }
+        /* 드래그 상태 부드러운 움직임 */
+        .draggable-item {
+            touch-action: none;
+            cursor: grab;
+            user-select: none;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.08);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        /* 로딩 펄스 애니메이션 */
+        .pulse-soft {
+            animation: softPulse 1.5s infinite ease-in-out;
+        }
+        @keyframes softPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        /* 화살표 꿀렁 애니메이션 */
+        @keyframes bounceArrow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .bounce-arrow {
+            animation: bounceArrow 0.8s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 md:p-6 relative">
+
+    <!-- 전체 게임 앱 컨테이너 -->
+    <div id="game-app" class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden border-8 border-teal-500 relative flex flex-col min-h-[850px]">
+        
+        <!-- 게임 헤더 -->
+        <header class="bg-gradient-to-r from-teal-600 to-emerald-700 text-white p-4 md:p-5 flex flex-col md:flex-row justify-between items-center gap-3 shadow-md shrink-0 relative">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 text-3xl rounded-2xl" id="header-avatar-container">👷‍♂️</div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black flex items-center gap-1.5">
+                        태안 보물공간 구하기 <span class="text-xs bg-yellow-300 text-teal-950 font-black px-2.5 py-1 rounded-full animate-bounce">어린이 버디 모드 🧚‍♀️</span>
+                    </h1>
+                    <p class="text-xs text-teal-100 font-medium">버려진 건물을 깨끗하게 치우고 멋지게 꾸미는 착한 재생 게임!</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-teal-800/60 py-1.5 px-4 rounded-2xl border border-teal-400/40">
+                <div class="text-center border-r border-teal-400/40 pr-3">
+                    <p class="text-[10px] text-teal-200 font-bold">💰 우리들의 용돈</p>
+                    <p class="text-lg font-black text-yellow-300 flex items-center justify-center gap-1">
+                        <span id="player-money">400</span>원
+                    </p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] text-teal-200 font-bold">⭐ 지금 할 일</p>
+                    <p class="text-sm font-black text-rose-200" id="player-phase">1단계: 깨끗이 대청소</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- 어린이 도우미 요정 가이드 바 -->
+        <div id="fairy-helper-bar" class="bg-yellow-100 border-b border-yellow-200 py-2.5 px-4 flex items-center justify-between text-xs font-black text-amber-950">
+            <span class="flex items-center gap-2">
+                <span class="text-lg animate-bounce">🧚‍♀️</span>
+                <span id="fairy-instruction">안녕! 아래에서 마음에 드는 멋진 대장님을 한 명 골라봐!</span>
+            </span>
+            <span class="bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full text-[9px]">초록요정 팁</span>
+        </div>
+
+        <!-- 튜토리얼 가이드 화살표 레이어 -->
+        <div id="tutorial-arrow-layer" class="absolute z-50 pointer-events-none hidden flex flex-col items-center">
+            <div class="bg-yellow-400 text-teal-950 font-black text-xs py-2 px-3.5 rounded-2xl shadow-xl border-2 border-teal-600 flex items-center gap-1">
+                <span>⭐</span> <span id="tutorial-text">여기를 눌러줘!</span>
+            </div>
+            <!-- 아래방향 노란색 화살표 -->
+            <div class="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[15px] border-t-yellow-400 drop-shadow-md bounce-arrow mt-1"></div>
+        </div>
+
+        <!-- [화면 1] 캐릭터 선택 화면 -->
+        <div id="screen-char-select" class="p-4 md:p-8 flex-1 flex flex-col justify-between">
+            <div class="text-center max-w-4xl mx-auto my-auto space-y-4">
+                <span class="text-5xl">🏝️</span>
+                <h2 class="text-xl md:text-2xl font-black text-teal-800">우리는 태안 공간 구출 특공대!</h2>
+                <p class="text-xs text-gray-500 leading-relaxed font-bold">
+                    지방의 작은 마을들은 놀이터나 극장이 없어서 심심하대요.<br>
+                    우리가 멋지게 건물을 고쳐서 친구들에게 멋진 놀이터와 도서관을 선물해봐요!
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2">
+                    <!-- 김목수 -->
+                    <button id="char-btn-carpenter" onclick="selectCharacter('carpenter', '🔨 뚝딱 김목수', '청소를 더 열심히 빨리하는 능력!')" class="char-card border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-4 bg-white hover:bg-teal-50/50 transition text-left focus:outline-none flex flex-col justify-between h-44 shadow-sm relative overflow-hidden">
+                        <div class="text-3xl">👷‍♂️</div>
+                        <div>
+                            <p class="font-extrabold text-teal-900 text-xs">뚝딱 건축가 (김목수)</p>
+                            <span class="text-[9px] bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full inline-block mt-1">청소하기 특화</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">초반 쓰레기를 치울 때 돈을 더 많이 가져옵니다.</p>
+                    </button>
+                    <!-- 이예술 -->
+                    <button id="char-btn-artist" onclick="selectCharacter('artist', '🎨 예쁜 이예술', '가구와 장식품을 싸게 살 수 있는 능력!')" class="char-card border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-4 bg-white hover:bg-teal-50/50 transition text-left focus:outline-none flex flex-col justify-between h-44 shadow-sm relative overflow-hidden">
+                        <div class="text-3xl">👩‍🎨</div>
+                        <div>
+                            <p class="font-extrabold text-teal-900 text-xs">꾸미기 대장 (이예술)</p>
+                            <span class="text-[9px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full inline-block mt-1">가구 대박 할인</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">상점에 있는 아기자기한 소품 가격을 깎아줍니다.</p>
+                    </button>
+                    <!-- 박홍보 -->
+                    <button id="char-btn-promoter" onclick="selectCharacter('promoter', '📢 씽씽 박홍보', '소문을 아주 널리 내서 손님을 부르는 능력!')" class="char-card border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-4 bg-white hover:bg-teal-50/50 transition text-left focus:outline-none flex flex-col justify-between h-44 shadow-sm relative overflow-hidden">
+                        <div class="text-3xl">📢</div>
+                        <div>
+                            <p class="font-extrabold text-teal-900 text-xs">소문쟁이 요정 (박홍보)</p>
+                            <span class="text-[9px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full inline-block mt-1">주민 모으기 대장</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">소문을 더 빨리 내고, 손님들에게 선물을 많이 받습니다.</p>
+                    </button>
+                    <!-- 최생태 -->
+                    <button id="char-btn-ecology" onclick="selectCharacter('ecology', '🌱 초록 최생태', '식물을 심으면 보너스를 듬뿍 받는 능력!')" class="char-card border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-4 bg-white hover:bg-teal-50/50 transition text-left focus:outline-none flex flex-col justify-between h-44 shadow-sm relative overflow-hidden">
+                        <div class="text-3xl">🌿</div>
+                        <div>
+                            <p class="font-extrabold text-teal-900 text-xs">자연 사랑꾼 (최생태)</p>
+                            <span class="text-[9px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full inline-block mt-1">식물사랑 보너스</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">환경 친화 화분을 심으면 정부 보조금을 더 많이 받아요.</p>
+                    </button>
+                    <!-- 정셰프 -->
+                    <button id="char-btn-chef" onclick="selectCharacter('chef', '🍽️ 맛있는 정셰프', '맛있는 간식을 나눠주고 칭찬받는 능력!')" class="char-card border-2 border-gray-200 hover:border-teal-500 rounded-2xl p-4 bg-white hover:bg-teal-50/50 transition text-left focus:outline-none flex flex-col justify-between h-44 shadow-sm relative overflow-hidden">
+                        <div class="text-3xl">🍽️</div>
+                        <div>
+                            <p class="font-extrabold text-teal-900 text-xs">요리 셰프 (정셰프)</p>
+                            <span class="text-[9px] bg-pink-100 text-pink-700 font-bold px-2 py-0.5 rounded-full inline-block mt-1">맛있는 간식 팁</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">멋진 카페테리아를 접목해 개장식 날 큰 기부금을 얻어요.</p>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-4 border-t pt-3 text-center">
+                <button id="btn-start-roulette" disabled onclick="transitionToRoulette()" class="w-full md:w-80 bg-gray-300 text-gray-500 font-black py-4 rounded-2xl transition duration-200 cursor-not-allowed text-sm">
+                    대장님을 먼저 한 명 터치해줘!
+                </button>
+            </div>
+        </div>
+
+        <!-- [화면 2] 유휴지역 무작위 배정 룰렛 화면 -->
+        <div id="screen-roulette" class="hidden p-6 md:p-10 flex-1 flex flex-col justify-between text-center">
+            <div class="my-auto max-w-md mx-auto space-y-6">
+                <span class="text-5xl animate-bounce inline-block">🎯</span>
+                <h2 class="text-xl md:text-2xl font-black text-teal-800">우리가 부술 보물 건물을 찾자!</h2>
+                <p class="text-xs text-gray-400">태안에 방치된 오래된 건물을 탐색해서 재미있는 놀이터로 바꿉니다.</p>
+                
+                <div id="roulette-display" class="bg-slate-50 border-4 border-dashed border-teal-500 rounded-3xl p-6 shadow-inner flex flex-col items-center justify-center min-h-[190px]">
+                    <span id="roulette-emoji" class="text-5xl mb-2">🏭</span>
+                    <h3 id="roulette-title" class="font-black text-lg text-teal-950">어디로 출발할까?</h3>
+                    <p id="roulette-target" class="text-xs text-emerald-600 font-extrabold mt-1">아래 노란 버튼을 클릭해 신나게 돌려봐!</p>
+                </div>
+
+                <div class="pt-4">
+                    <button id="btn-spin" onclick="spinRoulette()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-teal-950 text-base font-black py-4 rounded-2xl shadow-md transition duration-150">
+                        🚀 출동! 보물 건물 탐색하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [화면 3] 메인 게임 플레이 화면 -->
+        <div id="screen-main-game" class="hidden flex-1 p-3 md:p-5 flex flex-col lg:flex-row gap-5">
+            
+            <!-- 왼쪽: 유휴공간 내부 캔버스 영역 및 현황판 -->
+            <div class="flex-1 flex flex-col gap-3">
+                
+                <!-- 상단 공간 정보 바 + 소셜 버튼 -->
+                <div class="bg-teal-50 border border-teal-100 p-3 rounded-2xl flex justify-between items-center shrink-0">
+                    <div>
+                        <div class="flex items-center gap-1 text-xs text-teal-800 font-bold">
+                            <span id="field-area-badge">🏫</span> <span id="field-area-name">태안 남면 노후 폐교 부지</span>
+                        </div>
+                        <h3 class="text-xs md:text-sm font-black text-slate-800 mt-0.5 flex items-center gap-2">
+                            <span>여기가 바로:</span>
+                            <span id="field-target-facility" class="text-teal-600 font-extrabold">주민 생태 도서관</span>
+                        </h3>
+                    </div>
+                    <!-- 소셜 놀러가기 버튼 -->
+                    <button id="btn-go-social" onclick="openSocialModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black py-2.5 px-3 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                        <i class="fa-solid fa-plane-departure"></i> 친구 마을 구경가기 🚌
+                    </button>
+                </div>
+
+                <!-- 단계별 미션 프로그레스바 -->
+                <div class="bg-gray-100 rounded-full h-6 relative overflow-hidden shrink-0 border">
+                    <div id="main-progress-bar" class="bg-gradient-to-r from-teal-400 to-emerald-500 h-full transition-all" style="width: 0%"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-700" id="progress-bar-label">대청소 미션 완료율 0%</div>
+                </div>
+
+                <!-- 핵심: 내부 배경 및 실시간 인테리어 드래그 캔버스 -->
+                <div id="interior-canvas-container" class="flex-1 border-4 border-teal-600 rounded-2xl relative overflow-hidden flex flex-col min-h-[410px] shadow-inner bg-slate-300">
+                    
+                    <!-- 벽면 페인팅 적용 영역 (Top 70%) -->
+                    <div id="canvas-wall" class="absolute inset-x-0 top-0 bottom-[30%] bg-gray-300 border-b-8 border-amber-900/40 flex flex-col justify-end items-center relative transition-colors duration-500">
+                        
+                        <!-- 태안 바다뷰 창문 구현 -->
+                        <div class="absolute top-4 left-1/2 -translate-x-1/2 w-44 h-24 border-4 border-amber-800 rounded-t-full overflow-hidden bg-sky-200 shadow-md flex items-end justify-center">
+                            <div class="w-full h-1/2 bg-blue-500/80 relative">
+                                <div class="absolute bottom-2 left-1/4 w-3 h-3 bg-white/50 rounded-full animate-pulse"></div>
+                                <div class="absolute bottom-1 right-1/3 w-2 h-2 bg-white/50 rounded-full"></div>
+                                <span class="absolute top-[-10px] left-2 text-yellow-300 text-xs font-bold">☀️</span>
+                            </div>
+                            <div class="absolute inset-0 border-r border-amber-800 left-1/2"></div>
+                        </div>
+
+                        <!-- 칠하기 단계 안내 레이블 -->
+                        <div id="canvas-guide-overlay" class="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] py-1 px-2.5 rounded-lg z-10 font-bold">
+                            🚧 1단계: 방안에 있는 쓰레기나 상자들을 콕 터치해서 모두 치워보자!
+                        </div>
+                    </div>
+
+                    <!-- 바닥 영역 (Bottom 30%) -->
+                    <div id="canvas-floor" class="absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-stone-800 to-stone-700 shadow-inner">
+                        <div class="w-full h-full opacity-20 border-t border-b border-black/30 bg-[repeating-linear-gradient(90deg,transparent,transparent_40px,rgba(0,0,0,0.5)_40px,rgba(0,0,0,0.5)_42px)]"></div>
+                    </div>
+
+                    <!-- 쓰레기 및 인테리어 가구가 배치되고 정비되는 레이어 -->
+                    <div id="interactive-item-layer" class="absolute inset-0 z-20 pointer-events-auto">
+                        <!-- 동적 생성 쓰레기 & 설치된 가구 오브젝트들이 배치됨 -->
+                    </div>
+
+                    <!-- 개장단계 손님 애니메이션 레이어 -->
+                    <div id="guest-animation-layer" class="absolute inset-0 z-30 pointer-events-none overflow-hidden">
+                        <!-- 개장 시 귀여운 방문객 이모지들이 배치됨 -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 오른쪽: 컨트롤러 패널 (단계별 작업창 + 퀘스트 위젯) -->
+            <div class="w-full lg:w-[410px] flex flex-col gap-3">
+                
+                <!-- 현재 진행 중인 재생 단계 위젯 -->
+                <div class="bg-teal-950 text-white p-3.5 rounded-2xl shadow-md border border-teal-800">
+                    <p class="text-[9px] text-teal-300 font-bold tracking-wider uppercase">태안 도심 구출 작전</p>
+                    <div class="flex items-center justify-between mt-1">
+                        <h4 class="text-xs font-extrabold" id="current-phase-title">1단계: 쓰레기 분리배출 청소</h4>
+                        <span id="current-phase-badge" class="bg-teal-500 text-white text-[9px] font-black py-0.5 px-2 rounded-full">청소 미션</span>
+                    </div>
+                    <p class="text-[11px] text-teal-100/80 mt-1 leading-relaxed" id="current-phase-desc">
+                        방에 있는 버려진 쓰레기랑 상자를 터치해서 치우면 나라에서 지원 용돈을 줘요!
+                    </p>
+                </div>
+
+                <!-- [★핵심 신시스템] 나라에서 주는 깜짝 선물 미션! -->
+                <div id="gov-widget" class="bg-amber-50 border-2 border-amber-200 p-3.5 rounded-2xl shadow-sm space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black text-amber-900 flex items-center gap-1">
+                            <i class="fa-solid fa-gift text-amber-700 animate-bounce"></i> 🎁 나라에서 주는 선물 미션!
+                        </span>
+                        <span class="text-[9px] bg-amber-200 text-amber-800 font-extrabold px-1.5 py-0.5 rounded">공돈 받기 기회</span>
+                    </div>
+                    
+                    <div id="gov-quest-container" class="bg-white border border-amber-100 p-2.5 rounded-xl">
+                        <h5 class="text-[11px] font-extrabold text-slate-800 flex items-center justify-between">
+                            <span id="gov-quest-title">대기 중인 긴급 업무 지시가 없습니다.</span>
+                            <span id="gov-quest-reward-badge" class="text-[10px] text-emerald-600 font-black"></span>
+                        </h5>
+                        <p id="gov-quest-desc" class="text-[10px] text-gray-500 mt-1">진행도를 달성하면 정부 추가 미션이 발생합니다.</p>
+                        <div id="gov-quest-status" class="text-[9px] font-bold text-amber-700 mt-2 flex justify-between items-center">
+                            <span>미션 상황: <span id="gov-quest-current-status">대기 중</span></span>
+                            <button id="btn-claim-gov-bonus" onclick="claimGovBonus()" class="bg-gray-200 text-gray-400 text-[10px] px-2.5 py-1 rounded-lg font-black cursor-not-allowed" disabled>보조금 수령하기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 단계별 상호작용 컨트롤 보드 -->
+                <div class="flex-1 bg-slate-50 border border-slate-100 rounded-2xl p-3.5 flex flex-col justify-between min-h-[350px]">
+                    
+                    <!-- 탭 1: 대청소 단계 패널 (Phase 1) -->
+                    <div id="panel-phase1" class="flex-1 flex flex-col justify-between gap-3">
+                        <div class="space-y-3">
+                            <div class="bg-slate-100 border border-slate-200 p-3 rounded-xl">
+                                <p class="text-[11px] font-bold text-slate-800 mb-0.5">🧹 쓰레기 정리하기 수칙</p>
+                                <p class="text-[10px] text-gray-500 leading-normal">
+                                    오른쪽 화면 방안에 보이는 다양한 쓰레기와 깨진 먼지 블록들을 마우스나 손가락으로 가볍게 탭(터치)해봐요!
+                                </p>
+                            </div>
+                            <div class="text-center p-3 bg-white border rounded-xl">
+                                <p class="text-[10px] text-gray-400 font-bold">치워야 할 보물방 쓰레기</p>
+                                <p class="text-3xl font-black text-rose-500 mt-0.5" id="remaining-trash-count">8개</p>
+                            </div>
+                        </div>
+                        <button id="btn-goto-phase2" onclick="nextToPhase2()" class="w-full py-3.5 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs" disabled>
+                            청소를 완료하면 도색/인테리어 단계로 진행 ➔
+                        </button>
+                    </div>
+
+                    <!-- 탭 2: 인테리어 단계 패널 (Phase 2) -->
+                    <div id="panel-phase2" class="hidden flex-1 flex flex-col justify-between gap-3">
+                        <div class="space-y-3.5 overflow-y-auto max-h-[300px] pr-1">
+                            
+                            <!-- 1. 벽지 색칠 코너 -->
+                            <div>
+                                <p class="text-[11px] font-black text-teal-900 mb-1"><i class="fa-solid fa-brush mr-1"></i> 1. 예쁜 색상으로 벽 칠하기</p>
+                                <div class="grid grid-cols-4 gap-1.5">
+                                    <button id="paint-btn-1" onclick="paintWall('#e0f2fe', '태안 비치 블루')" class="py-1.5 px-0.5 bg-[#e0f2fe] border border-gray-300 rounded-lg text-[9px] font-bold text-blue-950 hover:scale-105 transition">오션블루</button>
+                                    <button id="paint-btn-2" onclick="paintWall('#ffedd5', '피치 선셋')" class="py-1.5 px-0.5 bg-[#ffedd5] border border-gray-300 rounded-lg text-[9px] font-bold text-amber-950 hover:scale-105 transition">피치선셋</button>
+                                    <button id="paint-btn-3" onclick="paintWall('#d1fae5', '태안 솔숲 민트')" class="py-1.5 px-0.5 bg-[#d1fae5] border border-gray-300 rounded-lg text-[9px] font-bold text-teal-950 hover:scale-105 transition">솔숲민트</button>
+                                    <button id="paint-btn-4" onclick="paintWall('#fef08a', '유채꽃 엘로우')" class="py-1.5 px-0.5 bg-[#fef08a] border border-gray-300 rounded-lg text-[9px] font-bold text-yellow-950 hover:scale-105 transition">유채노랑</button>
+                                </div>
+                                <p class="text-[9px] text-teal-700 font-bold mt-1" id="selected-wall-label">🎨 도색 상태: 미선택 (잿빛 시멘트)</p>
+                            </div>
+
+                            <!-- 2. 인테리어 숍 및 드래그 가이드 -->
+                            <div class="pt-2 border-t">
+                                <p class="text-[11px] font-black text-teal-900 mb-1"><i class="fa-solid fa-couch mr-1"></i> 2. 멋진 기구 구매하고 마우스로 끌어서 배치하기</p>
+                                <p class="text-[9px] text-gray-400 mb-1.5">구매를 누르면 아래 방 안에 가구가 짠 하고 나타나요! 꾹 눌러서 이동해요.</p>
+                                
+                                <div class="space-y-1.5" id="interior-shop-rack">
+                                    <!-- 가구 데이터 연동 -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t">
+                            <button id="btn-goto-phase3" onclick="nextToPhase3()" class="w-full py-3 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs" disabled>
+                                가구 3개 이상 배치 완료 후 홍보하기 ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 탭 3: 주민 홍보 단계 패널 (Phase 3) -->
+                    <div id="panel-phase3" class="hidden flex-1 flex flex-col justify-between gap-3">
+                        <div class="space-y-3">
+                            <div class="bg-blue-50 border border-blue-200 p-2.5 rounded-xl">
+                                <p class="text-[11px] font-bold text-blue-800 mb-0.5">📢 동네에 소문내기</p>
+                                <p class="text-[10px] text-blue-700 leading-normal">
+                                    새롭고 신나는 공간이 완공되었다고 동네방네 소문을 내볼까요? 기대 수치를 100% 채워봐요!
+                                </p>
+                            </div>
+
+                            <!-- 기대지수 충족 그래프 -->
+                            <div class="bg-white p-3 border rounded-xl text-center">
+                                <p class="text-[10px] text-slate-400 font-bold">마을 친구들이 놀러오고 싶어하는 기대치</p>
+                                <p class="text-3xl font-black text-teal-600 mt-0.5" id="promotion-rate-text">0%</p>
+                                <div class="w-full bg-gray-200 rounded-full h-3 mt-1.5 overflow-hidden">
+                                    <div id="promotion-inner-bar" class="bg-gradient-to-r from-blue-500 to-teal-500 h-full transition-all" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- 홍보 옵션 목록 -->
+                            <div class="space-y-1.5" id="promo-buttons-container">
+                                <button id="promo-btn-1" onclick="executePromotion('flyer', 50)" class="w-full bg-white hover:bg-slate-50 border p-2 rounded-xl text-xs flex justify-between items-center transition">
+                                    <div class="text-left">
+                                        <p class="font-extrabold text-slate-700">🗞️ 어촌회관 손편지 및 전단지 나눠주기</p>
+                                        <p class="text-[9px] text-gray-400">비용: 50원 / 기대치 +15% 증가</p>
+                                    </div>
+                                    <span class="bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded text-[10px]">소문내기</span>
+                                </button>
+                                <button id="promo-btn-2" onclick="executePromotion('sns', 100)" class="w-full bg-white hover:bg-slate-50 border p-2 rounded-xl text-xs flex justify-between items-center transition">
+                                    <div class="text-left">
+                                        <p class="font-extrabold text-slate-700">📱 SNS 동네 밴드 가입 및 초청장 보내기</p>
+                                        <p class="text-[9px] text-gray-400">비용: 100원 / 기대치 +30% 증가</p>
+                                    </div>
+                                    <span class="bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded text-[10px]">초대하기</span>
+                                </button>
+                                <button id="promo-btn-3" onclick="executePromotion('banner', 150)" class="w-full bg-white hover:bg-slate-50 border p-2 rounded-xl text-xs flex justify-between items-center transition">
+                                    <div class="text-left">
+                                        <p class="font-extrabold text-slate-700">🚌 공영 버스에 대형 홍보 스티커 붙이기</p>
+                                        <p class="text-[9px] text-gray-400">비용: 150원 / 기대치 +50% 증가</p>
+                                    </div>
+                                    <span class="bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded text-[10px]">광고하기</span>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="btn-goto-phase4" onclick="nextToPhase4()" class="w-full py-3.5 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs" disabled>
+                            주민 기대율을 가득 채워 개장하기 ➔
+                        </button>
+                    </div>
+
+                    <!-- 탭 4: 개장단계 패널 (Phase 4) -->
+                    <div id="panel-phase4" class="hidden flex-1 flex flex-col justify-between gap-3">
+                        <div class="space-y-3">
+                            <div class="bg-yellow-50 border border-yellow-200 p-2.5 rounded-xl text-center">
+                                <span class="text-3xl block animate-bounce mb-0.5">🎉</span>
+                                <p class="text-[11px] font-black text-amber-800">우리가 만든 보물방 개관 축제!</p>
+                                <p class="text-[10px] text-gray-500 leading-relaxed mt-0.5">
+                                    문을 활짝 여니 손님들이 몰려옵니다!<br>
+                                    <b>아래 방안을 신나게 걷고 있는 이모지 친구들을 터치해 기부금을 받아봐요!</b>
+                                </p>
+                            </div>
+
+                            <div class="bg-white p-2.5 border rounded-xl flex items-center justify-between text-xs">
+                                <div>
+                                    <p class="font-extrabold text-slate-700">입장한 고마운 이웃들</p>
+                                    <p class="text-[9px] text-gray-400">총 6명의 행복한 이웃들 터치하기</p>
+                                </div>
+                                <span class="text-base font-black text-teal-600" id="grand-open-stats">0 / 6명</span>
+                            </div>
+                        </div>
+
+                        <button id="btn-goto-phase5" onclick="nextToPhase5()" class="w-full py-3.5 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs" disabled>
+                            군청 성과보고 및 시상식 참여 ➔
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- 하단 알림창 -->
+                <div class="bg-slate-800 text-slate-200 text-[10px] p-2.5 rounded-xl flex items-center justify-between shrink-0 font-bold border border-slate-700">
+                    <span class="flex items-center gap-1">
+                        <span class="text-teal-400">📢 알림:</span>
+                        <span id="system-alert-text">크루와 재생 부지를 설정하고 타이쿤 프로젝트를 이끄세요!</span>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- [화면 4] 게임 최종 성공 보고서 및 수행평가 캠페인 설명 -->
+        <div id="screen-success" class="hidden p-4 md:p-8 flex-1 flex flex-col justify-between text-center max-w-3xl mx-auto">
+            <div class="my-auto space-y-4">
+                <span class="text-6xl animate-bounce inline-block">🏆</span>
+                <h2 class="text-2xl md:text-3xl font-black text-teal-800">태안 최고 보물 공간 수여 대상 수상!</h2>
+                <p id="success-congrats-text" class="text-xs font-bold text-gray-600 leading-relaxed">
+                    폐허 속에 잠들어 있던 오래된 공간이 태안 최고의 핫플레이스로 대전환에 성공했습니다!
+                </p>
+
+                <!-- 최종 성과 보고서 명세판 -->
+                <div class="bg-teal-50 rounded-3xl p-4 border-2 border-teal-200 text-left space-y-1.5 text-[11px] text-gray-700 shadow-inner">
+                    <h3 class="font-bold text-center text-teal-900 border-b border-teal-200 pb-1.5 text-xs mb-1.5">📋 초등학교 국어 수행평가 성과 보고서</h3>
+                    <p>🗺️ <b>재생 대상 구역:</b> <span id="report-location" class="font-bold">태안군 남면 일대</span></p>
+                    <p>🎬 <b>구축된 새 문화시설:</b> <span id="report-facility" class="font-bold">주민 공용 오픈 영화관</span></p>
+                    <p>👷‍♂️ <b>현장 총감리책임:</b> <span id="report-character" class="font-bold">김목수 크루</span></p>
+                    <p>🛋️ <b>공간 인테리어 가구 배치 수:</b> <span id="report-deco-count" class="font-bold">4종 가구 배치 완료</span></p>
+                    <p>🎨 <b>적용 벽면 컬러:</b> <span id="report-wall-color" class="font-bold">민트 에메랄드</span></p>
+                    
+                    <div class="border-t border-dashed border-teal-300 pt-2 mt-2">
+                        <p class="font-bold text-teal-900 mb-0.5">💡 수행평가 제언 요약:</p>
+                        <p class="leading-relaxed text-[10px] text-gray-500">
+                            태안군처럼 인구수가 줄어드는 소도시는 청소년 친구들과 부모님이 갈 수 있는 재밌는 문화 공간이 부족하여 다른 도시로 떠나는 악순환이 생깁니다. 
+                            이에 본 캠페인은 아무도 쓰지 않는 '낡은 건물'을 버리지 않고 예쁘게 고쳐서 바다와 어우러진 즐거운 배움과 예술터로 채우는 것이 친환경적이고 지속 가능한 최고 해결책임을 보여줍니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button id="btn-restart-game" onclick="resetGame()" class="w-full md:w-80 bg-teal-600 hover:bg-teal-700 text-white font-black py-3 rounded-2xl transition duration-150 shadow-md text-xs">
+                    🔄 다른 신나는 보물 공간 찾으러 가기
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- [모달] 타인 시설 방문 소셜 창 (Social Visit) -->
+    <div id="social-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col border-4 border-indigo-600">
+            <!-- 모달 헤더 -->
+            <div class="bg-gradient-to-r from-indigo-700 to-indigo-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🚌</span>
+                    <div>
+                        <h3 class="text-sm font-black">태안 문화마을 보물 투어 버스</h3>
+                        <p class="text-[9px] text-indigo-200 font-medium">다른 솜씨 좋은 친구들이 고쳐낸 예술 공간을 버스 타고 탐험해요!</p>
+                    </div>
+                </div>
+                <button onclick="closeSocialModal()" class="text-white hover:text-red-300 transition text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- 모달 콘텐츠 -->
+            <div class="p-4 overflow-y-auto max-h-[460px] space-y-3">
+                
+                <!-- 상단 방문 안내 설명 -->
+                <div class="bg-indigo-50 border border-indigo-100 p-2.5 rounded-xl text-[10px] text-indigo-900">
+                    💡 <b>용돈 선물 보너스:</b> 멋진 시설에 놀러 가서 응원의 **'좋아요 꾹! ❤️'**을 남겨주면, 내가 가구를 살 수 있도록 지원금 **보너스 용돈 +100원**을 나라에서 바로 줍니다! (방당 1번씩 수령 가능)
+                </div>
+
+                <!-- 다른 사람들의 시설 목록 (세부보기 진입 시 숨김 처리됨) -->
+                <div class="space-y-2.5" id="social-list-container">
+                    <!-- 동적 자바스크립트로 3개 시설 바인딩 예정 -->
+                </div>
+
+                <!-- 방문 상세 캔버스 모방 뷰 (방문 시 동적으로 로드되는 창) -->
+                <div id="visit-detail-preview" class="hidden border-2 border-indigo-400 rounded-2xl p-3 bg-slate-100 relative min-h-[220px]">
+                    <div class="absolute top-2 right-2 flex gap-1.5 z-10">
+                        <span id="visit-badge-tag" class="text-[9px] bg-indigo-600 text-white font-bold py-0.5 px-2 rounded-full">예시</span>
+                    </div>
+                    <h4 id="visit-detail-title" class="text-xs font-black text-slate-800">지훈 크루의 안면도 바다 수산 미술전시장</h4>
+                    
+                    <!-- 축소형 캔버스 뷰 -->
+                    <div id="visit-mini-canvas" class="w-full h-32 bg-sky-100 border border-indigo-200 rounded-xl mt-1.5 relative overflow-hidden flex items-end justify-around pb-2">
+                        <!-- 미니 벽지 도색 색상 및 미니 가구 배치 일러스트 -->
+                    </div>
+
+                    <!-- 응원 코너 및 목록으로 나가기 액션바 -->
+                    <div class="mt-3 flex flex-wrap gap-2 items-center justify-between">
+                        <p class="text-[9px] text-gray-500" id="visit-guestbook-text">"바다 냄새가 나고 예뻐요!"</p>
+                        
+                        <div class="flex items-center gap-2">
+                            <!-- [나가기 기능 추가] 목록으로 돌아가기 버튼 -->
+                            <button onclick="exitSocialPreview()" class="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black py-1.5 px-3 rounded-lg flex items-center gap-1 transition">
+                                <i class="fa-solid fa-arrow-left-long"></i> <span>목록으로 나가기 🚪</span>
+                            </button>
+
+                            <button id="btn-social-like" onclick="likeSocialFacility()" class="bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black py-1.5 px-3 rounded-lg flex items-center gap-1 transition">
+                                <i class="fa-solid fa-heart animate-pulse"></i> <span>좋아요 응원하고 +100원 받기</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="bg-slate-50 border-t p-2.5 flex justify-end">
+                <button onclick="closeSocialModal()" class="bg-gray-700 hover:bg-gray-800 text-white text-[11px] font-black py-2 px-4 rounded-xl transition">구경창 닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- SOUND SYNTHESIZER (Web Audio API) --- */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'upgrade') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'buy') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08); // A5
+                    osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime + 0.16); // D6
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'clear') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.12); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.24); // G5
+                    osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.36); // C6
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                }
+            } catch (e) {
+                console.log("Audio not supported or interaction needed.", e);
+            }
+        }
+
+        /* --- STREAMING_CHUNK: Game Data Pools... --- */
+        const taeanLocations = [
+            {
+                name: "안흥항 어민 폐 수산창고",
+                type: "수산 가동 중단 대형 냉동고",
+                emoji: "🏭",
+                targetFacility: "🎨 안흥항 바다 미술관 & 청년공방",
+            },
+            {
+                name: "태안 남면 노후 폐교 부지",
+                type: "인구 감소로 인해 방치된 시골 초등학교 분교",
+                emoji: "🏫",
+                targetFacility: "📚 주민 열린 숲속 생태 도서관",
+            },
+            {
+                name: "안면읍 외곽 방치된 폐 염전창고",
+                type: "소금 생산 중단으로 고사된 소금창고",
+                emoji: "🪵",
+                targetFacility: "🦀 갯벌 생태 체험 교육 미술관",
+            },
+            {
+                name: "소원면 옛 정수장 탱크부지",
+                type: "급수가 종료되어 녹슬어버린 물탱크 시설",
+                emoji: "🛢️",
+                targetFacility: "☕ 소리샘 밴드 연습실 & 가든 북카페",
+            },
+            {
+                name: "고남면 노후 공영 버스터미널 정비창",
+                type: "노선 개편 후 문을 닫아 부식이 진행된 차고지",
+                emoji: "🚍",
+                targetFacility: "🎻 세대 소통 다목적 복합 문화 강연장",
+            },
+            {
+                name: "이원면 유휴 해안 군부대 초소",
+                type: "작전 철수 후 해수 방풍림에 묻힌 시멘트 벙커",
+                emoji: "🧱",
+                targetFacility: "🌌 은하수 청년 천문 관측 쉼터 및 카페",
+            }
+        ];
+
+        const shopFurnitureItems = [
+            { 
+                id: "item_light", 
+                name: "감성 아늑 조명 💡", 
+                price: 100, 
+                emoji: "💡", 
+                desc: "따뜻한 은은한 전구색 빛으로 실내 피로도를 감소시킵니다.",
+                svg: `<div class="w-12 h-12 bg-yellow-400/20 border-2 border-yellow-400 rounded-full flex items-center justify-center shadow-lg shadow-yellow-200/50 relative"><span class="text-xl animate-pulse">💡</span><div class="absolute -inset-1 bg-yellow-400/10 rounded-full animate-ping"></div></div>`
+            },
+            { 
+                id: "item_bench", 
+                name: "빈티지 원목 벤치 🪑", 
+                price: 140, 
+                emoji: "🪑", 
+                desc: "천연목재를 활용해 제작한 다인용 대기 쉼터 의자.",
+                svg: `<div class="px-3 py-1 bg-amber-800 border-t-4 border-amber-950 rounded-lg text-white font-black text-xs shadow-md border-b-2 border-l-2 flex flex-col items-center justify-center">🪑 벤치<span class="text-[8px] text-amber-300">Oak Wood</span></div>`
+            },
+            { 
+                id: "item_stage", 
+                name: "버스킹 소통무대 🎸", 
+                price: 200, 
+                emoji: "🎸", 
+                desc: "로컬 뮤지션들의 라이브 버스킹을 유인할 무대 모듈 세트.",
+                svg: `<div class="w-16 h-10 bg-indigo-950 border-2 border-indigo-400 rounded-lg text-indigo-300 font-bold text-[9px] flex flex-col items-center justify-center shadow-inner relative"><div class="absolute top-1 right-2 text-red-500">🔴</div>🎸 BUSKING</div>`
+            },
+            { 
+                id: "item_projector", 
+                name: "시네마 프로젝터 📽️", 
+                price: 250, 
+                emoji: "📽️", 
+                desc: "태안 다큐영화와 숲속 가상 영상전시용 최고해상도 장비.",
+                svg: `<div class="px-2 py-1.5 bg-slate-800 border-2 border-cyan-400 rounded-xl text-cyan-400 font-bold text-[8px] flex flex-col items-center justify-center"><i class="fa-solid fa-video mb-1 text-[11px]"></i>📽️ 4K Beam</div>`
+            },
+            { 
+                id: "item_plants", 
+                name: "공기 정화 솔숲화분 🌿", 
+                price: 110, 
+                emoji: "🌿", 
+                desc: "태안 시그니처 곰솔나무를 가드닝화한 천연 산소 공급 아이템.",
+                svg: `<div class="w-11 h-12 bg-emerald-700/80 border-2 border-emerald-400 rounded-b-2xl rounded-t-lg flex flex-col items-center justify-center text-white text-[9px] font-bold shadow-md">🌿<span class="text-[7px]">ECO Green</span></div>`
+            },
+            { 
+                id: "item_bookshelf", 
+                name: "수납형 미니책장 📚", 
+                price: 160, 
+                emoji: "📚", 
+                desc: "독서 애호가와 예술도서 보관을 위한 오크나무 전시대.",
+                svg: `<div class="px-3 py-2 bg-yellow-900 border-2 border-amber-950 rounded-md text-[9px] text-white flex flex-col items-center justify-center font-bold">📚 BOOK<div class="h-1 w-full bg-slate-300 mt-0.5"></div></div>`
+            }
+        ];
+
+        const trashTypes = [
+            { emoji: "🗑️", name: "방치 폐가재 상자", gold: 15 },
+            { emoji: "🍂", name: "마른 방풍 솔가지", gold: 12 },
+            { emoji: "🕸️", name: "해양 폐습기 거미줄", gold: 10 },
+            { emoji: "🧱", name: "붕괴된 시멘트 벽돌", gold: 20 },
+            { emoji: "🪵", name: "파손된 외관 목재톱밥", gold: 18 },
+            { emoji: "🛢️", name: "녹슨 유제 드럼깡통", gold: 25 }
+        ];
+
+        const socialPlayers = [
+            {
+                id: "social_user1",
+                creator: "지훈 크루 👑",
+                facilityName: "만리포 감성 바다 미술전시장",
+                description: "태안 해돋이 노을색과 해양 폐그물을 예술 작품으로 승화시킨 미술 복합 예술 갤러리!",
+                wallColor: "#ffedd5",
+                likes: 42,
+                items: [
+                    { emoji: "💡", left: "20%", top: "35%", svg: `<div class="w-10 h-10 bg-yellow-400/20 border border-yellow-400 rounded-full flex items-center justify-center"><span class="text-xs">💡</span></div>` },
+                    { emoji: "🌿", left: "75%", top: "45%", svg: `<div class="w-10 h-10 bg-emerald-700/80 rounded-b-xl flex items-center justify-center text-white text-xs">🌿</div>` },
+                    { emoji: "🪑", left: "45%", top: "60%", svg: `<div class="px-2 py-0.5 bg-amber-800 rounded text-white text-[9px]">🪑 벤치</div>` }
+                ],
+                comment: "태안 특유의 모래 해변 감성을 소담하게 채운 아름다운 전시장입니다."
+            },
+            {
+                id: "social_user2",
+                creator: "수진 크루 🌱",
+                facilityName: "안면도 청소년 솔숲 시네마 가든",
+                description: "방치 폐교를 개조해 주민들이 상시 숲속 산림욕과 문화 예술 독립영화를 감상하는 정원 카페!",
+                wallColor: "#d1fae5",
+                likes: 56,
+                items: [
+                    { emoji: "📽️", left: "50%", top: "30%", svg: `<div class="px-1.5 py-1 bg-slate-800 rounded border border-cyan-400 text-cyan-400 text-[8px]">📽️ Beam</div>` },
+                    { emoji: "🪑", left: "25%", top: "60%", svg: `<div class="px-2 py-0.5 bg-amber-800 rounded text-white text-[9px]">🪑 벤치</div>` },
+                    { emoji: "🪑", left: "70%", top: "60%", svg: `<div class="px-2 py-0.5 bg-amber-800 rounded text-white text-[9px]">🪑 벤치</div>` }
+                ],
+                comment: "어린아이들이 주말마다 뛰어놀기 정말 아늑한 친환경 쉼터이군요!"
+            },
+            {
+                id: "social_user3",
+                creator: "민혁 크루 🎸",
+                facilityName: "안흥항 해양 보컬&밴드 주민 연습장",
+                description: "버려진 군사 초소를 정비해 밴드 합주 및 차 마시며 버스킹을 즐길 수 있도록 개조한 요새 연습장!",
+                wallColor: "#e0f2fe",
+                likes: 38,
+                items: [
+                    { emoji: "🎸", left: "50%", top: "50%", svg: `<div class="w-12 h-8 bg-indigo-950 rounded text-indigo-300 text-[7px] flex items-center justify-center">🎸 Stage</div>` },
+                    { emoji: "💡", left: "15%", top: "30%", svg: `<div class="w-10 h-10 bg-yellow-400/20 border border-yellow-400 rounded-full flex items-center justify-center"><span class="text-xs">💡</span></div>` },
+                    { emoji: "📚", left: "80%", top: "55%", svg: `<div class="px-2 py-1 bg-yellow-900 text-white text-[8px]">📚 BOOK</div>` }
+                ],
+                comment: "기타 소리와 밴드 연주가 울려 퍼져 인적이 끊겼던 포구가 아주 활기차졌습니다!"
+            }
+        ];
+
+        const govBonusMissions = [
+            {
+                id: "gov_q_paint",
+                title: "🎨 테마 칠하기 미션",
+                desc: "벽지 색상 중 마음에 드는 색을 하나 골라서 예쁘게 칠해보세요!",
+                targetType: "paint",
+                reward: 150
+            },
+            {
+                id: "gov_q_eco",
+                title: "🌿 파릇파릇 솔숲화분 심기",
+                desc: "공기를 깨끗하게 만드는 초록 솔숲 화분을 상점에서 하나 사보세요!",
+                targetType: "ecology_plant",
+                reward: 200
+            },
+            {
+                id: "gov_q_safety",
+                title: "💰 우리 용돈 350원 이상 모으기",
+                desc: "아껴 쓰거나 열심히 활동해서 용돈을 350원 넘게 모아보세요!",
+                targetType: "money_check",
+                reward: 180
+            }
+        ];
+
+        /* --- STREAMING_CHUNK: State Engine Setup... --- */
+        let state = {
+            money: 400,
+            phase: 1, // 1: 대청소, 2: 인테리어, 3: 주민홍보, 4: 개장식, 5: 최종수상
+            character: { id: '', name: '', perk: '' },
+            space: { name: '', emoji: '', targetFacility: '' },
+            wallColor: '',
+            wallColorName: '미선택 (잿빛 시멘트)',
+            placedFurnitureCount: 0,
+            placedPlantsCount: 0,
+            promotionProgress: 0,
+            grandOpeningGuestsCleaned: 0,
+            maxGuestsNeeded: 6,
+            currentGovQuest: null,
+            likedSocialIds: []
+        };
+
+        /* --- STREAMING_CHUNK: Arrow Tutorial Core Systems... --- */
+        function triggerArrow(targetId, text) {
+            const target = document.getElementById(targetId);
+            const arrow = document.getElementById('tutorial-arrow-layer');
+            if (!target || !arrow || target.offsetParent === null) {
+                arrow.classList.add('hidden');
+                return;
+            }
+            arrow.classList.remove('hidden');
+            document.getElementById('tutorial-text').innerText = text;
+
+            // 좌표 측정
+            const rect = target.getBoundingClientRect();
+            const parentRect = document.getElementById('game-app').getBoundingClientRect();
+
+            // 대상 중심부 윗 방향으로 위치 정밀 산출
+            const top = rect.top - parentRect.top - 55;
+            const left = rect.left - parentRect.left + (rect.width / 2) - (arrow.offsetWidth / 2);
+
+            arrow.style.top = `${top}px`;
+            arrow.style.left = `${left}px`;
+        }
+
+        function hideArrow() {
+            document.getElementById('tutorial-arrow-layer').classList.add('hidden');
+        }
+
+        // 전체 진행도에 맞는 초록요정 멘트 & 화살표 자동 업데이트
+        function runTutorialGuide() {
+            if (state.phase === 1) {
+                if (!state.character.id) {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 안녕! 우선 아래 5개 특공대 중 원하는 대장님 카드를 한 명 꾹 선택해봐!";
+                    triggerArrow('char-btn-carpenter', '여기를 꾹 눌러보세요!');
+                } else if (document.getElementById('btn-start-roulette').disabled === false && document.getElementById('screen-char-select').offsetParent !== null) {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 좋아! 선택한 대장님과 함께 출발하는 초록색 버튼을 눌러줘!";
+                    triggerArrow('btn-start-roulette', '다음으로 가기 버튼 클릭!');
+                } else if (document.getElementById('screen-roulette').offsetParent !== null) {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 태안의 보물 건물을 탐색할 준비가 완료되었어! 노란색 탐색 단추를 클릭해봐!";
+                    triggerArrow('btn-spin', '보물 공간 구하기 작동!');
+                } else {
+                    const hasTrash = document.getElementById('interactive-item-layer').children.length > 0;
+                    if (hasTrash) {
+                        document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 우와! 버려진 건물이 매칭됐어. 방안에 널려 있는 쓰레기/상자를 터치해서 싹 비워내자!";
+                        const firstTrash = document.getElementById('interactive-item-layer').children[0];
+                        if (firstTrash) {
+                            // 쓰레기는 동적 요소이므로 특정 아이디를 대신해 요소 직접 측정
+                            hideArrow(); // 터치는 자유롭게 유도
+                        }
+                    } else {
+                        document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 대단해! 방이 아주 깨끗해졌어! 이제 2단계 도색/인테리어 버튼을 눌러서 들어가자!";
+                        triggerArrow('btn-goto-phase2', '2단계 꾸미기 시작!');
+                    }
+                }
+            } else if (state.phase === 2) {
+                if (state.wallColor === '') {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 심심한 시멘트 벽면에 색칠을 해볼까? 우측 메뉴에서 마음에 드는 색칠 동그라미를 클릭해봐!";
+                    triggerArrow('paint-btn-1', '벽면 예쁜 색 칠하기!');
+                } else if (state.placedFurnitureCount < 3) {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 완벽해! 이제 상점 메뉴에서 벤치나 감성 조명 가구를 사서, 방안에 끌어다 놓아봐! (3개 이상)";
+                    const buyBtn = document.querySelector('#interior-shop-rack button');
+                    if (buyBtn) {
+                        triggerArrow('interior-shop-rack', '상점에서 가구 구비하기!');
+                    }
+                } else {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 우와! 가구가 정말 이쁘게 놓였는걸? 자! 이제 3단계 소문내기(홍보) 버튼을 눌러줘!";
+                    triggerArrow('btn-goto-phase3', '3단계 소문내기 출발!');
+                }
+            } else if (state.phase === 3) {
+                if (state.promotionProgress < 100) {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 우리가 이렇게 멋진 보물 공간을 만들었으니, 동네 친구들이 알도록 광고하기 단추를 눌러줘!";
+                    triggerArrow('promo-btn-1', '동네방네 소문 펑펑 내기!');
+                } else {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 모든 친구들이 오늘 밤만 기다리고 있어! 자, 대망의 4단계 개관 축제 선언 버튼을 누르자!";
+                    triggerArrow('btn-goto-phase4', '영광의 개막식 선언!');
+                }
+            } else if (state.phase === 4) {
+                if (state.grandOpeningGuestsCleaned < state.maxGuestsNeeded) {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 문이 활짝 열렸어! 방바닥을 걷고 있는 친구들과 할머니를 손가락으로 꾹 터치해서 행복하게 해줘!";
+                    hideArrow(); // 자유로운 손님 터치 유도
+                } else {
+                    document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 축제가 너무 신나게 진행되었어! 이제 5단계로 가서 우리들의 멋진 상장과 성과보고를 받으러 가자!";
+                    triggerArrow('btn-goto-phase5', '명예로운 시상식 참여!');
+                }
+            } else if (state.phase === 5) {
+                document.getElementById('fairy-instruction').innerText = "🧚‍♀️ 짝짝짝! 훌륭한 재생 특공대장님이십니다! 다른 버려진 공간도 구하러 떠나보실래요?";
+                triggerArrow('btn-restart-game', '다시 보물 구출 시작!');
+            }
+        }
+
+        // 주기적 위치 보정 루프 작동
+        setInterval(() => {
+            if (state.phase !== 5) {
+                runTutorialGuide();
+            }
+        }, 1200);
+
+        /* --- STREAMING_CHUNK: Character Select Systems... --- */
+        function selectCharacter(id, name, perk) {
+            state.character.id = id;
+            state.character.name = name;
+            state.character.perk = perk;
+
+            document.querySelectorAll('.char-card').forEach(card => {
+                card.classList.remove('border-teal-500', 'bg-teal-50', 'ring-4', 'ring-teal-400');
+            });
+            
+            const selectedBtn = document.getElementById(`char-btn-${id}`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('border-teal-500', 'bg-teal-50', 'ring-4', 'ring-teal-400');
+            }
+
+            const startBtn = document.getElementById('btn-start-roulette');
+            startBtn.disabled = false;
+            startBtn.className = "w-full md:w-80 bg-teal-600 hover:bg-teal-700 text-white font-black py-4 rounded-2xl transition duration-150 cursor-pointer shadow-md animate-bounce text-xs";
+            startBtn.innerText = `"${name}" 특공대장 매칭 완료! 시작하기 ➔`;
+            playSound('click');
+            runTutorialGuide();
+        }
+
+        function transitionToRoulette() {
+            let avatar = "👷‍♂️";
+            if (state.character.id === 'artist') avatar = "👩‍🎨";
+            if (state.character.id === 'promoter') avatar = "📢";
+            if (state.character.id === 'ecology') avatar = "🌿";
+            if (state.character.id === 'chef') avatar = "🍽️";
+            document.getElementById('header-avatar-container').innerText = avatar;
+
+            showScreen('screen-roulette');
+            runTutorialGuide();
+        }
+
+        /* --- STREAMING_CHUNK: Space Roulette Systems... --- */
+        let rouletteSpinning = false;
+        function spinRoulette() {
+            if (rouletteSpinning) return;
+            rouletteSpinning = true;
+            playSound('upgrade');
+            hideArrow();
+
+            const btn = document.getElementById('btn-spin');
+            btn.disabled = true;
+            btn.className = "w-full bg-gray-300 text-gray-500 font-extrabold py-4 rounded-2xl cursor-not-allowed text-xs";
+
+            let cycleCount = 0;
+            const timer = setInterval(() => {
+                const dummy = taeanLocations[cycleCount % taeanLocations.length];
+                document.getElementById('roulette-emoji').innerText = dummy.emoji;
+                document.getElementById('roulette-title').innerText = dummy.name;
+                document.getElementById('roulette-target').innerText = dummy.targetFacility;
+                cycleCount++;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(timer);
+                
+                const chosen = taeanLocations[Math.floor(Math.random() * taeanLocations.length)];
+                state.space = chosen;
+
+                document.getElementById('roulette-emoji').innerText = chosen.emoji;
+                document.getElementById('roulette-title').innerText = chosen.name;
+                document.getElementById('roulette-target').innerText = `🏆 부지 매칭 성공: ${chosen.targetFacility}`;
+
+                document.getElementById('roulette-display').className = "bg-teal-50 border-4 border-solid border-teal-500 rounded-3xl p-6 shadow-inner flex flex-col items-center justify-center min-h-[190px] pulse-soft";
+
+                logMessage(`[${chosen.name}] 부지 구출 작전을 본격 개시합니다!`);
+                playSound('clear');
+
+                setTimeout(() => {
+                    initMainGame();
+                }, 1800);
+
+            }, 1800);
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('screen-char-select').classList.add('hidden');
+            document.getElementById('screen-roulette').classList.add('hidden');
+            document.getElementById('screen-main-game').classList.add('hidden');
+            document.getElementById('screen-success').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        /* --- STREAMING_CHUNK: Game Initialization... --- */
+        function initMainGame() {
+            document.getElementById('field-area-badge').innerText = state.space.emoji;
+            document.getElementById('field-area-name').innerText = state.space.name;
+            document.getElementById('field-target-facility').innerText = state.space.targetFacility;
+
+            // 캐릭터 혜택 적용 안내 로그 출력
+            if (state.character.id === 'artist') {
+                logMessage("🎨 이예술 특성: 가구와 소품 가격이 20% 싸게 들어옵니다!");
+            } else if (state.character.id === 'carpenter') {
+                logMessage("🔨 김목수 특성: 쓰레기를 비울 때 추가 용돈 보너스를 많이 받아요!");
+            } else if (state.character.id === 'ecology') {
+                logMessage("🌱 최생태 특성: 초록 식물을 심으면 추가 나라 보너스를 더 받습니다.");
+            } else if (state.character.id === 'chef') {
+                logMessage("🍽️ 정셰프 특성: 개장식 때 맛있는 간식 꿀팁으로 선물이 2배!");
+            }
+
+            renderInteriorShop();
+            spawnTrashItems();
+            triggerNewGovQuest();
+
+            updateGlobalUI();
+            showScreen('screen-main-game');
+        }
+
+        /* --- STREAMING_CHUNK: Government Quest Systems... --- */
+        function triggerNewGovQuest() {
+            const randomIndex = Math.floor(Math.random() * govBonusMissions.length);
+            const quest = govBonusMissions[randomIndex];
+            state.currentGovQuest = quest;
+
+            document.getElementById('gov-quest-title').innerText = quest.title;
+            document.getElementById('gov-quest-desc').innerText = quest.desc;
+            document.getElementById('gov-quest-reward-badge').innerText = `💰 +${quest.reward}원`;
+            document.getElementById('gov-quest-current-status').innerText = "도전 중";
+            document.getElementById('gov-quest-current-status').className = "text-amber-600 font-extrabold";
+
+            const btn = document.getElementById('btn-claim-gov-bonus');
+            btn.disabled = true;
+            btn.className = "bg-gray-200 text-gray-400 text-[10px] px-2.5 py-1 rounded-lg font-black cursor-not-allowed";
+            btn.innerText = "미션 진행중";
+        }
+
+        function checkGovQuestCondition() {
+            if (!state.currentGovQuest) return;
+
+            const quest = state.currentGovQuest;
+            let accomplished = false;
+
+            if (quest.targetType === "paint") {
+                if (state.wallColor !== "") accomplished = true;
+            } else if (quest.targetType === "ecology_plant") {
+                if (state.placedPlantsCount >= 1) accomplished = true;
+            } else if (quest.targetType === "money_check") {
+                if (state.money >= 350) accomplished = true;
+            }
+
+            if (accomplished) {
+                document.getElementById('gov-quest-current-status').innerText = "미션 성공! 보상 대기";
+                document.getElementById('gov-quest-current-status').className = "text-emerald-600 font-extrabold animate-pulse";
+                
+                const btn = document.getElementById('btn-claim-gov-bonus');
+                btn.disabled = false;
+                btn.className = "bg-emerald-500 text-white hover:bg-emerald-600 text-[10px] px-2.5 py-1 rounded-lg font-black transition cursor-pointer shadow-sm animate-bounce";
+                btn.innerText = "용돈 선물 받기 🎁";
+            }
+        }
+
+        function claimGovBonus() {
+            if (!state.currentGovQuest) return;
+
+            playSound('clear');
+            let reward = state.currentGovQuest.reward;
+
+            if (state.character.id === 'ecology' && state.currentGovQuest.targetType === "ecology_plant") {
+                reward += 100;
+                logMessage("🌱 최생태 자연주의 버프! 친환경 선물 상금 추가 +100원!");
+            }
+
+            state.money += reward;
+            logMessage(`🎁 미션 완수! 나라에서 보너스 지원금 +${reward}원을 받았습니다!`);
+
+            state.currentGovQuest = null;
+            document.getElementById('gov-quest-title').innerText = "다음 수령 보너스 미션 대기 중...";
+            document.getElementById('gov-quest-desc').innerText = "조금 기다리면 재밌는 미션이 또 나타나요!";
+            document.getElementById('gov-quest-reward-badge').innerText = "";
+            document.getElementById('gov-quest-current-status').innerText = "대기";
+            document.getElementById('gov-quest-current-status').className = "text-gray-400";
+            
+            const btn = document.getElementById('btn-claim-gov-bonus');
+            btn.disabled = true;
+            btn.className = "bg-gray-200 text-gray-400 text-[10px] px-2.5 py-1 rounded-lg font-black cursor-not-allowed";
+            btn.innerText = "대기 중";
+
+            setTimeout(() => {
+                triggerNewGovQuest();
+                checkGovQuestCondition();
+            }, 6000);
+
+            updateGlobalUI();
+        }
+
+        /* --- STREAMING_CHUNK: Cleanup Systems... --- */
+        function spawnTrashItems() {
+            const container = document.getElementById('interactive-item-layer');
+            container.innerHTML = '';
+
+            const trashCount = 8;
+            for (let i = 0; i < trashCount; i++) {
+                const data = trashTypes[Math.floor(Math.random() * trashTypes.length)];
+                
+                const element = document.createElement('div');
+                element.className = "clean-item absolute cursor-pointer select-none text-4xl p-2 hover:scale-125 transition-transform duration-150 flex flex-col items-center z-20";
+                element.innerText = data.emoji;
+                
+                const randX = Math.random() * 80 + 10; 
+                const randY = Math.random() * 50 + 20; 
+                
+                element.style.left = `${randX}%`;
+                element.style.top = `${randY}%`;
+
+                element.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    cleanSingleTrash(element, data);
+                });
+
+                container.appendChild(element);
+            }
+            updateGlobalUI();
+        }
+
+        function cleanSingleTrash(element, data) {
+            playSound('click');
+            element.classList.add('scale-0', 'rotate-90', 'pointer-events-none');
+            
+            let payout = data.gold;
+            if (state.character.id === 'carpenter') {
+                payout += 10;
+                logMessage("🔨 김목수 인부 혜택! 무거운 철골 청소 보너스 용돈 +10원");
+            }
+
+            state.money += payout;
+            logMessage(`🧹 [${data.name}] 치우기 완료! 지원 보너스 +${payout}원 지급.`);
+
+            setTimeout(() => {
+                element.remove();
+                const remaining = document.getElementById('interactive-item-layer').children.length;
+                document.getElementById('remaining-trash-count').innerText = `${remaining}개`;
+
+                const cleanedRatio = Math.round(((8 - remaining) / 8) * 100);
+                document.getElementById('main-progress-bar').style.width = `${cleanedRatio}%`;
+                document.getElementById('progress-bar-label').innerText = `1단계 대청소 임무 완료율 ${cleanedRatio}%`;
+
+                if (remaining === 0) {
+                    playSound('clear');
+                    logMessage("✨ 반짝반짝 청소 끝! 이제 2단계 벽지 색칠 및 가구 인테리어를 해보세요!");
+                    
+                    const btn = document.getElementById('btn-goto-phase2');
+                    btn.disabled = false;
+                    btn.className = "w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl transition cursor-pointer shadow-md animate-bounce text-xs";
+                    btn.innerText = "2단계: 내 맘대로 예쁘게 꾸미기 시작 ➔";
+                }
+                
+                checkGovQuestCondition();
+                updateGlobalUI();
+                runTutorialGuide();
+            }, 180);
+        }
+
+        /* --- STREAMING_CHUNK: Decoration Systems... --- */
+        function nextToPhase2() {
+            state.phase = 2;
+            playSound('clear');
+            document.getElementById('player-phase').innerText = "2단계: 예쁘게 꾸미기";
+            
+            document.getElementById('panel-phase1').classList.add('hidden');
+            document.getElementById('panel-phase2').classList.remove('hidden');
+
+            document.getElementById('current-phase-title').innerText = "2단계: 벽지 색칠과 가구 배치";
+            document.getElementById('current-phase-desc').innerText = "예쁜 페인트를 선택해 벽을 칠하고, 벤치나 스크린을 끌어다 나만의 놀이 공간을 정렬하세요!";
+
+            document.getElementById('canvas-guide-overlay').innerText = "🎨 2단계: 원하는 가구를 구매하면 캔버스 중앙에 나타나요. 꾹 눌러서 어울리는 곳에 배치해요! (최소 3개)";
+
+            document.getElementById('main-progress-bar').style.width = `0%`;
+            document.getElementById('progress-bar-label').innerText = `가구 정렬 완성도: 0 / 3개 정비`;
+            
+            checkGovQuestCondition();
+            updateGlobalUI();
+            runTutorialGuide();
+        }
+
+        function paintWall(color, colorName) {
+            playSound('click');
+            state.wallColor = color;
+            state.wallColorName = colorName;
+
+            const wallElement = document.getElementById('canvas-wall');
+            wallElement.style.backgroundColor = color;
+
+            document.getElementById('selected-wall-label').innerText = `🎨 벽 색깔 완료: ${colorName}`;
+            logMessage(`🖌️ 벽면을 따뜻하고 산뜻한 [${colorName}] 톤으로 직접 칠해냈습니다.`);
+            
+            checkPhase2Ready();
+            checkGovQuestCondition();
+            runTutorialGuide();
+        }
+
+        function renderInteriorShop() {
+            const rack = document.getElementById('interior-shop-rack');
+            rack.innerHTML = '';
+
+            shopFurnitureItems.forEach(item => {
+                let actualPrice = item.price;
+                if (state.character.id === 'artist') {
+                    actualPrice = Math.round(item.price * 0.8);
+                }
+
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between p-2 hover:bg-slate-100 rounded-xl border bg-white text-xs shadow-sm";
+                card.innerHTML = `
+                    <div class="flex-1 pr-1">
+                        <p class="font-extrabold text-slate-800 text-[11px]">${item.name}</p>
+                        <p class="text-[9px] text-gray-400 leading-tight">${item.desc}</p>
+                    </div>
+                    <div>
+                        <button onclick="buyFurniture('${item.id}', ${actualPrice})" class="bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg transition shrink-0 shadow-sm">
+                            ${actualPrice}원
+                        </button>
+                    </div>
+                `;
+                rack.appendChild(card);
+            });
+        }
+
+        function buyFurniture(itemId, price) {
+            if (state.phase !== 2) {
+                logMessage("⚠️ 아직 인테리어 가구를 살 수 있는 단계가 아니에요!");
+                return;
+            }
+
+            if (state.money < price) {
+                logMessage("❌ 용돈이 모자라요! 조금 기다리면 열리는 보너스 미션을 수행해보세요!");
+                return;
+            }
+
+            const itemData = shopFurnitureItems.find(i => i.id === itemId);
+            if (!itemData) return;
+
+            state.money -= price;
+            playSound('buy');
+
+            const container = document.getElementById('interactive-item-layer');
+            const furniture = document.createElement('div');
+            
+            furniture.className = "draggable-item absolute p-1.5 select-none z-30 flex flex-col items-center transition-shadow duration-150 rounded-2xl bg-white/40 border border-white/20 shadow-md";
+            furniture.innerHTML = itemData.svg;
+            
+            const randomOffset = Math.random() * 80 - 40; 
+            furniture.style.left = `calc(50% + ${randomOffset}px)`;
+            furniture.style.top = `40%`;
+            furniture.style.position = "absolute";
+
+            furniture.dataset.itemId = itemId;
+            furniture.dataset.placed = "true";
+
+            setupDraggable(furniture);
+            container.appendChild(furniture);
+
+            state.placedFurnitureCount++;
+            
+            if (itemId === "item_plants") {
+                state.placedPlantsCount++;
+            }
+
+            logMessage(`🛒 [${itemData.name}] 구매! 아래 방안에 가구가 뿅 나타났어요. 손가락으로 밀어 옮겨요!`);
+
+            const count = state.placedFurnitureCount;
+            const progressRatio = Math.min(100, Math.round((count / 3) * 100));
+            document.getElementById('main-progress-bar').style.width = `${progressRatio}%`;
+            document.getElementById('progress-bar-label').innerText = `인테리어 완성도: ${count} / 3개 이상 정비`;
+
+            checkPhase2Ready();
+            checkGovQuestCondition();
+            updateGlobalUI();
+            runTutorialGuide();
+        }
+
+        /* --- STREAMING_CHUNK: Touch & Mouse Draggables... --- */
+        function setupDraggable(element) {
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let origX = 0;
+            let origY = 0;
+
+            const container = document.getElementById('interior-canvas-container');
+
+            element.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                element.setPointerCapture(e.pointerId);
+                playSound('click');
+
+                const containerRect = container.getBoundingClientRect();
+                const elementRect = element.getBoundingClientRect();
+
+                origX = elementRect.left - containerRect.left;
+                origY = elementRect.top - containerRect.top;
+
+                startX = e.clientX;
+                startY = e.clientY;
+
+                element.style.transition = 'none'; 
+            });
+
+            element.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                let newX = origX + dx;
+                let newY = origY + dy;
+
+                const containerRect = container.getBoundingClientRect();
+                const elementRect = element.getBoundingClientRect();
+
+                const maxX = containerRect.width - elementRect.width;
+                const maxY = containerRect.height - elementRect.height;
+
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+
+                element.style.left = `${newX}px`;
+                element.style.top = `${newY}px`;
+            });
+
+            const stopDrag = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                element.releasePointerCapture(e.pointerId);
+                element.style.transition = 'all 0.15s ease';
+                playSound('upgrade');
+                logMessage("🛋️ 가구가 제자리에 멋지게 안착되었습니다.");
+            };
+
+            element.addEventListener('pointerup', stopDrag);
+            element.addEventListener('pointercancel', stopDrag);
+        }
+
+        function checkPhase2Ready() {
+            const hasColor = state.wallColor !== '';
+            const meetsCount = state.placedFurnitureCount >= 3;
+
+            const btn = document.getElementById('btn-goto-phase3');
+            if (hasColor && meetsCount) {
+                btn.disabled = false;
+                btn.className = "w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl transition cursor-pointer shadow-md animate-bounce text-xs";
+                btn.innerText = "3단계: 우리 보물방 소문내기 ➔";
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full py-3 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs";
+            }
+        }
+
+        /* --- STREAMING_CHUNK: Promotion & Opening Systems... --- */
+        function nextToPhase3() {
+            state.phase = 3;
+            playSound('clear');
+            document.getElementById('player-phase').innerText = "3단계: 동네 소문내기";
+
+            document.getElementById('panel-phase2').classList.add('hidden');
+            document.getElementById('panel-phase3').classList.remove('hidden');
+
+            document.getElementById('current-phase-title').innerText = "3단계: 지역 널리 소문 소통하기";
+            document.getElementById('current-phase-desc').innerText = "아무리 멋진 보물 공간도 소문나지 않으면 안 돼요! 광고를 내서 주민 친구들의 기대치를 채우세요.";
+
+            document.getElementById('canvas-guide-overlay').innerText = "📢 3단계: 소문내기 홍보를 집행해 대망의 오픈 축제 기대감을 가득 채워요!";
+
+            document.getElementById('main-progress-bar').style.width = `0%`;
+            document.getElementById('progress-bar-label').innerText = `친구들의 기대지수: 0%`;
+
+            checkGovQuestCondition();
+            updateGlobalUI();
+            runTutorialGuide();
+        }
+
+        function executePromotion(type, cost) {
+            if (state.phase !== 3) return;
+
+            let expectPower = 0;
+            if (type === 'flyer') expectPower = 15;
+            if (type === 'sns') expectPower = 30;
+            if (type === 'banner') expectPower = 50;
+
+            if (state.character.id === 'promoter') {
+                expectPower = Math.round(expectPower * 1.3);
+            }
+
+            if (state.money < cost) {
+                logMessage("❌ 소문을 내기 위한 용돈이 약간 부족합니다! 나라 미션 선물을 기다려봐요!");
+                return;
+            }
+
+            state.money -= cost;
+            playSound('upgrade');
+
+            state.promotionProgress = Math.min(100, state.promotionProgress + expectPower);
+            logMessage(`📢 홍보 작전 성공! 마을 친구들이 놀러올 확률이 +${expectPower}% 올랐습니다.`);
+
+            document.getElementById('promotion-rate-text').innerText = `${state.promotionProgress}%`;
+            document.getElementById('promotion-inner-bar').style.width = `${state.promotionProgress}%`;
+
+            document.getElementById('main-progress-bar').style.width = `${state.promotionProgress}%`;
+            document.getElementById('progress-bar-label').innerText = `태안 지역 기대 지수: ${state.promotionProgress}%`;
+
+            if (state.promotionProgress >= 100) {
+                playSound('clear');
+                logMessage("✨ 친구들이 기다리다 지쳐 빨리 문을 열어 달래요! 당장 4단계 개관식을 진행하세요!");
+                
+                const btn = document.getElementById('btn-goto-phase4');
+                btn.disabled = false;
+                btn.className = "w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl transition cursor-pointer shadow-md animate-bounce text-xs";
+                btn.innerText = "4단계: 대대적인 개막 축제 선포 ➔";
+            }
+
+            checkGovQuestCondition();
+            updateGlobalUI();
+            runTutorialGuide();
+        }
+
+        function nextToPhase4() {
+            state.phase = 4;
+            playSound('clear');
+            document.getElementById('player-phase').innerText = "4단계: 신나는 개막";
+
+            document.getElementById('panel-phase3').classList.add('hidden');
+            document.getElementById('panel-phase4').classList.remove('hidden');
+
+            document.getElementById('current-phase-title').innerText = "4단계: 소통 공간 첫 손님 체험 축제";
+            document.getElementById('current-phase-desc').innerText = "짜잔! 문을 열었어요. 걸어 들어오는 주민들을 콕콕 눌러 고마운 만족 기부금을 받으세요.";
+
+            document.getElementById('canvas-guide-overlay').innerText = "🎈 4단계: 방바닥 위를 걸어다니는 친구들을 콕콕 터치해 만족 활력을 모아주세요!";
+
+            document.getElementById('main-progress-bar').style.width = `0%`;
+            document.getElementById('progress-bar-label').innerText = `수거한 주민 축하 용돈: 0 / 6명`;
+
+            spawnOpeningGuests();
+            checkGovQuestCondition();
+            updateGlobalUI();
+            runTutorialGuide();
+        }
+
+        function spawnOpeningGuests() {
+            const container = document.getElementById('guest-animation-layer');
+            container.innerHTML = '';
+
+            const guestPool = [
+                { emoji: "👵", name: "남면 이장님 할머님" },
+                { emoji: "👦", name: "태안초 4학년 은우" },
+                { emoji: "👨‍🌾", name: "귀어 농부 삼촌" },
+                { emoji: "👩", name: "재밌는 책 읽어주는 이모" },
+                { emoji: "🧑‍💻", name: "컴퓨터 게임 개발자 형아" },
+                { emoji: "⛵", name: "바다 잠수 해녀 할머니" }
+            ];
+
+            guestPool.forEach((guest, index) => {
+                setTimeout(() => {
+                    if (state.phase !== 4) return;
+
+                    const el = document.createElement('div');
+                    el.className = "absolute cursor-pointer select-none text-4xl p-2 hover:scale-125 transition-all duration-300 z-40 flex flex-col items-center animate-bounce";
+                    el.innerText = guest.emoji;
+
+                    const randX = Math.random() * 80 + 10;
+                    const randY = Math.random() * 15 + 75;
+                    
+                    el.style.left = `${randX}%`;
+                    el.style.top = `${randY}%`;
+
+                    el.addEventListener('pointerdown', (e) => {
+                        e.stopPropagation();
+                        satisfyGuest(el, guest);
+                    });
+
+                    container.appendChild(el);
+                    playSound('click');
+                    logMessage(`👨‍👩‍👧‍👦 [${guest.name}]님이 신나서 웃으며 들어왔어요!`);
+                }, index * 1200);
+            });
+        }
+
+        function satisfyGuest(el, guest) {
+            playSound('clear');
+            el.classList.add('scale-0', 'pointer-events-none');
+
+            let tip = 80;
+            if (state.character.id === 'promoter') {
+                tip += 20;
+                logMessage("📢 소문쟁이 요정 효과! 소문이 훌륭해 추가 만족 용돈 보너스를 받습니다.");
+            }
+            if (state.character.id === 'chef') {
+                tip += 80;
+                logMessage("🍽️ 요리 셰프의 간식 버프! 맛있는 머핀을 나눠주고 감동 팁을 2배로 받았어요!");
+            }
+
+            state.money += tip;
+            state.grandOpeningGuestsCleaned++;
+
+            logMessage(`❤️ [${guest.name}] 대만족! 고마움 가득 기부금 +${tip}원 수령 완료.`);
+
+            document.getElementById('grand-open-stats').innerText = `${state.grandOpeningGuestsCleaned} / ${state.maxGuestsNeeded}명`;
+
+            const progressRatio = Math.round((state.grandOpeningGuestsCleaned / state.maxGuestsNeeded) * 100);
+            document.getElementById('main-progress-bar').style.width = `${progressRatio}%`;
+            document.getElementById('progress-bar-label').innerText = `축제 활력 충전도: ${progressRatio}%`;
+
+            setTimeout(() => {
+                el.remove();
+                if (state.grandOpeningGuestsCleaned >= state.maxGuestsNeeded) {
+                    playSound('clear');
+                    logMessage("🎉 축제 완료! 수고하셨습니다 대장님! 군청으로 성과 보고를 하러 떠나요!");
+                    
+                    const btn = document.getElementById('btn-goto-phase5');
+                    btn.disabled = false;
+                    btn.className = "w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl transition cursor-pointer shadow-md animate-bounce text-xs";
+                    btn.innerText = "5단계: 명예로운 최우수 상 수장식 진행 ➔";
+                }
+                
+                checkGovQuestCondition();
+                updateGlobalUI();
+                runTutorialGuide();
+            }, 300);
+        }
+
+        /* --- STREAMING_CHUNK: Success & Reset Systems... --- */
+        function nextToPhase5() {
+            state.phase = 5;
+            playSound('clear');
+            triggerGameClear();
+        }
+
+        function triggerGameClear() {
+            document.getElementById('report-location').innerText = state.space.name;
+            document.getElementById('report-facility').innerText = state.space.targetFacility;
+            document.getElementById('report-character').innerText = `${state.character.name} 대장님`;
+            document.getElementById('report-deco-count').innerText = `${state.placedFurnitureCount}종 가구 인테리어 완료`;
+            document.getElementById('report-wall-color').innerText = state.wallColorName;
+
+            document.getElementById('success-congrats-text').innerText = 
+                `경축! 아무도 쓰지 않아 먼지만 풀풀 날리던 [${state.space.name}]가 ${state.character.name}님의 감각적인 손길과 청소로 친구들과 주민들의 비밀기지인 "${state.space.targetFacility}"(으)로 대변신했습니다!`;
+
+            showScreen('screen-success');
+            runTutorialGuide();
+        }
+
+        /* --- STREAMING_CHUNK: Social Visit & Close View System... --- */
+        let activeVisitingIndex = 0;
+
+        function openSocialModal() {
+            playSound('click');
+            const modal = document.getElementById('social-modal');
+            modal.classList.remove('hidden');
+
+            renderSocialList();
+        }
+
+        function closeSocialModal() {
+            playSound('click');
+            const modal = document.getElementById('social-modal');
+            modal.classList.add('hidden');
+            
+            document.getElementById('visit-detail-preview').classList.add('hidden');
+            document.getElementById('social-list-container').classList.remove('hidden');
+        }
+
+        function renderSocialList() {
+            const container = document.getElementById('social-list-container');
+            container.innerHTML = '';
+
+            socialPlayers.forEach((user, index) => {
+                const isAlreadyLiked = state.likedSocialIds.includes(user.id);
+                const badge = isAlreadyLiked 
+                    ? `<span class="bg-gray-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">관람 완료</span>` 
+                    : `<span class="bg-indigo-100 text-indigo-800 text-[9px] font-black px-2 py-0.5 rounded-full">+100원 용돈 대기</span>`;
+
+                const item = document.createElement('div');
+                item.className = "p-3 border rounded-xl hover:border-indigo-500 bg-slate-50 flex items-center justify-between cursor-pointer transition";
+                item.onclick = () => loadSocialPreview(index);
+                item.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
+                            <span>🏠 ${user.facilityName}</span>
+                            ${badge}
+                        </h4>
+                        <p class="text-[10px] text-gray-500 mt-0.5">멋쟁이 친구: ${user.creator}</p>
+                    </div>
+                    <span class="text-[10px] bg-indigo-600 text-white py-1 px-2.5 rounded-lg font-black shrink-0">구경하기 🚌</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function loadSocialPreview(index) {
+            playSound('upgrade');
+            activeVisitingIndex = index;
+            const user = socialPlayers[index];
+
+            // [어린이 사용성 개선] 구경 화면 집중을 위해 뒤의 목록 숨기기
+            document.getElementById('social-list-container').classList.add('hidden');
+
+            const previewPanel = document.getElementById('visit-detail-preview');
+            previewPanel.classList.remove('hidden');
+
+            document.getElementById('visit-detail-title').innerText = `${user.creator}님의 보물공간: ${user.facilityName}`;
+            document.getElementById('visit-badge-tag').innerText = `인기짱 지수: ❤️ ${user.likes}`;
+            document.getElementById('visit-guestbook-text').innerText = `💬 관찰 소감: "${user.comment}"`;
+
+            const miniCanvas = document.getElementById('visit-mini-canvas');
+            miniCanvas.style.backgroundColor = user.wallColor;
+            miniCanvas.innerHTML = '';
+
+            const miniWin = document.createElement('div');
+            miniWin.className = "absolute top-1 left-1/2 -translate-x-1/2 w-16 h-8 border border-amber-800 rounded-t-full bg-sky-200 opacity-80";
+            miniCanvas.appendChild(miniWin);
+
+            user.items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = "absolute text-xs scale-90";
+                el.style.left = item.left;
+                el.style.top = item.top;
+                el.innerHTML = item.svg;
+                miniCanvas.appendChild(el);
+            });
+
+            const btn = document.getElementById('btn-social-like');
+            const isAlreadyLiked = state.likedSocialIds.includes(user.id);
+            if (isAlreadyLiked) {
+                btn.disabled = true;
+                btn.className = "bg-gray-300 text-gray-500 text-[10px] font-black py-1.5 px-3 rounded-lg cursor-not-allowed";
+                btn.innerHTML = "💡 이미 관람 용돈 선물을 수령했습니다";
+            } else {
+                btn.disabled = false;
+                btn.className = "bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black py-1.5 px-3 rounded-lg flex items-center gap-1 transition cursor-pointer shadow-sm animate-pulse";
+                btn.innerHTML = "<i class='fa-solid fa-heart'></i> <span>좋아요 응원하고 +100원 받기</span>";
+            }
+        }
+
+        // [신규 기능 추가] 소셜 룸 상세 보기에서 목록으로 나가는 기능
+        function exitSocialPreview() {
+            playSound('click');
+            // 상세를 닫고 목록을 재출력
+            document.getElementById('visit-detail-preview').classList.add('hidden');
+            document.getElementById('social-list-container').classList.remove('hidden');
+            renderSocialList();
+        }
+
+        function likeSocialFacility() {
+            const user = socialPlayers[activeVisitingIndex];
+            if (state.likedSocialIds.includes(user.id)) return;
+
+            playSound('clear');
+            state.likedSocialIds.push(user.id);
+
+            state.money += 100;
+            logMessage(`🚌 다른 친구의 방에서 영감을 얻어 나라에서 관람 상금 +100원 획득!`);
+
+            user.likes++;
+
+            loadSocialPreview(activeVisitingIndex);
+            renderSocialList();
+
+            checkGovQuestCondition();
+            updateGlobalUI();
+        }
+
+        /* --- STREAMING_CHUNK: Global Synchronizers... --- */
+        function updateGlobalUI() {
+            document.getElementById('player-money').innerText = state.money.toLocaleString();
+        }
+
+        function logMessage(text) {
+            document.getElementById('system-alert-text').innerText = text;
+        }
+
+        function resetGame() {
+            state = {
+                money: 400,
+                phase: 1,
+                character: { id: '', name: '', perk: '' },
+                space: { name: '', emoji: '', targetFacility: '' },
+                wallColor: '',
+                wallColorName: '미선택 (잿빛 시멘트)',
+                placedFurnitureCount: 0,
+                placedPlantsCount: 0,
+                promotionProgress: 0,
+                grandOpeningGuestsCleaned: 0,
+                maxGuestsNeeded: 6,
+                currentGovQuest: null,
+                likedSocialIds: []
+            };
+
+            document.getElementById('canvas-wall').style.backgroundColor = '#d1d5db'; 
+            document.getElementById('selected-wall-label').innerText = `🎨 도색 상태: 미선택 (잿빛 시멘트)`;
+            document.getElementById('interactive-item-layer').innerHTML = '';
+            document.getElementById('guest-animation-layer').innerHTML = '';
+            
+            document.querySelectorAll('.char-card').forEach(card => {
+                card.classList.remove('border-teal-500', 'bg-teal-50', 'ring-4', 'ring-teal-400');
+            });
+
+            const btn = document.getElementById('btn-spin');
+            btn.disabled = false;
+            btn.className = "w-full bg-yellow-500 hover:bg-yellow-600 text-teal-950 text-base font-black py-4 rounded-2xl shadow-md transition duration-150";
+
+            const startBtn = document.getElementById('btn-start-roulette');
+            startBtn.disabled = true;
+            startBtn.className = "w-full md:w-80 bg-gray-300 text-gray-500 font-black py-4 rounded-2xl transition duration-200 cursor-not-allowed text-xs";
+            startBtn.innerText = "대장님을 먼저 한 명 터치해줘!";
+
+            document.getElementById('btn-goto-phase2').disabled = true;
+            document.getElementById('btn-goto-phase2').className = "w-full py-3.5 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs";
+            
+            document.getElementById('btn-goto-phase3').disabled = true;
+            document.getElementById('btn-goto-phase3').className = "w-full py-3 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs";
+
+            document.getElementById('btn-goto-phase4').disabled = true;
+            document.getElementById('btn-goto-phase4').className = "w-full py-3.5 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs";
+
+            document.getElementById('btn-goto-phase5').disabled = true;
+            document.getElementById('btn-goto-phase5').className = "w-full py-3.5 bg-gray-300 text-gray-500 font-black rounded-xl cursor-not-allowed transition text-xs";
+
+            document.getElementById('player-phase').innerText = "1단계: 대청소";
+            document.getElementById('panel-phase2').classList.add('hidden');
+            document.getElementById('panel-phase3').classList.add('hidden');
+            document.getElementById('panel-phase4').classList.add('hidden');
+            document.getElementById('panel-phase1').classList.remove('hidden');
+
+            logMessage("크루와 재생 부지를 설정하고 타이쿤 프로젝트를 이끄세요!");
+            showScreen('screen-char-select');
+            runTutorialGuide();
+        }
+    </script>
+</body>
+</html>

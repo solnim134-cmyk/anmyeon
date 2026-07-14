@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>미로 한가운데의 우리들 - 캠페인 게임</title>
+  <!-- Tailwind CSS & Google Fonts & FontAwesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Neo+Dunggeunmo+Pro&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: radial-gradient(circle at center, #1e1b4b 0%, #030712 100%);
+    }
+    .neon-text-pink {
+      text-shadow: 0 0 5px rgba(236, 72, 153, 0.5), 0 0 15px rgba(236, 72, 153, 0.7);
+    }
+    .neon-text-cyan {
+      text-shadow: 0 0 5px rgba(6, 182, 212, 0.5), 0 0 15px rgba(6, 182, 212, 0.7);
+    }
+    .pixel-font {
+      font-family: 'Neo Dunggeunmo Pro', 'Courier New', monospace;
+    }
+    .modern-retro-font {
+      font-family: 'Orbitron', sans-serif;
+    }
+    /* Modern Neo-Console Styles */
+    .console-body {
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.05);
+    }
+    .neon-border-cyan {
+      border: 2px solid #06b6d4;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    }
+    .neon-border-pink {
+      border: 2px solid #ec4899;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+    }
+    /* Pulse glow keyframes */
+    @keyframes pulse-cyan {
+      0%, 100% { box-shadow: 0 0 8px rgba(6, 182, 212, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.8); }
+    }
+    .glow-cyan {
+      animation: pulse-cyan 2s infinite;
+    }
+    /* Smooth Scroll Helper */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-center p-4">
+
+  <div class="max-w-4xl w-full text-center mb-8">
+    <div class="inline-block px-3 py-1 bg-gradient-to-r from-pink-500/20 to-cyan-500/20 border border-indigo-500/30 rounded-full text-xs text-indigo-300 font-bold tracking-widest uppercase mb-3 animate-pulse">
+      ⚡ 2026 NEXT-GEN INTERACTIVE CAMPAIGN
+    </div>
+    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">
+      미로 한가운데의 우리들
+    </h1>
+    <p class="text-slate-400 mt-3 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
+      "갈 데 없어서 또 여길 맴돌아..."<br>
+      트렌디한 시티팝 감성 속 숨겨진 청소년들의 방황 미로를 탈출하세요!
+    </p>
+  </div>
+
+  <!-- MAIN NEO-CONSOLE CONTAINER -->
+  <div class="console-body w-full max-w-md rounded-[2.5rem] p-5 flex flex-col items-center select-none mb-10 border-4 border-indigo-500/30">
+    
+    <!-- Top Brand Logo -->
+    <div class="w-full flex justify-between items-center px-4 mb-3">
+      <span class="modern-retro-font text-xs tracking-widest text-cyan-400 font-bold neon-text-cyan">NEO-DEVICES</span>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <span class="text-[10px] text-emerald-400 font-bold modern-retro-font">LIVE CHANNELS</span>
+      </div>
+    </div>
+
+    <!-- Screen Area (Vaporwave/Cyber-Y2K Display Style) -->
+    <div class="w-full bg-[#0a0f24] rounded-2xl p-3 border-2 border-slate-700 shadow-2xl relative overflow-hidden">
+      
+      <!-- Scanlines decorative grid overlay -->
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] pointer-events-none z-10"></div>
+      
+      <!-- Game Screen Viewport -->
+      <div class="relative bg-slate-950 border-2 border-indigo-500/50 rounded-xl overflow-hidden shadow-inner" style="height: 340px;">
+        
+        <!-- START SCREEN -->
+        <div id="start-screen" class="absolute inset-0 flex flex-col items-center justify-between p-6 text-center bg-gradient-to-br from-indigo-950/90 via-[#0c0a21] to-slate-950 z-20">
+          <div></div>
+          <div class="flex flex-col items-center">
+            <!-- Sleek Icon -->
+            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-500 to-pink-500 flex items-center justify-center text-3xl mb-4 shadow-lg shadow-indigo-500/40">
+              🧭
+            </div>
+            <div class="modern-retro-font text-2xl font-black text-cyan-400 neon-text-cyan tracking-widest mb-2 animate-bounce">LOST & WANDERING</div>
+            <div class="pixel-font text-[13px] text-slate-300 font-bold leading-relaxed">
+              토요일 학원 끝난 시간...<br>
+              "얘들아, 우리 오늘 어디서 만나서 놀지?"<br>
+              <span class="text-pink-400 font-extrabold">[청소년 복합 문화 센터]</span>를 찾아가자!
+            </div>
+          </div>
+          
+          <div class="w-full">
+            <button onclick="startGame()" class="w-full pixel-font font-bold py-3 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-slate-950 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all text-sm tracking-wide">
+              🎮 게임 시작하기 (START)
+            </button>
+            <div class="text-[10px] text-slate-500 mt-3 pixel-font">
+              * 미니맵 레이더가 추가되어 길 찾기가 훨씬 쉬워졌습니다!
+            </div>
+          </div>
+        </div>
+
+        <!-- PLAYGAME SCREEN -->
+        <div id="gameplay-screen" class="hidden w-full h-full flex flex-col justify-between p-3 relative">
+          <!-- Top HUD: Boredom Gauge & Energy/Oasis Marker -->
+          <div class="w-full bg-slate-900/90 border border-indigo-500/30 p-2 rounded-lg flex flex-col backdrop-blur-sm z-10">
+            <div class="flex justify-between items-center text-xs font-bold pixel-font">
+              <span class="text-pink-400 flex items-center gap-1">😫 지루함 누적 지수:</span>
+              <span id="boredom-text" class="modern-retro-font text-cyan-300">10%</span>
+            </div>
+            <!-- Boredom Status Bar -->
+            <div class="w-full bg-slate-950 h-2.5 rounded-full border border-slate-800 mt-1.5 relative overflow-hidden">
+              <div id="boredom-bar" class="bg-gradient-to-r from-cyan-400 to-pink-500 h-full transition-all duration-300" style="width: 10%;"></div>
+            </div>
+          </div>
+
+          <!-- 3D Canvas Viewport (1인칭 뷰) + HUD Overlays -->
+          <div class="flex-grow flex items-center justify-center my-1 relative">
+            <canvas id="gameCanvas" width="360" height="170" class="rounded-lg border border-slate-800 bg-slate-950"></canvas>
+            
+            <!-- Floating Event Toast -->
+            <div id="event-popup" class="hidden absolute inset-x-2 bottom-2 bg-slate-900/95 border-2 border-cyan-500 text-slate-100 p-2.5 rounded-lg text-xs pixel-font leading-normal shadow-2xl animate-bounce z-10">
+              ⚠️ 이벤트 메시지
+            </div>
+          </div>
+
+          <!-- Dialog Text Box (Narrative log) -->
+          <div class="bg-slate-900/95 border border-slate-700/60 p-2.5 rounded-xl h-16 overflow-y-auto flex items-center z-10">
+            <p id="dialog-text" class="pixel-font text-[11px] text-slate-300 leading-tight">
+              탁 트인 길목입니다. 사방에 숨겨진 힐링 오아시스와 새로운 탈출 통로를 모색해 보세요.
+            </p>
+          </div>
+        </div>
+
+        <!-- GAMEOVER SCREEN -->
+        <div id="gameover-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950 z-20">
+          <div class="text-4xl mb-3 animate-bounce">💤</div>
+          <div class="modern-retro-font text-xl text-pink-500 font-bold tracking-widest mb-2 neon-text-pink">GAME OVER</div>
+          <div id="gameover-reason" class="pixel-font text-[12px] leading-relaxed text-slate-400 mb-6">
+            지루함 게이지가 가득 찼습니다.<br>
+            결국 머무를 곳이 없어 추운 길거리를 헤매다 무기력하게 컴백홈 했습니다...
+          </div>
+          <button onclick="startGame()" class="pixel-font font-bold px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white rounded-xl shadow-lg shadow-pink-500/20 active:scale-95 transition-all text-xs">
+            🔄 리벤지 매치 도전
+          </button>
+        </div>
+
+        <!-- WIN & CAMPAIGN CLIMAX SCREEN -->
+        <div id="win-screen" class="hidden absolute inset-0 flex flex-col items-center justify-between p-6 text-center bg-gradient-to-br from-[#0c0a21] to-slate-950 z-20 overflow-y-auto">
+          <div></div>
+          <div class="flex flex-col items-center w-full">
+            <div class="text-4xl mb-2 animate-pulse">🎉</div>
+            <div class="modern-retro-font text-lg text-cyan-400 font-bold tracking-widest mb-2 neon-text-cyan">MISSION SUCCESS?</div>
+            <div class="pixel-font text-xs leading-relaxed text-slate-300 mb-4 font-bold">
+              드디어 소문으로만 돌던 꿈의 힐링 보금자리인<br>
+              <span class="bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 px-2 py-0.5 rounded inline-block mt-1">[청소년 복합 문화 센터]</span>에 도달했습니다!
+            </div>
+            <!-- Critical Twist Alert Box -->
+            <div class="border border-dashed border-pink-500/50 p-3 rounded-xl bg-pink-950/20 text-left text-[11px] pixel-font leading-relaxed mb-4 w-full">
+              🚨 <span class="font-bold text-pink-400">[실제 현황 알림]</span><br>
+              해당 구역의 시설은 가공의 시설이거나 예산 부족으로 건립 조례안 검토가 기약 없이 중단된 상황입니다.
+            </div>
+            <p class="pixel-font text-[11px] leading-relaxed text-slate-400 mb-4">
+              우리가 신나게 게임 속에서 도달한 그 목적지는 현실엔 아직 단 한 칸도 존재하지 않을 수 있습니다. 청소년들이 마음껏 쉬고 꿈을 그릴 공간 건립을 위해 힘을 모아주세요!
+            </p>
+          </div>
+          <a href="#campaign-cta" onclick="scrollCta()" class="w-full pixel-font font-bold py-3 bg-gradient-to-r from-cyan-400 via-indigo-400 to-pink-400 text-slate-950 rounded-xl shadow-lg animate-pulse text-xs">
+            👉 아래 서명 페이지로 바로 이동하기
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Console Neon Switch Controller Layout (Tactile Neon Buttons) -->
+    <div class="w-full flex justify-between items-center px-2 mt-5">
+      <!-- D-PAD (Left controller) -->
+      <div class="relative w-28 h-28 flex items-center justify-center">
+        <!-- Up (Forward) -->
+        <button onclick="movePlayer('forward')" class="absolute top-0 w-9 h-9 rounded-xl neon-border-cyan bg-slate-900 text-cyan-400 hover:bg-slate-800 flex items-center justify-center font-bold shadow-lg active:scale-90 transition-all text-sm">▲</button>
+        <!-- Left -->
+        <button onclick="movePlayer('left')" class="absolute left-0 w-9 h-9 rounded-xl neon-border-cyan bg-slate-900 text-cyan-400 hover:bg-slate-800 flex items-center justify-center font-bold shadow-lg active:scale-90 transition-all text-sm">◀</button>
+        <!-- Center core decorate -->
+        <div class="absolute w-8 h-8 bg-slate-950 rounded-lg border border-slate-800"></div>
+        <!-- Right -->
+        <button onclick="movePlayer('right')" class="absolute right-0 w-9 h-9 rounded-xl neon-border-cyan bg-slate-900 text-cyan-400 hover:bg-slate-800 flex items-center justify-center font-bold shadow-lg active:scale-90 transition-all text-sm">▶</button>
+        <!-- Down (Not used but visually complete) -->
+        <div class="absolute bottom-0 w-9 h-9 rounded-xl bg-slate-900/50 text-slate-600 border border-slate-800/80 flex items-center justify-center font-bold text-xs cursor-not-allowed">▼</div>
+      </div>
+
+      <!-- Neon Action Button Circle (Right controller) -->
+      <div class="flex gap-4 items-center">
+        <div class="flex flex-col items-center">
+          <button onclick="interactAction()" class="w-12 h-12 rounded-full neon-border-pink bg-slate-900 text-pink-400 hover:bg-slate-800 font-extrabold text-sm flex items-center justify-center shadow-lg active:scale-90 transition-all">A</button>
+          <span class="text-[9px] text-slate-400 font-bold mt-1.5 modern-retro-font">SURVEY</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <button onclick="playSoundSynth()" class="w-12 h-12 rounded-full border-2 border-indigo-500 bg-slate-900 text-indigo-400 hover:bg-slate-800 font-bold text-sm flex items-center justify-center shadow-lg active:scale-90 transition-all">🎵</button>
+          <span class="text-[9px] text-slate-400 font-bold mt-1.5 modern-retro-font">BGM</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Soft Keys (Select / Reset) -->
+    <div class="flex gap-8 mt-5">
+      <div class="flex flex-col items-center">
+        <button class="w-10 h-2.5 bg-slate-800 rounded-full hover:bg-slate-700 shadow-md transition-all cursor-pointer" onclick="showHelpToast()"></button>
+        <span class="text-[8px] text-slate-400 font-bold mt-1 modern-retro-font">HELP</span>
+      </div>
+      <div class="flex flex-col items-center">
+        <button onclick="startGame()" class="w-10 h-2.5 bg-slate-800 rounded-full hover:bg-slate-700 shadow-md transition-all cursor-pointer"></button>
+        <span class="text-[8px] text-slate-400 font-bold mt-1 modern-retro-font">RESET</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGN CONTENT & SIGN UP FORM (CALL TO ACTION) -->
+  <section id="campaign-cta" class="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-indigo-950/40 rounded-3xl p-6 md:p-8 border border-indigo-500/20 shadow-2xl scroll-mt-6">
+    <div class="text-center mb-8">
+      <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-400/20 text-cyan-400 rounded-full text-[11px] font-bold uppercase tracking-wider">
+        Campaign Proposal
+      </span>
+      <h2 class="text-2xl md:text-3xl font-black mt-3 leading-tight">
+        "골목을 배회하지 않도록"<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400">진짜 청소년 전용 복합 문화 공간</span>을 건립해 주세요!
+      </h2>
+      <p class="text-slate-400 text-xs md:text-sm mt-3 leading-relaxed">
+        대한민국 대부분의 청소년 쉼터는 고장 나고 낡은 시설들로 가득합니다. 우리의 놀 권리와 안전하게 소통할 권리를 보장할 새로운 랜드마크 스튜디오가 지자체마다 필요합니다.
+      </p>
+    </div>
+
+    <!-- Key Arguments and Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80 flex items-start gap-3">
+        <div class="p-2 bg-pink-500/10 text-pink-400 rounded-xl text-lg flex-shrink-0">🚷</div>
+        <div>
+          <h4 class="font-bold text-slate-200 text-sm">유스(Youth) 공간 절벽</h4>
+          <p class="text-xs text-slate-400 mt-1 leading-normal">
+            "카페에서는 고가의 음료 때문에, 공원에서는 시끄럽다는 시선 때문에 청소년들은 결국 길거리 어두운 구석진 미로로 내몰리고 있습니다."
+          </p>
+        </div>
+      </div>
+      <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80 flex items-start gap-3">
+        <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl text-lg flex-shrink-0">🚀</div>
+        <div>
+          <h4 class="font-bold text-slate-200 text-sm">우리가 희망하는 가치 공간</h4>
+          <p class="text-xs text-slate-400 mt-1 leading-normal">
+            무료 고성능 와이파이, 댄스/크리에이터 동아리 합주 스튜디오, 자유 북카페, 힐링 라운지가 어우러진 현대식 복합 플랫폼 건립을 청원합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- REAL-TIME INTERACTIVE SIGNATURE BOX -->
+    <div class="bg-slate-950/90 p-5 md:p-6 rounded-2xl border border-indigo-500/30 shadow-inner relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-cyan-500/5 rounded-full blur-3xl"></div>
+      <div class="absolute -left-10 -top-10 w-40 h-40 bg-pink-500/5 rounded-full blur-3xl"></div>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 pb-4 border-b border-slate-800">
+        <h3 class="text-lg font-bold text-cyan-400 flex items-center gap-2">
+          ✍️ 청원 서명 동의 참여자 현황
+        </h3>
+        <div class="bg-indigo-950/60 border border-indigo-500/40 px-3 py-1 rounded-lg text-xs font-mono">
+          현재 동참: <span id="counter-display" class="text-pink-400 font-bold">14,352</span>명
+        </div>
+      </div>
+
+      <!-- Modern Interactive Form -->
+      <form onsubmit="handleSignature(event)" class="space-y-4 relative z-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs text-indigo-300 font-bold mb-1.5 uppercase tracking-wider">이름 / 닉네임</label>
+            <input required id="signer-name" type="text" placeholder="홍길동" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all">
+          </div>
+          <div>
+            <label class="block text-xs text-indigo-300 font-bold mb-1.5 uppercase tracking-wider">활동 중심 지역 (시/군/구)</label>
+            <input required id="signer-region" type="text" placeholder="서울 마포구" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-indigo-300 font-bold mb-1.5 uppercase tracking-wider">정부와 지자체에 건네는 메시지</label>
+          <input required id="signer-msg" type="text" placeholder="우리 동네 청소년들이 쉴 수 있는 문화 공간을 하루빨리 마련해 주세요!" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all">
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-pink-500 text-slate-950 font-black text-sm py-3.5 rounded-xl hover:brightness-110 active:scale-[0.99] transition-all shadow-xl shadow-indigo-500/10">
+          온라인 청원 서명 발송하기
+        </button>
+      </form>
+
+      <!-- Simulated Live Signature Feed -->
+      <div class="mt-5 pt-4 border-t border-slate-800/80">
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-2 font-bold font-mono">실시간 서명 타임라인</p>
+        <div id="feed-container" class="space-y-2 max-h-24 overflow-y-auto pr-1">
+          <div class="flex justify-between items-center bg-slate-900/40 p-2 rounded-lg text-xs border border-slate-800/40">
+            <span class="text-slate-300 font-semibold">김*민 (경기 수원)</span>
+            <span class="text-indigo-400 text-[11px]">"길거리 방황 이제 그만!"</span>
+          </div>
+          <div class="flex justify-between items-center bg-slate-900/40 p-2 rounded-lg text-xs border border-slate-800/40">
+            <span class="text-slate-300 font-semibold">박*서 (서울 도봉)</span>
+            <span class="text-indigo-400 text-[11px]">"합주실 있는 문화공간 완전 강추"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notification Overlay Box instead of alert() -->
+  <div id="toast-message" class="fixed top-5 left-1/2 -translate-x-1/2 bg-slate-900 border-2 border-cyan-400/80 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 scale-0 opacity-0 z-50 max-w-md w-11/12">
+    <div class="text-2xl" id="toast-icon">✨</div>
+    <div class="flex-grow">
+      <h5 class="text-xs font-bold text-cyan-400 tracking-wider font-mono">SYSTEM LOG</h5>
+      <p id="toast-text" class="text-xs text-slate-300 leading-snug mt-0.5">상태 알림 내용이 출력됩니다.</p>
+    </div>
+  </div>
+
+  <!-- Sound Synth Engine & Game logic -->
+  <script>
+    // Audio Context Setup
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    // High quality synth audio functions
+    function playSound(freq, duration, type = 'square', gainValue = 0.05) {
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.log("Audio block bypass");
+      }
+    }
+
+    function playBeep() { playSound(750, 0.08, 'triangle', 0.07); }
+    function playTurn() { playSound(520, 0.06, 'sine', 0.06); }
+    function playHurt() { 
+      playSound(220, 0.2, 'sawtooth', 0.08); 
+      setTimeout(() => playSound(150, 0.15, 'sawtooth', 0.08), 80); 
+    }
+    function playOasis() {
+      playSound(660, 0.1, 'sine', 0.06);
+      setTimeout(() => playSound(880, 0.1, 'sine', 0.06), 80);
+      setTimeout(() => playSound(1320, 0.15, 'sine', 0.07), 160);
+    }
+    function playDiscovery() {
+      const scale = [523, 659, 784, 1046];
+      scale.forEach((note, i) => {
+        setTimeout(() => playSound(note, 0.12, 'sine', 0.06), i * 100);
+      });
+    }
+    function playSoundSynth() {
+      playOasis();
+    }
+
+    // MAP SETUP (Slightly Simplified with 2 Sweet Spots/Oasis)
+    // 0: Road, 1: Wall, 2: Old Facility, 3: Hagwon Wall, 4: Expensive Cafe, 5: No-Youth Zone
+    // 8: Sweet Oasis (Wi-Fi zone / Resting Spot -- Boredom drops drastically!)
+    // 9: Final Goal (Youth Center)
+    const MAP_SIZE = 8;
+    const MAZE = [
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 1, 2, 0, 1], // Start: (1,1)
+      [1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 3, 8, 0, 0, 4, 0, 1], // (3,2) is a healing Wi-Fi oasis!
+      [1, 1, 0, 1, 1, 1, 0, 1],
+      [1, 5, 0, 0, 2, 8, 0, 1], // (5,5) is another healing Oasis!
+      [1, 1, 1, 1, 1, 1, 9, 1], // Goal: (6,6)
+      [1, 1, 1, 1, 1, 1, 1, 1]
+    ];
+
+    let playerPos = { x: 1, y: 1 };
+    let playerDir = 1; // 0: North, 1: East, 2: South, 3: West
+    let boredom = 10;
+    let gameActive = false;
+
+    // Viewport & UI elements
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Live signature counter increments randomly over time to make it alive
+    let sigCounter = 14352;
+    setInterval(() => {
+      if (Math.random() > 0.4) {
+        sigCounter += Math.floor(Math.random() * 3) + 1;
+        document.getElementById("counter-display").innerText = sigCounter.toLocaleString();
+        
+        // Occasionally inject live logs
+        if (Math.random() > 0.8) {
+          const names = ["최*민", "한*진", "임*하", "윤*진", "오*혁", "배*영"];
+          const locs = ["서울 서대문", "부산 해운대", "광주 남구", "대구 수성", "인천 연수", "대전 유성"];
+          const msgs = ["청소년들의 쉼터 응원합니다!", "도심 속 작은 공간이 큰 힘이 돼요", "우리 동네에도 꼭 지어지길", "쉴 곳 부족 심각해요", "서명 완료했습니다!"];
+          
+          const randomFeed = document.createElement("div");
+          randomFeed.className = "flex justify-between items-center bg-slate-900/40 p-2 rounded-lg text-xs border border-slate-800/40 animate-pulse";
+          randomFeed.innerHTML = `<span class="text-slate-300 font-semibold">${names[Math.floor(Math.random() * names.length)]} (${locs[Math.floor(Math.random() * locs.length)]})</span><span class="text-indigo-400 text-[11px]">"${msgs[Math.floor(Math.random() * msgs.length)]}"</span>`;
+          
+          const container = document.getElementById("feed-container");
+          container.insertBefore(randomFeed, container.firstChild);
+          if (container.children.length > 5) {
+            container.removeChild(container.lastChild);
+          }
+        }
+      }
+    }, 4000);
+
+    // Custom Custom Notification Toast Alert
+    function triggerToast(icon, text) {
+      const toast = document.getElementById("toast-message");
+      document.getElementById("toast-icon").innerText = icon;
+      document.getElementById("toast-text").innerText = text;
+      
+      toast.classList.remove("scale-0", "opacity-0");
+      toast.classList.add("scale-100", "opacity-100");
+      
+      setTimeout(() => {
+        toast.classList.remove("scale-100", "opacity-100");
+        toast.classList.add("scale-0", "opacity-0");
+      }, 3500);
+    }
+
+    function showHelpToast() {
+      triggerToast("💡", "우측 상단 미니 레이더의 빛나는 녹색 별(★)을 향해 길을 찾으세요! 핑크색 보석(💎)은 지루함을 깎아주는 힐링 존입니다.");
+    }
+
+    // GAME INITS
+    function startGame() {
+      initAudio();
+      playerPos = { x: 1, y: 1 };
+      playerDir = 1; // East
+      boredom = 10;
+      gameActive = true;
+
+      document.getElementById("start-screen").classList.add("hidden");
+      document.getElementById("gameover-screen").classList.add("hidden");
+      document.getElementById("win-screen").classList.add("hidden");
+      document.getElementById("gameplay-screen").classList.remove("hidden");
+      
+      updateUI();
+      render3DView();
+      playDiscovery();
+    }
+
+    function scrollCta() {
+      document.getElementById("campaign-cta").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function handleSignature(e) {
+      e.preventDefault();
+      const name = document.getElementById("signer-name").value;
+      const region = document.getElementById("signer-region").value;
+      const msg = document.getElementById("signer-msg").value;
+
+      triggerToast("💖", `${name}님, 성공적으로 청원 서명이 전송되었습니다! 청소년 자치권 옹호 연대에 힘이 되어 주셔서 감사합니다.`);
+      
+      // Add to feed timeline
+      const newFeed = document.createElement("div");
+      newFeed.className = "flex justify-between items-center bg-cyan-950/40 p-2 rounded-lg text-xs border border-cyan-500/20";
+      newFeed.innerHTML = `<span class="text-cyan-300 font-bold">${name.slice(0,1)}*${name.slice(2)} (${region})</span><span class="text-pink-400 text-[11px]">"${msg}"</span>`;
+      
+      const container = document.getElementById("feed-container");
+      container.insertBefore(newFeed, container.firstChild);
+      
+      e.target.reset();
+    }
+
+    function getOffsetPos(relativeDir) {
+      let checkDir = playerDir;
+      if (relativeDir === 'left') checkDir = (playerDir + 3) % 4;
+      if (relativeDir === 'right') checkDir = (playerDir + 1) % 4;
+
+      let dx = 0, dy = 0;
+      if (checkDir === 0) dy = -1; // North
+      if (checkDir === 1) dx = 1;  // East
+      if (checkDir === 2) dy = 1;  // South
+      if (checkDir === 3) dx = -1; // West
+
+      return { x: playerPos.x + dx, y: playerPos.y + dy };
+    }
+
+    function getBlockAt(offsetPos) {
+      if (offsetPos.x < 0 || offsetPos.x >= MAP_SIZE || offsetPos.y < 0 || offsetPos.y >= MAP_SIZE) {
+        return 1; 
+      }
+      return MAZE[offsetPos.y][offsetPos.x];
+    }
+
+    function render3DView() {
+      const leftPos = getOffsetPos('left');
+      const forwardPos = getOffsetPos('forward');
+      const rightPos = getOffsetPos('right');
+
+      const leftOpen = getBlockAt(leftPos) !== 1;
+      const forwardOpen = getBlockAt(forwardPos) !== 1;
+      const rightOpen = getBlockAt(rightPos) !== 1;
+
+      // Draw Retro Vaporwave View
+      ctx.fillStyle = "#0c0a21"; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Deep sky gradient
+      let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGrad.addColorStop(0, '#1e1b4b');
+      skyGrad.addColorStop(0.5, '#0f172a');
+      skyGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Ceiling and Floor grid dividing lines
+      ctx.strokeStyle = "rgba(99, 102, 241, 0.2)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i < canvas.width; i += 40) {
+        ctx.moveTo(i, 0); ctx.lineTo(canvas.width / 2, canvas.height / 2);
+        ctx.moveTo(i, canvas.height); ctx.lineTo(canvas.width / 2, canvas.height / 2);
+      }
+      ctx.stroke();
+
+      // Rendering projection parameters
+      const leftX = 90;
+      const rightX = canvas.width - leftX;
+      const topY = 40;
+      const bottomY = canvas.height - topY;
+
+      // Draw Left Barricade/Wall
+      if (!leftOpen) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(leftX, topY);
+        ctx.lineTo(leftX, bottomY); ctx.lineTo(0, canvas.height);
+        
+        let wallGrad = ctx.createLinearGradient(0, 0, leftX, 0);
+        wallGrad.addColorStop(0, '#ec4899');
+        wallGrad.addColorStop(1, '#4f46e5');
+        ctx.fillStyle = wallGrad;
+        ctx.fill();
+        
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(0, topY); ctx.lineTo(leftX, topY);
+        ctx.moveTo(0, bottomY); ctx.lineTo(leftX, bottomY);
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.5)";
+        ctx.stroke();
+      }
+
+      // Draw Right Barricade/Wall
+      if (!rightOpen) {
+        ctx.beginPath();
+        ctx.moveTo(canvas.width, 0); ctx.lineTo(rightX, topY);
+        ctx.lineTo(rightX, bottomY); ctx.lineTo(canvas.width, canvas.height);
+        
+        let wallGrad = ctx.createLinearGradient(rightX, 0, canvas.width, 0);
+        wallGrad.addColorStop(0, '#4f46e5');
+        wallGrad.addColorStop(1, '#ec4899');
+        ctx.fillStyle = wallGrad;
+        ctx.fill();
+
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(canvas.width, topY); ctx.lineTo(rightX, topY);
+        ctx.moveTo(canvas.width, bottomY); ctx.lineTo(rightX, bottomY);
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.5)";
+        ctx.stroke();
+      }
+
+      // Front Wall projection
+      if (!forwardOpen) {
+        ctx.beginPath();
+        ctx.rect(leftX, topY, rightX - leftX, bottomY - topY);
+        ctx.fillStyle = "#312e81";
+        ctx.fill();
+
+        ctx.strokeStyle = "#06b6d4";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Neon warning banner on the front wall
+        ctx.fillStyle = "#f43f5e";
+        ctx.font = "bold 9px 'Neo Dunggeunmo Pro'";
+        ctx.fillText("❌ 진입 차단", leftX + 50, topY + 45);
+      } else {
+        // Deep far wall frame
+        const dLeftX = 135;
+        const dRightX = canvas.width - dLeftX;
+        const dTopY = 60;
+        const dBottomY = canvas.height - dTopY;
+
+        ctx.beginPath();
+        ctx.rect(dLeftX, dTopY, dRightX - dLeftX, dBottomY - dTopY);
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.3)";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(leftX, topY); ctx.lineTo(dLeftX, dTopY);
+        ctx.moveTo(rightX, topY); ctx.lineTo(dRightX, dTopY);
+        ctx.moveTo(leftX, bottomY); ctx.lineTo(dLeftX, dBottomY);
+        ctx.moveTo(rightX, bottomY); ctx.lineTo(dRightX, dBottomY);
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.3)";
+        ctx.stroke();
+      }
+
+      // Draw Retro HUD overlay text
+      ctx.fillStyle = "#06b6d4";
+      ctx.font = "8px 'Orbitron'";
+      const dirNames = ["NORTH (N)", "EAST (E)", "SOUTH (S)", "WEST (W)"];
+      ctx.fillText(`DIR: ${dirNames[playerDir]} | POS: ${playerPos.x}, ${playerPos.y}`, 8, 15);
+
+      // DRAW COMPACT REAL-TIME RADAR MAP (UPPER RIGHT CORNER)
+      const radarX = canvas.width - 65;
+      const radarY = 8;
+      const radarW = 56;
+      const radarH = 56;
+      const cellW = radarW / MAP_SIZE;
+      const cellH = radarH / MAP_SIZE;
+
+      ctx.fillStyle = "rgba(10, 15, 30, 0.85)";
+      ctx.fillRect(radarX, radarY, radarW, radarH);
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.6)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(radarX, radarY, radarW, radarH);
+
+      // Loop through mini map elements
+      for (let y = 0; y < MAP_SIZE; y++) {
+        for (let x = 0; x < MAP_SIZE; x++) {
+          const block = MAZE[y][x];
+          const cx = radarX + x * cellW;
+          const cy = radarY + y * cellH;
+
+          if (block === 1) {
+            // Walls (Slightly translucent)
+            ctx.fillStyle = "rgba(236, 72, 153, 0.25)";
+            ctx.fillRect(cx, cy, cellW - 0.5, cellH - 0.5);
+          } else if (block === 8) {
+            // Wi-Fi Oasis (Healing Spot)
+            ctx.fillStyle = "#a855f7";
+            ctx.fillRect(cx, cy, cellW, cellH);
+          } else if (block === 9) {
+            // Destination Portal (Goal)
+            ctx.fillStyle = "#10b981";
+            ctx.fillRect(cx, cy, cellW, cellH);
+          }
+        }
+      }
+
+      // Draw Player indicator on Mini Radar
+      const px = radarX + playerPos.x * cellW + cellW / 2;
+      const py = radarY + playerPos.y * cellH + cellH / 2;
+      ctx.fillStyle = "#06b6d4";
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw player nose pointer direction on mini-map
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      if (playerDir === 0) ctx.lineTo(px, py - 3.5);
+      if (playerDir === 1) ctx.lineTo(px + 3.5, py);
+      if (playerDir === 2) ctx.lineTo(px, py + 3.5);
+      if (playerDir === 3) ctx.lineTo(px - 3.5, py);
+      ctx.stroke();
+    }
+
+    function updateUI() {
+      // Boredom constraint protection
+      if (boredom < 0) boredom = 0;
+      if (boredom > 100) boredom = 100;
+
+      document.getElementById("boredom-text").innerText = `${boredom}%`;
+      document.getElementById("boredom-bar").style.width = `${boredom}%`;
+
+      if (boredom >= 100) {
+        triggerGameOver();
+      }
+    }
+
+    function movePlayer(action) {
+      if (!gameActive) return;
+
+      if (action === 'left') {
+        playerDir = (playerDir + 3) % 4; // Turn Left
+        boredom += 1; // EASIER: Reduced from 3
+        playTurn();
+        document.getElementById("dialog-text").innerText = "왼쪽으로 가볍게 돌아섰습니다. 회색 골목 벽이 보입니다.";
+      } else if (action === 'right') {
+        playerDir = (playerDir + 1) % 4; // Turn Right
+        boredom += 1; // EASIER: Reduced from 3
+        playTurn();
+        document.getElementById("dialog-text").innerText = "오른쪽으로 방향을 전환했습니다. 골목길 나침반을 확인하세요.";
+      } else if (action === 'forward') {
+        const nextPos = getOffsetPos('forward');
+        const blockType = getBlockAt(nextPos);
+
+        if (blockType === 1) {
+          // Hit Wall
+          playHurt();
+          boredom += 3; // EASIER: Reduced from 5
+          document.getElementById("dialog-text").innerText = "쿵! 꽉 막힌 콘크리트 벽입니다. 청소년들이 쉴 수 없는 장벽에 직면했습니다.";
+        } else {
+          // Walk Forward
+          playerPos = nextPos;
+          boredom += 2; // EASIER: Reduced from 4
+          playBeep();
+          
+          handleTileEvent(blockType);
+        }
+      }
+
+      updateUI();
+      render3DView();
+    }
+
+    function handleTileEvent(type) {
+      if (type === 2) {
+        // Old Facility
+        boredom += 6; // EASIER: Reduced from 15
+        playHurt();
+        triggerToast("🏚️", "낡아서 이용 불가능한 쉼터 스팟");
+        document.getElementById("dialog-text").innerText = "오래되어 녹슨 그네와 파손된 벤치만 남아있는 낡은 공원입니다. 누워서 쉴 수가 없어 한숨이 나옵니다. (+6%)";
+      } else if (type === 3) {
+        // Hagwon Barrier
+        boredom += 5; // EASIER: Reduced from 10
+        playHurt();
+        triggerToast("🏫", "빽빽한 국영수 학원가 빌딩 장벽");
+        document.getElementById("dialog-text").innerText = "간판이 빽빽한 학원가 건물입니다. '가서 공부나 해'라는 어른들의 시선에 스트레스 지수가 늘어납니다. (+5%)";
+      } else if (type === 4) {
+        // Expensive Cafe
+        boredom += 6; // EASIER: Reduced from 12
+        playHurt();
+        triggerToast("💸", "부담스러운 대형 프랜차이즈 카페");
+        document.getElementById("dialog-text").innerText = "음료수 한 잔에 6천 원이 훌쩍 넘는 고급 카페입니다. 용돈 걱정에 문앞에서 발길을 돌립니다. (+6%)";
+      } else if (type === 5) {
+        // No Youth
+        boredom += 5; // EASIER: Reduced from 10
+        playHurt();
+        triggerToast("🚫", "청소년 차단(No-Youth) 구역");
+        document.getElementById("dialog-text").innerText = "청소년의 정숙하지 못한 태도를 배척하는 노유스 구역입니다. 갈 수 있는 매장이 사라집니다. (+5%)";
+      } else if (type === 8) {
+        // Wi-Fi Oasis (Healing Spot) - NEW ADDITION for easier gameplay
+        boredom -= 25; // Drastically decreases boredom
+        playOasis();
+        triggerToast("💎", "청소년 한시적 힐링존 (무료 공유 벤치)");
+        document.getElementById("dialog-text").innerText = "우연히 발견한 무료 공용 벤치와 무료 공공 와이파이 구역입니다! 친구들과 앉아서 폰을 보며 한숨 돌립니다. (지루함 -25%)";
+      } else if (type === 9) {
+        // Goal reached
+        gameActive = false;
+        playDiscovery();
+        document.getElementById("gameplay-screen").classList.add("hidden");
+        document.getElementById("win-screen").classList.remove("hidden");
+      } else {
+        document.getElementById("dialog-text").innerText = "사방이 상가와 아파트로 가로막힌 미로를 헤매고 있습니다. 문화센터(★)를 찾아 계속 나아가세요.";
+      }
+    }
+
+    function interactAction() {
+      if (!gameActive) return;
+      playBeep();
+      triggerToast("📋", "주변 설문조사: 이 동네는 갈 만한 쉼터가 절대적으로 부족합니다.");
+      document.getElementById("dialog-text").innerText = "벽면에 '청소년 출입 금지' 낙서가 보입니다. 우리에겐 대안 공간이 절실합니다.";
+    }
+
+    function triggerGameOver() {
+      gameActive = false;
+      playHurt();
+      document.getElementById("gameplay-screen").classList.add("hidden");
+      document.getElementById("gameover-screen").classList.remove("hidden");
+    }
+
+    // Keyboard controls
+    document.addEventListener("keydown", (e) => {
+      if (!gameActive) return;
+      if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") movePlayer('forward');
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") movePlayer('left');
+      if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") movePlayer('right');
+      if (e.key === " ") interactAction();
+    });
+
+  </script>
+</body>
+</html>

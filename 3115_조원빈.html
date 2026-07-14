@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대중교통 개선 캠페인 기획 제안</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Noto Sans KR & Montserrat) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Montserrat', sans-serif;
+            background-color: #f8fafc;
+        }
+        .concept-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .concept-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .active-tab {
+            border-bottom: 3px solid #3b82f6;
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 text-center">
+            <span class="inline-block bg-indigo-500 bg-opacity-40 text-indigo-100 text-xs px-3 py-1.5 rounded-full uppercase tracking-wider font-semibold mb-3">
+                Public Transit Campaign Proposal
+            </span>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4">
+                더 나은 대중교통을 위한 3가지 캠페인
+            </h1>
+            <p class="max-w-2xl mx-auto text-base sm:text-lg text-indigo-100 font-light leading-relaxed">
+                시민들의 일상에 밀착한 문제를 해결하기 위해 직관적인 컨셉과 실행력 있는 아이디어를 결합한 브랜딩 제안서입니다.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 flex-grow w-full">
+        
+        <!-- Quick Selector (Anchor Links) -->
+        <div class="flex flex-wrap justify-center gap-2 mb-12">
+            <a href="#campaign-1" class="px-5 py-2.5 rounded-full bg-white border border-gray-200 hover:border-blue-500 hover:text-blue-600 shadow-sm transition text-sm font-medium">
+                🚦 새치기·혼잡 개선
+            </a>
+            <a href="#campaign-2" class="px-5 py-2.5 rounded-full bg-white border border-gray-200 hover:border-blue-500 hover:text-blue-600 shadow-sm transition text-sm font-medium">
+                ⏳ 배차대기·경험 혁신
+            </a>
+            <a href="#campaign-3" class="px-5 py-2.5 rounded-full bg-white border border-gray-200 hover:border-blue-500 hover:text-blue-600 shadow-sm transition text-sm font-medium">
+                🔇 차내 소음·매너 관리
+            </a>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="space-y-16">
+            
+            <!-- CAMPAIGN 1 -->
+            <section id="campaign-1" class="scroll-mt-12">
+                <div class="concept-card bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 sm:p-8 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">Concept 01</span>
+                                <span class="text-teal-100 text-sm font-semibold">지하철/버스 승강장 문화</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">선(線) 넘지 않는 사이, 선(Good)한 사이</h2>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl">
+                            <i class="fa-solid fa-person-walking-dashed-line-arrow-right text-3xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 sm:p-8 md:p-10">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <!-- Left: Concept Summary -->
+                            <div class="lg:col-span-5 space-y-6">
+                                <div>
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">핵심 컨셉</h3>
+                                    <p class="text-lg font-bold text-teal-700 leading-snug">"강요가 아닌 유머와 넛지(Nudge)로 만드는 세련된 질서"</p>
+                                    <p class="text-gray-600 mt-2 text-sm leading-relaxed">
+                                        기존의 딱딱한 경고나 훈계식 명령에서 탈피합니다. 바닥에 유쾌한 인포그래픽을 입히고 심리적 트리거를 제공하여 승객 스스로가 질서를 지키는 보람을 느끼게 합니다.
+                                    </p>
+                                </div>
+                                <div class="border-t border-gray-100 pt-4">
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">주요 이용자</h3>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="bg-teal-50 text-teal-700 text-xs px-3 py-1.5 rounded-lg font-medium">출퇴근 직장인</span>
+                                        <span class="bg-teal-50 text-teal-700 text-xs px-3 py-1.5 rounded-lg font-medium">통학 학생층</span>
+                                        <span class="bg-teal-50 text-teal-700 text-xs px-3 py-1.5 rounded-lg font-medium">지하철 고속 환승 유저</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Key Features -->
+                            <div class="lg:col-span-7 bg-slate-50 rounded-2xl p-6 sm:p-8 space-y-6 border border-slate-100">
+                                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 bg-teal-500 rounded-full"></span> 캠페인 주요 세부 방안
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">1</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">바닥 넛지(Nudge) 안내선 디자인</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">대기 라인에 "이곳부터는 앞 사람의 매너를 지켜주는 선입니다" 등 유머러스하고 매끄러운 멘트와 발바닥 그래픽을 랩핑하여 새치기를 줄입니다.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">2</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">가방 백(Back)허그 챌린지</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">만원 지하철과 버스 내에서 타인의 공간을 확보하기 위해 백팩을 앞으로 메거나 바닥에 내려놓는 모습을 공유하는 자발적 인증 SNS 이벤트입니다.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">3</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">"완벽히 멈추면, 그때 움직여요" 하차 캠페인</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">정차 전에 미리 출입구로 몰려 발생하는 낙상 사고 및 밀치기를 방지하기 위해 정차 완료 후 하차 태그를 유도하는 릴렉스 방송을 구성합니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CAMPAIGN 2 -->
+            <section id="campaign-2" class="scroll-mt-12">
+                <div class="concept-card bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
+                    <div class="bg-gradient-to-r from-indigo-500 to-blue-600 p-6 sm:p-8 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">Concept 02</span>
+                                <span class="text-indigo-100 text-sm font-semibold">정류장 대기 혁신</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">정거장(停車場), 정(情)거장으로 변신!</h2>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl">
+                            <i class="fa-solid fa-clock-rotate-left text-3xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 sm:p-8 md:p-10">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <!-- Left: Concept Summary -->
+                            <div class="lg:col-span-5 space-y-6">
+                                <div>
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">핵심 컨셉</h3>
+                                    <p class="text-lg font-bold text-indigo-700 leading-snug">"기다림의 불안감을 온기와 문화의 경험으로 치환"</p>
+                                    <p class="text-gray-600 mt-2 text-sm leading-relaxed">
+                                        버스가 제시간에 오지 않을 때 느껴지는 승객들의 답답함과 지루함을 완화합니다. 정류장이라는 오프라인 대기 공간을 지역 기반의 미디어 쉼터이자 마음 충전소로 기능하도록 재해석합니다.
+                                    </p>
+                                </div>
+                                <div class="border-t border-gray-100 pt-4">
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">주요 이용자</h3>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-medium">배차 긴 외곽 노선 이용자</span>
+                                        <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-medium">심야 안심 귀가 승객</span>
+                                        <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-medium">지역 교통 소외 노년층</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Key Features -->
+                            <div class="lg:col-span-7 bg-slate-50 rounded-2xl p-6 sm:p-8 space-y-6 border border-slate-100">
+                                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span> 캠페인 주요 세부 방안
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">1</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">정류장 QR 스마트 미니 라이브러리</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">대중교통 안내 디스플레이 옆에 QR코드를 비치해 대기시간(5분, 10분 등)에 맞춘 로컬 작가의 숏폼 수필, 일러스트, 시 등을 즐길 수 있도록 지원합니다.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">2</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">스마트 안심 쉼터 마일리지 연계</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">지자체가 마련한 혹한기·혹서기용 온기정류장(쉼터)에서 승차 대기를 하며 누린 시간에 비례하여 대중교통 알뜰 마일리지를 충전해 주는 복지형 캠페인입니다.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">3</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">정류장 실시간 직관 가이드 맵</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">단순한 잔여 분 표시를 넘어 직관적인 불빛 라인을 통해 다음 버스가 내 앞 사거리 몇 미터 전에 오고 있는지를 시각화하여 정보 불안을 줄입니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CAMPAIGN 3 -->
+            <section id="campaign-3" class="scroll-mt-12">
+                <div class="concept-card bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
+                    <div class="bg-gradient-to-r from-rose-500 to-orange-600 p-6 sm:p-8 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">Concept 03</span>
+                                <span class="text-rose-100 text-sm font-semibold">소음 공해 & 차내 예절</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">쉿! 사운드 오프, 매너 온 (Sound Off, Manner On)</h2>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl">
+                            <i class="fa-solid fa-volume-xmark text-3xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 sm:p-8 md:p-10">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <!-- Left: Concept Summary -->
+                            <div class="lg:col-span-5 space-y-6">
+                                <div>
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">핵심 컨셉</h3>
+                                    <p class="text-lg font-bold text-rose-700 leading-snug">"움직이는 휴식공간을 위한 평화로운 침묵(Silent Peace)"</p>
+                                    <p class="text-gray-600 mt-2 text-sm leading-relaxed">
+                                        스마트폰의 급격한 사용량 증대로 무선 통화 및 동영상 스피커 노출 소음이 빈번합니다. 탑승 시간만큼은 편안한 소음 안식처가 되도록 물리적 인프라 제공과 행동 조율을 융합합니다.
+                                    </p>
+                                </div>
+                                <div class="border-t border-gray-100 pt-4">
+                                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">주요 이용자</h3>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="bg-rose-50 text-rose-700 text-xs px-3 py-1.5 rounded-lg font-medium">유튜브·OTT 다빈도 시청층</span>
+                                        <span class="bg-rose-50 text-rose-700 text-xs px-3 py-1.5 rounded-lg font-medium">장거리 피로 누적 통근러</span>
+                                        <span class="bg-rose-50 text-rose-700 text-xs px-3 py-1.5 rounded-lg font-medium">소음에 민감한 예민 승객</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Key Features -->
+                            <div class="lg:col-span-7 bg-slate-50 rounded-2xl p-6 sm:p-8 space-y-6 border border-slate-100">
+                                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 bg-rose-500 rounded-full"></span> 캠페인 주요 세부 방안
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">1</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">'소리샘' 감지 사운드센서 & 도트 캐릭터 전광판</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">지정 데시벨(dB) 이상 소리 방출을 센서가 감지하면, 차내 전광판에 귀여운 '조용히(Quiet) 캐릭터'가 수줍게 입에 손가락을 대는 모션을 띄워 주변 자각을 돕습니다.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">2</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">공공 친환경 페이퍼 이어폰 부스</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">이어폰을 가져오지 않아 당황한 승객을 위해 역사 개찰구 안쪽이나 버스 내부에 환경 오염을 최소화한 재활용 종이/수수 소재의 간이 대여 이어폰 자판기를 공급합니다.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">3</div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">노이즈 프리 존 (Noise-Free Zone) 지하철 시범 운영</h4>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">KTX의 수면객차처럼 지하철의 특정 객차(예: 중간 4/5호칸)를 저소음 우선 칸으로 규정하고 모바일 무음 권장 및 동승자와의 저소음 대화를 상호 약속합니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+        
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-900 text-gray-400 py-8 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p class="mb-2">본 기획안은 시민 친화적인 대중교통 이용 문화 형성을 위해 고안되었습니다.</p>
+            <p>&copy; 2026 Public Transport Improvement Campaigns. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

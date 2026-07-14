@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밤하늘 아래, 우리의 불빛 - 초간편 힐링 게임</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: 감성 한글 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gowun Batang', 'Noto Sans KR', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* 밤하늘 별 깜빡임 효과 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3.5s infinite ease-in-out;
+        }
+        /* 부드러운 빛무리 효과 */
+        .light-glow {
+            filter: blur(45px);
+            transition: opacity 1.5s ease, transform 1.5s ease;
+        }
+        /* 풍등 뜨는 효과 (성공 연출) */
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) translateX(0) scale(0.8); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-20vh) translateX(var(--drift)) scale(1.2); opacity: 0; }
+        }
+        .lantern {
+            position: absolute;
+            bottom: -50px;
+            width: 18px;
+            height: 26px;
+            background: radial-gradient(circle at center, #ffdf7a 20%, #ff7b00 80%);
+            border-radius: 8px 8px 4px 4px;
+            box-shadow: 0 0 15px rgba(255, 150, 0, 0.8);
+            animation: floatUp 14s infinite linear;
+            filter: blur(0.5px);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen relative flex flex-col justify-between">
+
+    <!-- 오디오 활성화 및 안내 모달 -->
+    <div id="audio-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 text-center transition-opacity duration-1000">
+        <div class="max-w-md bg-slate-900/90 p-8 rounded-3xl border border-indigo-500/20 shadow-2xl backdrop-blur-md">
+            <div class="text-4xl mb-4">🌟</div>
+            <h1 class="text-2xl font-bold text-amber-200 mb-2">밤하늘 아래, 우리의 불빛</h1>
+            <p class="text-xs text-indigo-300 tracking-wider uppercase mb-4">Cozy & Peaceful Simulation</p>
+            
+            <div class="bg-slate-950/60 p-5 rounded-xl text-left text-sm text-slate-300 leading-relaxed mb-6 space-y-3 border border-slate-800">
+                <p class="flex items-center"><span class="text-amber-400 mr-2">✦</span> 클릭 한 번으로 꺼진 가로등을 쉽게 켤 수 있습니다.</p>
+                <p class="flex items-center"><span class="text-amber-400 mr-2">✦</span> 한 번 켜진 가로등은 절대 꺼지지 않으니 안심하세요.</p>
+                <p class="flex items-center"><span class="text-amber-400 mr-2">✦</span> 지나가는 사람들에게 따스한 불빛을 선물해 보세요.</p>
+                <p class="flex items-center"><span class="text-amber-400 mr-2">✦</span> 6개의 가로등을 모두 켜서 기분 좋은 축제를 열어보세요.</p>
+            </div>
+            
+            <button onclick="startGame()" class="w-full px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 transition text-white font-medium rounded-full shadow-lg shadow-indigo-500/20">
+                따뜻한 거리 들어가기
+            </button>
+        </div>
+    </div>
+
+    <!-- 밤하늘 배경 및 별 레이어 -->
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950 z-0">
+        <div id="stars-container" class="absolute inset-0"></div>
+    </div>
+
+    <!-- 헤더 / UI (상태 현황) -->
+    <header class="relative z-20 p-4 md:p-6 flex justify-between items-center w-full max-w-5xl mx-auto pointer-events-none">
+        <div class="pointer-events-auto">
+            <h2 class="text-lg md:text-xl font-bold text-amber-100/90 tracking-wide">밤하늘 아래, 우리의 불빛</h2>
+            <p class="text-xs text-indigo-300/80 mt-1">마음을 녹여줄 따뜻한 등불을 하나씩 밝혀보세요.</p>
+        </div>
+        
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <!-- 음소거 버튼 -->
+            <button id="sound-btn" onclick="toggleMute()" class="p-2.5 rounded-full bg-slate-900/80 border border-slate-700/40 hover:bg-slate-800 transition text-slate-300 shadow-md">
+                <svg id="sound-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" />
+                </svg>
+            </button>
+            <!-- 켜진 가로등 개수 -->
+            <div class="px-4 py-2 bg-slate-900/80 border border-slate-700/40 rounded-full text-xs text-amber-200 shadow-md">
+                밝혀진 등불: <span id="lit-count" class="font-bold">0</span> / 6
+            </div>
+        </div>
+    </header>
+
+    <!-- 게임 주요 공간 (가로등 및 사람들 배치) -->
+    <main class="relative z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col justify-end pb-32 md:pb-40 px-4 select-none">
+        <!-- 빛무리 레이어 (가로등 불빛 그라데이션) -->
+        <div id="glow-container" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+        <!-- 가로등 정렬 구역 -->
+        <div id="streetlights-container" class="absolute bottom-20 left-0 right-0 h-56 flex justify-around items-end z-10 px-4 md:px-8">
+            <!-- 가로등 6개가 동적 생성됩니다. -->
+        </div>
+
+        <!-- 걸어다니는 사람들 정렬 구역 -->
+        <div id="people-container" class="absolute bottom-16 left-0 right-0 h-24 overflow-visible z-20 pointer-events-none">
+            <!-- 사람들이 동적 생성됩니다. -->
+        </div>
+
+        <!-- 지면 (바닥 데코레이션) -->
+        <div class="absolute bottom-16 left-0 right-0 h-2 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-full z-10 shadow-lg shadow-indigo-900/30"></div>
+        <div class="absolute bottom-14 left-0 right-0 h-2 bg-slate-950 z-0"></div>
+    </main>
+
+    <!-- 화면 클릭 시 이펙트 생성 레이어 -->
+    <div id="particle-trigger" onclick="spawnFirefly(event)" class="absolute inset-0 z-0 cursor-pointer"></div>
+
+    <!-- 하단 메시지 바 -->
+    <footer class="relative z-10 p-4 text-center w-full max-w-5xl mx-auto pointer-events-none">
+        <p id="healing-message" class="text-xs md:text-sm text-slate-400 italic transition-all duration-1000 ease-in-out">
+            "가로등을 터치하여 어두운 거리를 따스함으로 물들여 보세요."
+        </p>
+    </footer>
+
+    <!-- 성공 축하 모달 -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-950/90 z-50 flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-opacity duration-1000">
+        <div class="max-w-md bg-indigo-950/80 p-8 rounded-3xl border border-amber-400/30 shadow-2xl shadow-amber-500/10 backdrop-blur-lg">
+            <div class="text-5xl mb-4 animate-bounce">✨🌻✨</div>
+            <h2 class="text-2xl font-bold text-amber-200 mb-3">거리가 따뜻한 행복으로 가득 찼습니다!</h2>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-6">
+                당신이 켜준 6개의 가로등 덕분에 차가운 어둠이 모두 물러갔습니다. <br>
+                이제 사람들은 따뜻함 속에서 서로 웃으며 밤하늘의 춤을 바라봅니다.
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="resetGame()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 transition text-slate-950 text-sm font-bold rounded-full shadow-lg shadow-amber-500/20">
+                    거리 다시 밝히기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 오디오 관련 및 전체 로직 스크립트 -->
+    <script>
+        // Web Audio API를 활용한 고요하고 맑은 오디오 엔진
+        let audioCtx = null;
+        let masterGain = null;
+        let isMuted = false;
+        let bgmInterval = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0.12, audioCtx.currentTime); 
+            masterGain.connect(audioCtx.destination);
+            startBGM();
+        }
+
+        // 아주 온화하고 아름다운 피아노 코드 연주
+        function playChord(notes, duration = 4.5) {
+            if (!audioCtx || isMuted) return;
+            const now = audioCtx.currentTime;
+            notes.forEach(freq => {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now);
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.04, now + 0.8); 
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                osc.connect(gainNode);
+                gainNode.connect(masterGain);
+                osc.start(now);
+                osc.stop(now + duration);
+            });
+        }
+
+        // 맑고 고요한 차임 종소리 효과음
+        function playChime(isClimax = false) {
+            if (!audioCtx || isMuted) return;
+            const now = audioCtx.currentTime;
+            const scale = isClimax ? [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50] : [329.63, 392.00, 523.25, 659.25];
+            
+            scale.forEach((freq, idx) => {
+                const timeDelay = idx * 0.1;
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + timeDelay);
+                
+                gainNode.gain.setValueAtTime(0, now + timeDelay);
+                gainNode.gain.linearRampToValueAtTime(0.05, now + timeDelay + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + timeDelay + 1.2);
+                
+                osc.connect(gainNode);
+                gainNode.connect(masterGain);
+                osc.start(now + timeDelay);
+                osc.stop(now + timeDelay + 1.5);
+            });
+        }
+
+        // 가볍고 은은한 터치 반응 효과음
+        function playSoftPluck() {
+            if (!audioCtx || isMuted) return;
+            const now = audioCtx.currentTime;
+            const pitch = 523.25 * (Math.random() > 0.5 ? 1.5 : 1.2);
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(pitch, now);
+            gainNode.gain.setValueAtTime(0.06, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+            
+            osc.connect(gainNode);
+            gainNode.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        }
+
+        function startBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            const progressions = [
+                [130.81, 196.00, 329.63, 392.00], // C Maj7
+                [146.83, 220.00, 349.23, 440.00], // F Maj7
+                [110.07, 164.81, 261.63, 329.63], // A min7
+                [116.54, 196.00, 293.66, 392.00]  // G7
+            ];
+            let step = 0;
+
+            const playNext = () => {
+                playChord(progressions[step]);
+                step = (step + 1) % progressions.length;
+            };
+
+            playNext();
+            bgmInterval = setInterval(playNext, 4500);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('sound-icon');
+            if (isMuted) {
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />`;
+                if (masterGain) masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            } else {
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9.5H4.5v5h3.25L12 18.75z" />`;
+                if (masterGain) masterGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            }
+        }
+
+        // 게임 상태 관리
+        let streetlights = [];
+        let people = [];
+        const maxStreetlights = 6;
+        const totalPeople = 5;
+        let isGameCleared = false;
+        let lastTime = 0;
+
+        const healingMessages = [
+            "가로등을 터치하여 어두운 거리를 따스함으로 물들여 보세요.",
+            "작은 불빛 하나가 누군가의 외로운 밤길을 비춰줍니다.",
+            "등불이 늘어날수록 밤하늘이 더욱 은은하고 맑아집니다.",
+            "따뜻해진 거리를 보며 지나가는 사람들의 마음도 훈훈해집니다.",
+            "이제 조금만 더 밝히면 거리에 아름다운 연등 축제가 시작될 거예요.",
+            "모든 거리가 밝아졌습니다! 밤하늘의 춤을 마음껏 감상하세요."
+        ];
+
+        function startGame() {
+            document.getElementById('audio-modal').classList.add('opacity-0');
+            setTimeout(() => {
+                document.getElementById('audio-modal').style.display = 'none';
+            }, 1000);
+            initAudio();
+            setupStars();
+            setupStreetlights();
+            setupPeople();
+            isGameCleared = false;
+            gameLoop();
+        }
+
+        // 뒷배경 부드럽게 반짝이는 은하수 별무리 생성
+        function setupStars() {
+            const container = document.getElementById('stars-container');
+            container.innerHTML = '';
+            const screenWidth = window.innerWidth;
+            const starCount = Math.floor(screenWidth / 16);
+
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2 + 0.6;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 70}%`;
+                star.style.animationDelay = `${Math.random() * 4}s`;
+                star.style.animationDuration = `${Math.random() * 3 + 2.5}s`;
+                container.appendChild(star);
+            }
+        }
+
+        // 가로등 생성 및 세팅 (온기 감소 없이 영구 지속)
+        function setupStreetlights() {
+            const container = document.getElementById('streetlights-container');
+            container.innerHTML = '';
+            streetlights = [];
+
+            for (let i = 0; i < maxStreetlights; i++) {
+                const streetlight = {
+                    id: i,
+                    isLit: false,
+                    xPercent: (100 / (maxStreetlights + 1)) * (i + 1)
+                };
+
+                const el = document.createElement('div');
+                el.className = 'relative flex flex-col items-center select-none w-16';
+                el.id = `lamp-${i}`;
+
+                el.innerHTML = `
+                    <!-- 가로등 전구부 -->
+                    <div class="relative w-12 h-12 flex justify-center items-center z-20">
+                        <div class="absolute top-1 w-10 h-3 bg-slate-800 rounded-t-full border-t border-slate-700"></div>
+                        <div class="absolute top-3 w-8 h-7 bg-slate-900/60 border border-slate-700/50 rounded-b-md"></div>
+                        <!-- 전구 코어 -->
+                        <div id="bulb-${i}" class="absolute top-4.5 w-3 h-3 bg-slate-700 rounded-full transition-colors duration-500"></div>
+                    </div>
+                    <!-- 가로등 기둥 -->
+                    <div class="w-1.5 h-28 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-x border-slate-700/40 z-10"></div>
+                    <div class="w-5 h-2.5 bg-slate-800 border border-slate-700 rounded-sm z-10"></div>
+                    
+                    <!-- 클릭용 오버레이 타겟 박스 (쉽게 누를 수 있도록 넓은 영역 제공) -->
+                    <div onclick="toggleLamp(${i})" class="absolute inset-y-0 -inset-x-4 cursor-pointer z-30 flex items-center justify-center">
+                        <!-- 반짝이는 깜빡임 가이드링 -->
+                        <div id="guide-glow-${i}" class="w-10 h-10 rounded-full border border-amber-500/30 absolute top-2 animate-pulse pointer-events-none"></div>
+                    </div>
+                `;
+
+                container.appendChild(el);
+                streetlights.push(streetlight);
+            }
+            updateScoreUI();
+        }
+
+        // 산책을 즐기는 다채로운 이웃 주민들 세팅
+        const characterStyles = [
+            { icon: '🚶', scale: 0.92 },
+            { icon: '🎒', scale: 0.88 },
+            { icon: '🐕', scale: 0.95 },
+            { icon: '👵', scale: 0.85 },
+            { icon: '🎧', scale: 0.94 }
+        ];
+
+        function setupPeople() {
+            const container = document.getElementById('people-container');
+            container.innerHTML = '';
+            people = [];
+
+            for (let i = 0; i < totalPeople; i++) {
+                const style = characterStyles[i % characterStyles.length];
+                const person = {
+                    id: i,
+                    icon: style.icon,
+                    x: Math.random() * 80 + 10,
+                    speed: (Math.random() * 0.04 + 0.03) * (Math.random() > 0.5 ? 1 : -1),
+                    scale: style.scale,
+                    danceTimer: Math.random() * 10,
+                    element: null,
+                    isHappyState: false
+                };
+
+                const el = document.createElement('div');
+                el.id = `person-${i}`;
+                el.className = 'absolute bottom-0 w-12 h-16 flex flex-col items-center justify-end z-20';
+                el.innerHTML = `
+                    <div class="relative flex flex-col items-center">
+                        <div id="mood-${i}" class="absolute -top-7 text-sm opacity-0 transition-all duration-300 transform translate-y-2">💭</div>
+                        <div id="avatar-${i}" class="text-3xl select-none filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">${person.icon}</div>
+                        <div id="foot-glow-${i}" class="w-8 h-1.5 bg-black/40 rounded-full transition-all duration-500"></div>
+                    </div>
+                `;
+                container.appendChild(el);
+                person.element = el;
+                people.push(person);
+            }
+        }
+
+        // 가로등 간편 켜기 & 끄기 상호작용
+        function toggleLamp(id) {
+            if (isGameCleared) return;
+            const lamp = streetlights[id];
+
+            // 켜기/끄기 토글 (단순히 누르기만 하면 완료!)
+            lamp.isLit = !lamp.isLit;
+
+            const bulb = document.getElementById(`bulb-${id}`);
+            const guide = document.getElementById(`guide-glow-${id}`);
+
+            if (lamp.isLit) {
+                // 부드러운 전구 켜짐 효과
+                bulb.className = "absolute top-4 w-4 h-4 rounded-full bg-yellow-100 ring-4 ring-yellow-200 shadow-[0_0_20px_#fef08a,0_0_40px_#f59e0b] scale-110 transition-all duration-300";
+                guide.className = "hidden"; // 활성화 시 인디케이터 숨김
+
+                playChime(false);
+                createGlowEffect(id);
+                spawnEnergyRelease(id);
+            } else {
+                // 끄기
+                bulb.className = "absolute top-4.5 w-3 h-3 bg-slate-700 rounded-full transition-all duration-500";
+                guide.className = "w-10 h-10 rounded-full border border-amber-500/30 absolute top-2 animate-pulse pointer-events-none";
+
+                playSoftPluck();
+                const glow = document.getElementById(`glow-${id}`);
+                if (glow) glow.remove();
+            }
+
+            updateScoreUI();
+            checkGameVictory();
+        }
+
+        // 가로등 따스한 조명그라데이션 생성
+        function createGlowEffect(id) {
+            const glowContainer = document.getElementById('glow-container');
+            const containerWidth = document.getElementById('streetlights-container').clientWidth;
+            const posLeft = (containerWidth / (maxStreetlights + 1)) * (id + 1);
+
+            let glow = document.getElementById(`glow-${id}`);
+            if (!glow) {
+                glow = document.createElement('div');
+                glow.id = `glow-${id}`;
+                glow.className = 'absolute light-glow rounded-full pointer-events-none opacity-0';
+                glow.style.width = '350px';
+                glow.style.height = '350px';
+                glow.style.background = 'radial-gradient(circle, rgba(254,243,199,0.35) 0%, rgba(253,186,116,0.15) 50%, rgba(0,0,0,0) 70%)';
+                glow.style.left = `${posLeft - 175}px`;
+                glow.style.bottom = `-10px`;
+                glowContainer.appendChild(glow);
+
+                // 부드럽게 Fade-in 되도록 시간차 효과
+                setTimeout(() => {
+                    glow.style.opacity = '1';
+                }, 50);
+            }
+        }
+
+        // 켰을 때 풍성하고 아름다운 빛가루 이펙트
+        function spawnEnergyRelease(id) {
+            const containerWidth = document.getElementById('streetlights-container').clientWidth;
+            const x = (containerWidth / (maxStreetlights + 1)) * (id + 1);
+            const y = window.innerHeight - 240;
+
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    createSparkle(x + (Math.random() - 0.5) * 40, y + (Math.random() - 0.5) * 40);
+                }, i * 40);
+            }
+        }
+
+        // 밤거리를 밝히는 영롱한 스파클링 반딧불 소환
+        function spawnFirefly(event) {
+            const x = event.clientX;
+            const y = event.clientY;
+            createSparkle(x, y);
+            if (audioCtx) playSoftPluck();
+        }
+
+        // 빛 파티클 생성 함수
+        function createSparkle(x, y, color = '#fcd34d') {
+            const p = document.createElement('div');
+            p.className = 'absolute pointer-events-none rounded-full z-40 transition-all duration-1000 ease-out';
+            const size = Math.random() * 6 + 4;
+            p.style.width = `${size}px`;
+            p.style.height = `${size}px`;
+            p.style.background = `radial-gradient(circle, #ffffff 10%, ${color} 60%, rgba(255,255,255,0) 100%)`;
+            p.style.boxShadow = `0 0 8px ${color}`;
+            p.style.left = `${x - size/2}px`;
+            p.style.top = `${y - size/2}px`;
+
+            document.body.appendChild(p);
+
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 40 + 20;
+            const destX = (Math.cos(angle) * dist);
+            const destY = (Math.sin(angle) * dist) - 15;
+
+            setTimeout(() => {
+                p.style.transform = `translate(${destX}px, ${destY}px) scale(0.1)`;
+                p.style.opacity = '0';
+            }, 50);
+
+            setTimeout(() => p.remove(), 1050);
+        }
+
+        // UI 개수 표기 업데이트
+        function updateScoreUI() {
+            const litCount = streetlights.filter(l => l.isLit).length;
+            document.getElementById('lit-count').textContent = litCount;
+
+            // 하단 힐링 메시지 교체
+            const msg = document.getElementById('healing-message');
+            msg.textContent = `"${healingMessages[Math.min(litCount, healingMessages.length - 1)]}"`;
+        }
+
+        // 승리 요건 판단 (6개 가로등 모두 점등)
+        function checkGameVictory() {
+            const litCount = streetlights.filter(l => l.isLit).length;
+            if (litCount === maxStreetlights) {
+                triggerFestivalOfLight();
+            }
+        }
+
+        // 영광의 등불 축제 성공 연출
+        function triggerFestivalOfLight() {
+            isGameCleared = true;
+            playChime(true);
+
+            // 가로등 기둥을 화려하고 환상적으로 강화
+            streetlights.forEach(lamp => {
+                const bulb = document.getElementById(`bulb-${lamp.id}`);
+                bulb.className = "absolute top-4 w-5 h-5 bg-yellow-100 rounded-full ring-8 ring-amber-300 shadow-[0_0_50px_#fffbeb,0_0_100px_#f59e0b] scale-125 duration-1000";
+            });
+
+            // 아름다운 밤하늘 풍등 무한 방출 연출
+            const bg = document.querySelector('main');
+            for (let i = 0; i < 24; i++) {
+                setTimeout(() => {
+                    const lantern = document.createElement('div');
+                    lantern.className = 'lantern';
+                    lantern.style.left = `${Math.random() * 95}%`;
+                    lantern.style.setProperty('--drift', `${(Math.random() - 0.5) * 160}px`);
+                    lantern.style.animationDelay = `${Math.random() * 2}s`;
+                    lantern.style.animationDuration = `${Math.random() * 8 + 11}s`;
+                    bg.appendChild(lantern);
+                }, i * 200);
+            }
+
+            // 축하 모달 천천히 팝업
+            setTimeout(() => {
+                const modal = document.getElementById('success-modal');
+                modal.classList.remove('pointer-events-none');
+                modal.classList.add('opacity-100');
+            }, 4500);
+        }
+
+        // 리셋 및 재시작
+        function resetGame() {
+            const modal = document.getElementById('success-modal');
+            modal.classList.add('pointer-events-none');
+            modal.classList.remove('opacity-100');
+
+            document.querySelectorAll('.lantern').forEach(l => l.remove());
+            document.getElementById('glow-container').innerHTML = '';
+
+            isGameCleared = false;
+            setupStreetlights();
+            setupPeople();
+        }
+
+        // 캐릭터 걷기 및 행복 애니메이션 루프
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            lastTime = timestamp;
+
+            // 주민 캐릭터 프레임워크 갱신
+            people.forEach(person => {
+                person.x += person.speed;
+
+                // 화면 밖 무한 반사 턴백
+                if (person.x > 95) {
+                    person.x = 95;
+                    person.speed *= -1;
+                } else if (person.x < 5) {
+                    person.x = 5;
+                    person.speed *= -1;
+                }
+
+                if (person.element) {
+                    person.element.style.left = `${person.x}%`;
+                    const dirScale = person.speed > 0 ? 1 : -1;
+                    const avatar = document.getElementById(`avatar-${person.id}`);
+                    
+                    // 해당 캐릭터가 현재 켜진 가로등 영역 아래에 있는지 감지
+                    let isUnderLight = false;
+                    streetlights.forEach(lamp => {
+                        if (lamp.isLit) {
+                            if (Math.abs(person.x - lamp.xPercent) < 10) {
+                                isUnderLight = true;
+                            }
+                        }
+                    });
+
+                    const mood = document.getElementById(`mood-${person.id}`);
+                    const shadow = document.getElementById(`foot-glow-${person.id}`);
+
+                    if (isUnderLight || isGameCleared) {
+                        // 가로등 아래에서 춤추고 크게 행복해하는 모드
+                        if (!person.isHappyState) {
+                            person.isHappyState = true;
+                            // 머리 위에 하트, 별, 음표 등 기쁜 아이콘 띄우기
+                            mood.textContent = ['❤️', '✨', '🎵', '🌻', '🎁'][Math.floor(Math.random() * 5)];
+                            mood.className = 'absolute -top-7 text-sm opacity-100 transform translate-y-0 duration-300 animate-bounce';
+                            shadow.className = 'w-10 h-2 bg-amber-400/40 rounded-full transition-all duration-300 blur-[1px] shadow-[0_0_8px_rgba(253,186,116,0.7)]';
+                        }
+                        
+                        person.danceTimer += 0.12;
+                        const bounce = Math.sin(person.danceTimer) * 12; // 경쾌한 콩콩뛰기 발걸음
+                        avatar.style.transform = `translateY(${bounce}px) scale(${person.scale * 1.15}) scaleX(${dirScale})`;
+                    } else {
+                        // 어두운 구역을 쓸쓸하게 걸어가는 모드
+                        if (person.isHappyState || person.isHappyState === undefined) {
+                            person.isHappyState = false;
+                            mood.className = 'absolute -top-7 text-sm opacity-0 transform translate-y-2 duration-300';
+                            shadow.className = 'w-8 h-1.5 bg-black/40 rounded-full transition-all duration-500';
+                        }
+                        
+                        person.danceTimer += 0.05;
+                        const sway = Math.sin(person.danceTimer) * 1.5;
+                        avatar.style.transform = `translateY(${sway}px) scale(${person.scale}) scaleX(${dirScale})`;
+                    }
+                }
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('resize', () => {
+            if (audioCtx) setupStars();
+        });
+    </script>
+</body>
+</html>

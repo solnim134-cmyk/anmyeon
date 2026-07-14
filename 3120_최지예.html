@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안전한 해루질 대결!</title>
+    <!-- 구글 폰트: 국문 픽셀 디자인을 위한 네오둥근모 및 에스코어 드림 -->
+    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=S-Core+Dream:wght@600;800;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'S-Core Dream', 'DungGeunMo', sans-serif;
+            background-color: #0b1528;
+            overflow: hidden; /* 스크롤바를 완전히 제거하여 단일 화면 유지 */
+            user-select: none;
+            -webkit-user-select: none;
+            height: 100vh;
+        }
+
+        .pixel-font {
+            font-family: 'DungGeunMo', monospace;
+        }
+
+        /* 옛날 예능 자막 느낌의 굵고 화려한 텍스트 효과 */
+        .variety-title {
+            font-weight: 900;
+            color: #fffb00;
+            text-shadow: 
+                -3px -3px 0 #000,  
+                 3px -3px 0 #000,
+                -3px  3px 0 #000,
+                 3px  3px 0 #000,
+                -5px  5px 0 #ff4500,
+                 5px  5px 0 #ff4500;
+        }
+
+        .variety-text-green {
+            font-weight: 900;
+            color: #2eff3c;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+        }
+
+        /* 캐릭터 대기 모션 (숨쉬기) */
+        @keyframes idleBob {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .character-idle {
+            animation: idleBob 2s ease-in-out infinite;
+        }
+
+        /* 갯벌 물결 애니메이션 */
+        @keyframes mudWave {
+            0%, 100% { transform: translateX(0) scaleY(1); }
+            50% { transform: translateX(-10px) scaleY(1.05); }
+        }
+        .mud-wave-bg {
+            animation: mudWave 6s ease-in-out infinite;
+        }
+
+        /* 해산물이 둥실둥실 떠 있는 애니메이션 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(8deg); }
+        }
+        .float-animation {
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        /* 바구니 흔들림 애니메이션 */
+        @keyframes basketShake {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            20%, 60% { transform: scale(1.1) rotate(-10deg); }
+            40%, 80% { transform: scale(1.1) rotate(10deg); }
+        }
+        .shake-active {
+            animation: basketShake 0.6s ease-in-out;
+        }
+
+        .fly-to-p1 {
+            animation: flyToP1 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .fly-to-p2 {
+            animation: flyToP2 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes flyToP1 {
+            0% { transform: translate(-50%, -50%) scale(1.5); top: 40%; left: 50%; opacity: 1; }
+            100% { transform: translate(0, 0) scale(0.3); top: 70%; left: 10%; opacity: 0; }
+        }
+
+        @keyframes flyToP2 {
+            0% { transform: translate(-50%, -50%) scale(1.5); top: 40%; left: 50%; opacity: 1; }
+            100% { transform: translate(0, 0) scale(0.3); top: 70%; left: 82%; opacity: 0; }
+        }
+
+        /* 해산물 도망치기 애니메이션 */
+        .run-away-animation {
+            animation: escapeAway 1.2s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
+
+        @keyframes escapeAway {
+            0% { transform: translate(-50%, -50%) scale(1.5); top: 40%; left: 50%; opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1.7) rotate(-20deg); top: 35%; left: 50%; }
+            100% { transform: translate(-50%, -50%) scale(0.1) rotate(180deg); top: -20%; left: 120%; opacity: 0; }
+        }
+
+        /* 후광 조명 효과 */
+        .sun-ray {
+            background: radial-gradient(circle, rgba(253,224,71,0.4) 0%, rgba(253,224,71,0) 70%);
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between h-screen text-white select-none relative bg-gradient-to-b from-[#081121] via-[#112440] to-[#1a385c]">
+
+    <header class="w-full bg-blue-950/80 border-b-4 border-blue-500/50 p-3 shadow-md z-10 flex justify-between items-center h-16">
+        <div class="flex items-center gap-2">
+            <span class="text-3xl">🌊</span>
+            <h1 class="text-xl md:text-2xl pixel-font tracking-wider text-yellow-300 variety-text-green">안전한 해루질 대결!</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <div id="soundToggleBtn" onclick="toggleMute()" class="cursor-pointer bg-blue-800 hover:bg-blue-700 border-2 border-blue-400 px-3 py-1.5 rounded-lg text-xs md:text-sm font-black pixel-font flex items-center gap-1 shadow-md transition-colors">
+                🔊 소리 켜짐
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-6xl mx-auto p-4 relative flex flex-col justify-between overflow-hidden">
+        
+        <!-- 현재 누구 차례인지 알려주는 신호등 형태 전광판 -->
+        <div class="w-full bg-black/60 border-2 border-blue-400 rounded-xl p-2.5 text-center shadow-lg z-10">
+            <span id="turn-announcement" class="text-lg md:text-2xl font-black tracking-tight text-yellow-300">
+                📢 준비 대결! 플레이어 1 (바다) 준비하세요!
+            </span>
+        </div>
+
+        <!-- 갯벌 무대 일러스트레이션 구조 -->
+        <div class="flex-1 w-full relative mt-4 rounded-3xl border-4 border-sky-600/30 overflow-hidden bg-gradient-to-b from-[#11233d] to-[#18456b] shadow-2xl">
+            
+            <!-- 갯벌 바닥 레이어 및 연출용 물결 -->
+            <div class="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#1e3a8a_15%,transparent_15%)] bg-[size:24px_24px]"></div>
+            <div class="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-[#162e49] to-transparent mud-wave-bg"></div>
+            
+            <!-- 갯벌 구멍, 바위 등 픽셀 패턴 장식 -->
+            <svg class="absolute bottom-6 left-1/3 opacity-30 w-12 h-6" viewBox="0 0 40 20"><ellipse cx="20" cy="10" rx="15" ry="5" fill="#000"/></svg>
+            <svg class="absolute bottom-12 right-1/4 opacity-30 w-16 h-8" viewBox="0 0 40 20"><ellipse cx="20" cy="10" rx="18" ry="6" fill="#000"/></svg>
+
+            <!-- 왼쪽 영역: 손녀 '바다' & 바구니 -->
+            <div class="absolute bottom-4 left-[6%] md:left-[12%] flex flex-col items-center z-10">
+                <!-- 바구니 스코어 -->
+                <div class="bg-emerald-500/90 border-2 border-white text-white font-bold text-xs px-2.5 py-1 rounded-full mb-2 shadow-md">
+                    바다 🧺 <span id="p1-score" class="pixel-font text-yellow-200">0 / 5</span>
+                </div>
+                
+                <!-- 바다 도트 아바타 -->
+                <div class="w-24 h-28 character-idle">
+                    <svg viewBox="0 0 40 48" class="w-full h-full drop-shadow-lg">
+                        <!-- Head -->
+                        <rect x="12" y="4" width="16" height="16" fill="#fbcfe8" />
+                        <!-- Hair (Brown) -->
+                        <rect x="10" y="2" width="20" height="4" fill="#78350f" />
+                        <rect x="10" y="6" width="4" height="12" fill="#78350f" />
+                        <rect x="26" y="6" width="4" height="12" fill="#78350f" />
+                        <!-- Eyes -->
+                        <rect x="14" y="10" width="2" height="3" fill="#000" />
+                        <rect x="24" y="10" width="2" height="3" fill="#000" />
+                        <rect x="12" y="14" width="2" height="2" fill="#f43f5e" />
+                        <rect x="26" y="14" width="2" height="2" fill="#f43f5e" />
+                        <!-- Straw Hat -->
+                        <rect x="4" y="2" width="32" height="2" fill="#fef08a" />
+                        <rect x="10" y="0" width="20" height="2" fill="#fef08a" />
+                        <!-- Clothes (Overalls with safe life jacket) -->
+                        <rect x="12" y="20" width="16" height="16" fill="#f97316" /> <!-- Orange Life Jacket -->
+                        <rect x="14" y="22" width="12" height="14" fill="#0284c7" /> <!-- Chest Wader -->
+                        <!-- Red Gloves -->
+                        <rect x="7" y="26" width="5" height="4" fill="#dc2626" />
+                        <rect x="28" y="26" width="5" height="4" fill="#dc2626" />
+                        <!-- Boots -->
+                        <rect x="13" y="36" width="5" height="8" fill="#ca8a04" />
+                        <rect x="22" y="36" width="5" height="8" fill="#ca8a04" />
+                    </svg>
+                </div>
+                
+                <!-- 바다의 조과통 (획득한 수집품 실시간 표시) -->
+                <div id="p1-basket" class="mt-2 bg-amber-950/80 border-4 border-amber-800 rounded-xl px-3 py-2 w-28 h-14 flex items-center justify-center gap-1 shadow-inner relative">
+                    <span id="p1-basket-empty" class="text-[10px] text-amber-500 font-bold pixel-font">빈 조과통</span>
+                    <div id="p1-basket-items" class="flex flex-wrap gap-0.5 justify-center"></div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 영역: 손자 '푸름' & 바구니 -->
+            <div class="absolute bottom-4 right-[6%] md:right-[12%] flex flex-col items-center z-10">
+                <!-- 바구니 스코어 -->
+                <div class="bg-sky-500/90 border-2 border-white text-white font-bold text-xs px-2.5 py-1 rounded-full mb-2 shadow-md">
+                    푸름 🧺 <span id="p2-score" class="pixel-font text-yellow-200">0 / 5</span>
+                </div>
+                
+                <!-- 푸름 도트 아바타 -->
+                <div class="w-24 h-28 character-idle" style="animation-delay: -1s;">
+                    <svg viewBox="0 0 40 48" class="w-full h-full drop-shadow-lg">
+                        <!-- Head -->
+                        <rect x="12" y="4" width="16" height="16" fill="#fbcfe8" />
+                        <!-- Hair (Black spikes) -->
+                        <rect x="10" y="0" width="20" height="4" fill="#1e293b" />
+                        <rect x="8" y="4" width="4" height="6" fill="#1e293b" />
+                        <rect x="28" y="4" width="4" height="6" fill="#1e293b" />
+                        <!-- Eyes -->
+                        <rect x="14" y="10" width="2" height="3" fill="#000" />
+                        <rect x="24" y="10" width="2" height="3" fill="#000" />
+                        <rect x="12" y="14" width="2" height="2" fill="#f43f5e" />
+                        <rect x="26" y="14" width="2" height="2" fill="#f43f5e" />
+                        <!-- Helmet -->
+                        <rect x="10" y="0" width="20" height="4" fill="#ca8a04" />
+                        <rect x="8" y="4" width="24" height="2" fill="#eab308" />
+                        <!-- Clothes (Overalls with safe life jacket) -->
+                        <rect x="12" y="20" width="16" height="16" fill="#f97316" /> <!-- Orange Life Jacket -->
+                        <rect x="14" y="22" width="12" height="14" fill="#15803d" /> <!-- Chest Wader -->
+                        <!-- Orange Gloves -->
+                        <rect x="7" y="26" width="5" height="4" fill="#f97316" />
+                        <rect x="28" y="26" width="5" height="4" fill="#f97316" />
+                        <!-- Boots -->
+                        <rect x="13" y="36" width="5" height="8" fill="#1e293b" />
+                        <rect x="22" y="36" width="5" height="8" fill="#1e293b" />
+                    </svg>
+                </div>
+
+                <!-- 푸름의 조과통 -->
+                <div id="p2-basket" class="mt-2 bg-amber-950/80 border-4 border-amber-800 rounded-xl px-3 py-2 w-28 h-14 flex items-center justify-center gap-1 shadow-inner relative">
+                    <span id="p2-basket-empty" class="text-[10px] text-amber-500 font-bold pixel-font">빈 조과통</span>
+                    <div id="p2-basket-items" class="flex flex-wrap gap-0.5 justify-center"></div>
+                </div>
+            </div>
+
+            <!-- 판정 및 날아가기 이펙트용 무대 중앙 -->
+            <div id="battle-stage-center" class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <!-- 해산물 비행용/도망용 인스턴스가 렌더링될 곳 -->
+                <div id="spawned-seafood" class="w-40 h-40 relative hidden transition-all duration-1000"></div>
+            </div>
+
+            <!-- 바구니 날아갈 때 가이드/축하 텍스트 레이어 -->
+            <div id="mudflat-celebration" class="absolute inset-x-0 top-1/4 text-center pointer-events-none z-30 opacity-0 transform scale-50 transition-all duration-300">
+                <h2 id="mudflat-title-text" class="variety-title text-5xl md:text-7xl mb-2">딩동댕!</h2>
+                <p id="mudflat-sub-text" class="text-white text-lg md:text-2xl font-black drop-shadow-md">꽃게를 잡았어요!</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- 활성화되었을 때만 나타나며, 제출 후 갯벌 화면 감상을 위해 슥 내려갑니다. -->
+    <div id="quiz-card-container" class="fixed inset-x-4 bottom-6 max-w-2xl mx-auto bg-[#0a182e]/95 border-4 border-yellow-400 rounded-2xl p-4 md:p-5 shadow-2xl z-40 transition-all duration-300 transform translate-y-0 scale-100">
+        
+        <!-- 문제 카테고리 표시부 -->
+        <div class="flex justify-between items-center mb-2">
+            <span id="quiz-category" class="bg-red-500 text-white text-[11px] md:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase border border-white">
+                안전 장비 수칙
+            </span>
+            <span class="text-xs text-yellow-300 font-bold pixel-font">O/X를 골라주세요!</span>
+        </div>
+
+        <!-- 퀴즈 문제 텍스트 -->
+        <div class="my-3 min-h-[70px] md:min-h-[80px] flex items-center justify-center">
+            <p id="quiz-text" class="text-lg md:text-2xl font-bold tracking-tight text-white text-center leading-relaxed drop-shadow">
+                가슴 장화를 착용했을 때는 답답하더라도 생명을 위해 구명조끼를 겹쳐 입어야 할까요?
+            </p>
+        </div>
+
+        <!-- O / X 선택 버튼 -->
+        <div class="grid grid-cols-2 gap-4 mt-3">
+            <button id="btn-o" onclick="submitAnswer(true)" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 border-b-6 border-emerald-700 text-white py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all">
+                <span class="text-3xl md:text-4xl font-black">O</span>
+                <span class="text-sm md:text-lg font-black">그렇다</span>
+            </button>
+            <button id="btn-x" onclick="submitAnswer(false)" class="bg-rose-500 hover:bg-rose-400 active:scale-95 border-b-6 border-rose-700 text-white py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all">
+                <span class="text-3xl md:text-4xl font-black">X</span>
+                <span class="text-sm md:text-lg font-black">아니다</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="explanation-card-container" class="fixed inset-x-4 bottom-6 max-w-2xl mx-auto bg-amber-50 border-4 border-amber-500 rounded-2xl p-4 md:p-5 shadow-2xl z-40 transition-all duration-300 transform translate-y-32 opacity-0 pointer-events-none text-black">
+        <div class="text-center">
+            <h3 class="text-red-600 font-extrabold text-lg md:text-xl mb-1">🚨 해루질 안전 훈수!</h3>
+            <p id="explanation-text" class="font-bold text-sm md:text-base text-slate-800 leading-relaxed mb-4">
+                가슴장화는 깊은 물에 빠지면 거꾸로 둥둥 뜨게 되어 머리가 잠기기 때문에 구명조끼가 절대 필요합니다!
+            </p>
+            <button onclick="nextTurn()" class="bg-amber-400 hover:bg-amber-300 text-black border-b-4 border-amber-600 px-8 py-2.5 rounded-full font-black text-sm md:text-base shadow-md">
+                네, 꼭 기억할게요! 👉
+            </button>
+        </div>
+    </div>
+
+    <!-- 다음 라운드 전용 간이 대기버튼 (정답 시 노출) -->
+    <div id="next-btn-container" class="fixed inset-x-0 bottom-12 flex justify-center z-40 hidden pointer-events-auto">
+        <button onclick="nextTurn()" class="bg-amber-400 hover:bg-amber-300 active:scale-95 text-black border-b-6 border-amber-600 text-lg md:text-xl font-black px-10 py-3 rounded-full shadow-2xl">
+            다음 대결로 넘어가기 👉
+        </button>
+    </div>
+
+    <div id="victory-modal" class="fixed inset-0 bg-blue-950/95 flex flex-col items-center justify-center z-50 hidden p-4">
+        <div class="bg-blue-900 border-8 border-yellow-400 rounded-3xl p-6 md:p-10 max-w-2xl w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="text-7xl md:text-8xl mb-4">🏆</div>
+            <h2 class="variety-title text-4xl md:text-6xl mb-4">만통(滿桶) 성공!</h2>
+            
+            <p id="winner-text" class="text-2xl md:text-3xl font-extrabold text-yellow-300 mb-6 drop-shadow-md">
+                플레이어 1 (바다) 대승리!
+            </p>
+
+            <div class="my-6 bg-blue-950/60 p-4 rounded-xl border border-blue-500">
+                <p class="text-base md:text-lg font-bold text-white mb-2 leading-relaxed">
+                    "오늘 안전수칙을 완벽하게 마스터하셨네요! <br>실제 바다에서도 늘 생명조끼를 착용하고 든든하게 만통하세요!"
+                </p>
+            </div>
+
+            <div id="victory-seafoods" class="flex justify-center gap-2 mb-8 flex-wrap"></div>
+
+            <button onclick="resetGame()" class="bg-yellow-400 hover:bg-yellow-300 active:scale-95 text-blue-950 text-xl md:text-2xl font-black px-12 py-4 rounded-full border-b-8 border-yellow-600 shadow-xl transition-all">
+                다시 처음부터 한판 더! 🔄
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 8비트 사운드 재생을 위한 웹오디오 합성기 클래스
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+                this.isMuted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playTone(freq, type, duration, delay = 0) {
+                if (this.isMuted) return;
+                this.init();
+                
+                setTimeout(() => {
+                    if (this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                    
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                }, delay * 1000);
+            }
+
+            playCorrect() {
+                this.playTone(523.25, 'sine', 0.15, 0);       // 도
+                this.playTone(659.25, 'sine', 0.15, 0.12);    // 미
+                this.playTone(783.99, 'sine', 0.4, 0.24);      // 솔
+            }
+
+            playIncorrect() {
+                this.playTone(220.00, 'sawtooth', 0.25, 0);   // 라
+                this.playTone(196.00, 'sawtooth', 0.4, 0.2);   // 솔
+            }
+
+            playVictory() {
+                const notes = [523.25, 523.25, 523.25, 523.25, 659.25, 587.33, 659.25, 783.99];
+                const durations = [0.15, 0.15, 0.15, 0.3, 0.15, 0.15, 0.15, 0.6];
+                let cumulativeTime = 0;
+                
+                notes.forEach((note, index) => {
+                    this.playTone(note, 'triangle', durations[index], cumulativeTime);
+                    cumulativeTime += durations[index] - 0.02;
+                });
+            }
+        }
+
+        const sound = new SoundSynth();
+
+        function toggleMute() {
+            sound.isMuted = !sound.isMuted;
+            const btn = document.getElementById('soundToggleBtn');
+            if (sound.isMuted) {
+                btn.innerHTML = "🔇 소리 꺼짐";
+                btn.classList.replace('bg-blue-800', 'bg-gray-600');
+            } else {
+                btn.innerHTML = "🔊 소리 켜짐";
+                btn.classList.replace('bg-gray-600', 'bg-blue-800');
+                sound.playTone(523.25, 'sine', 0.1);
+            }
+        }
+
+        // 싱싱한 해산물 일러스트 (인라인 SVG)
+        const SeafoodSVGs = {
+            crab: `
+                <svg viewBox="0 0 100 100" class="w-full h-full float-animation drop-shadow-2xl">
+                    <rect x="25" y="40" width="50" height="35" rx="15" fill="#f87171" stroke="#b91c1c" stroke-width="4"/>
+                    <circle cx="40" cy="30" r="6" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+                    <circle cx="40" cy="30" r="3" fill="#000"/>
+                    <line x1="40" y1="36" x2="40" y2="40" stroke="#b91c1c" stroke-width="3"/>
+                    <circle cx="60" cy="30" r="6" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+                    <circle cx="60" cy="30" r="3" fill="#000"/>
+                    <line x1="60" y1="36" x2="60" y2="40" stroke="#b91c1c" stroke-width="3"/>
+                    <path d="M 20,45 Q 10,25 25,20 Q 30,35 25,45 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/>
+                    <path d="M 12,25 Q 5,15 15,10 Q 25,20 20,25 Z" fill="#ea580c" stroke="#b91c1c" stroke-width="2"/>
+                    <path d="M 80,45 Q 90,25 75,20 Q 70,35 75,45 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/>
+                    <path d="M 88,25 Q 95,15 85,10 Q 75,20 80,25 Z" fill="#ea580c" stroke="#b91c1c" stroke-width="2"/>
+                    <path d="M 28,65 Q 10,75 18,85" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 28,55 Q 8,60 12,70" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 72,65 Q 90,75 82,85" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 72,55 Q 92,60 88,70" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+                    <ellipse cx="33" cy="55" rx="4" ry="2" fill="#fca5a5"/>
+                    <ellipse cx="67" cy="55" rx="4" ry="2" fill="#fca5a5"/>
+                </svg>
+            `,
+            octopus: `
+                <svg viewBox="0 0 100 100" class="w-full h-full float-animation drop-shadow-2xl">
+                    <rect x="30" y="20" width="40" height="40" rx="20" fill="#fb923c" stroke="#c2410c" stroke-width="4"/>
+                    <path d="M 38,28 Q 50,22 62,28" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                    <ellipse cx="42" cy="40" rx="5" ry="7" fill="#fff" stroke="#c2410c" stroke-width="2"/>
+                    <circle cx="42" cy="40" r="3" fill="#000"/>
+                    <ellipse cx="58" cy="40" rx="5" ry="7" fill="#fff" stroke="#c2410c" stroke-width="2"/>
+                    <circle cx="58" cy="40" r="3" fill="#000"/>
+                    <circle cx="50" cy="48" r="4" fill="#9a3412"/>
+                    <circle cx="49" cy="47" r="1" fill="#fff"/>
+                    <path d="M 35,58 Q 20,70 15,85" fill="none" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M 45,58 Q 35,75 35,92" fill="none" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M 55,58 Q 65,75 65,92" fill="none" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M 65,58 Q 80,70 85,85" fill="none" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="21" cy="73" r="2" fill="#ffedd5"/>
+                    <circle cx="36" cy="80" r="2" fill="#ffedd5"/>
+                    <circle cx="64" cy="80" r="2" fill="#ffedd5"/>
+                    <circle cx="79" cy="73" r="2" fill="#ffedd5"/>
+                </svg>
+            `,
+            conch: `
+                <svg viewBox="0 0 100 100" class="w-full h-full float-animation drop-shadow-2xl">
+                    <path d="M 25,70 L 50,20 L 75,70 Q 50,85 25,70 Z" fill="#fed7aa" stroke="#7c2d12" stroke-width="4"/>
+                    <path d="M 33,55 Q 50,65 67,55" fill="none" stroke="#ea580c" stroke-width="4"/>
+                    <path d="M 38,40 Q 50,48 62,40" fill="none" stroke="#ea580c" stroke-width="4"/>
+                    <path d="M 43,28 Q 50,33 57,28" fill="none" stroke="#ea580c" stroke-width="3"/>
+                    <ellipse cx="50" cy="70" rx="22" ry="12" fill="#fca5a5" stroke="#7c2d12" stroke-width="3"/>
+                    <ellipse cx="50" cy="70" rx="15" ry="7" fill="#f43f5e"/>
+                    <polygon points="20,25 22,18 28,20 23,25" fill="#fef08a"/>
+                    <polygon points="75,25 82,23 80,30 75,25" fill="#fef08a"/>
+                </svg>
+            `
+        };
+
+        // 퀴즈 데이터베이스
+        const QuizData = [
+            {
+                question: "밤에 스마트폰 전등 불빛 하나에만 의지하고 안개가 짙은 날 갯벌에 들어가도 괜찮을까요?",
+                answer: false,
+                category: "안개 및 조명",
+                explanation: "휴대폰 전등은 너무 약합니다! 반드시 밝은 헤드랜턴과 여비 배터리, 나침반 역할을 할 위성 GPS 앱을 꼭 소지해야만 안전합니다.",
+                seafoodType: "crab",
+                seafoodName: "튼실한 꽃게"
+            },
+            {
+                question: "해루질 전용 가슴 장화를 튼튼하게 입었다면 무겁고 답답한 구명조끼는 필요 없을까요?",
+                answer: false,
+                category: "안전 장비",
+                explanation: "장화 안으로 물이 들어차면 무게 때문에 발이 위로 떠오르고 머리가 아래로 처지는 익사 사고를 유발합니다! 반드시 구명조끼를 함께 입어야 합니다.",
+                seafoodType: "octopus",
+                seafoodName: "꿈틀이 왕낙지"
+            },
+            {
+                question: "해루질 중 멀리서 바다 안개(해무)가 조금씩 피어오른다면 곧바로 갯벌에서 나와야 할까요?",
+                answer: true,
+                category: "기상 이변",
+                explanation: "해무는 순식간에 사방을 덮쳐 바로 눈앞도 보이지 않게 하며 방향감각을 지워버립니다. 안개 징조가 보이면 즉시 뭍으로 피하셔야 합니다.",
+                seafoodType: "conch",
+                seafoodName: "속이 알찬 참소라"
+            },
+            {
+                question: "밀물 시간 알람(간조 끝)이 스마트폰에서 방금 울렸다면 아쉬우니 10분만 더 줍고 나가도 괜찮을까요?",
+                answer: false,
+                category: "물때 시간",
+                explanation: "밀물 알람이 울린 순간 이미 뭍으로 향하는 퇴로 일부가 가라앉았을 가능성이 높습니다! 반드시 알람 최소 1시간 전에는 복귀를 준비하세요.",
+                seafoodType: "crab",
+                seafoodName: "싱싱한 암꽃게"
+            },
+            {
+                question: "아무리 갯벌의 지리를 바삭하게 잘 아는 전문가라도, 해루질은 동료와 짝을 이루는 게 안전합니까?",
+                answer: true,
+                category: "동반자 동행",
+                explanation: "갯벌 구덩이(갯골)에 빠지거나 길을 잃었을 때 혼자라면 구조를 부르기 어렵습니다. 반드시 2인 이상이 서로를 챙기며 안전하게 다녀야 합니다.",
+                seafoodType: "octopus",
+                seafoodName: "힘이 가득한 뻘낙지"
+            },
+            {
+                question: "갯벌 펄 깊은 곳에 한쪽 다리가 완전히 박혔을 때는 뛰어서 서둘러 빠져나가야 할까요?",
+                answer: false,
+                category: "갯벌 대처요령",
+                explanation: "발을 세워 빠져나오려 하면 압력 때문에 더深く 들어갑니다! 뒤로 비스듬히 누워 몸을 평평하게 한 뒤 헤엄치듯 기어 나와야 합니다.",
+                seafoodType: "conch",
+                seafoodName: "귀여운 얼룩소라"
+            },
+            {
+                question: "출발하기 전에 부모님이나 가족에게 가고자 하는 해루질 장소와 시간대를 미리 알려두는 게 좋을까요?",
+                answer: true,
+                category: "사고 예방",
+                explanation: "사고가 생겨 정해진 시간까지 연락이 닿지 않을 경우 신속히 구조대의 구조를 받을 수 있게 하는 아주 든든한 예방법입니다.",
+                seafoodType: "crab",
+                seafoodName: "황금 무늬 돌게"
+            },
+            {
+                question: "아기처럼 아주 크기가 작은 새끼 꽃게나 낙지도 아깝지 않게 일단 잡아서 집으로 가져가는 게 정답일까요?",
+                answer: false,
+                category: "수산자원 보호",
+                explanation: "어린 생명(금지체장 미만)을 무분별하게 잡으면 과태료 대상이 될 뿐만 아니라 자연을 파괴합니다. 작은 수산물은 꼭 바다로 다시 돌려주세요!",
+                seafoodType: "octopus",
+                seafoodName: "팔딱팔딱 세발낙지"
+            }
+        ];
+
+        let p1Score = 0;
+        let p2Score = 0;
+        let currentTurn = 1; // 1: 바다, 2: 푸름
+        let currentQuestionIndex = 0;
+        let p1Collected = [];
+        let p2Collected = [];
+
+        function shuffleQuiz() {
+            for (let i = QuizData.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [QuizData[i], QuizData[j]] = [QuizData[j], QuizData[i]];
+            }
+        }
+
+        // 요소 매핑 캐싱
+        const p1ScoreEl = document.getElementById('p1-score');
+        const p2ScoreEl = document.getElementById('p2-score');
+        const p1Card = document.getElementById('p1-card');
+        const p2Card = document.getElementById('p2-card');
+        const p1BasketItems = document.getElementById('p1-basket-items');
+        const p2BasketItems = document.getElementById('p2-basket-items');
+        const p1BasketEmpty = document.getElementById('p1-basket-empty');
+        const p2BasketEmpty = document.getElementById('p2-basket-empty');
+        const turnAnnouncement = document.getElementById('turn-announcement');
+        
+        const quizCardContainer = document.getElementById('quiz-card-container');
+        const quizCategory = document.getElementById('quiz-category');
+        const quizText = document.getElementById('quiz-text');
+        
+        const explanationCardContainer = document.getElementById('explanation-card-container');
+        const explanationText = document.getElementById('explanation-text');
+        const nextBtnContainer = document.getElementById('next-btn-container');
+
+        const battleStageCenter = document.getElementById('battle-stage-center');
+        const spawnedSeafood = document.getElementById('spawned-seafood');
+        const mudflatCelebration = document.getElementById('mudflat-celebration');
+        const mudflatTitleText = document.getElementById('mudflat-title-text');
+        const mudflatSubText = document.getElementById('mudflat-sub-text');
+        
+        const victoryModal = document.getElementById('victory-modal');
+        const winnerText = document.getElementById('winner-text');
+        const victorySeafoods = document.getElementById('victory-seafoods');
+
+        function initGame() {
+            shuffleQuiz();
+            currentQuestionIndex = 0;
+            p1Score = 0;
+            p2Score = 0;
+            currentTurn = 1;
+            p1Collected = [];
+            p2Collected = [];
+            
+            updateScores();
+            showQuizPanel();
+        }
+
+        function showQuizPanel() {
+            // 설명창 및 축하 패널 초기화
+            explanationCardContainer.classList.remove('opacity-100', 'translate-y-0');
+            explanationCardContainer.classList.add('opacity-0', 'translate-y-32', 'pointer-events-none');
+            nextBtnContainer.classList.add('hidden');
+            mudflatCelebration.classList.add('opacity-0');
+            mudflatCelebration.classList.remove('scale-100');
+            mudflatCelebration.classList.add('scale-50');
+
+            // 다음 문제 로드 및 O/X 질문창 슬라이드업
+            const currentQuiz = QuizData[currentQuestionIndex];
+            quizCategory.innerText = `${currentQuiz.category} 수칙`;
+            quizText.innerText = `"${currentQuiz.question}"`;
+
+            quizCardContainer.classList.remove('translate-y-48', 'opacity-0', 'scale-95');
+            quizCardContainer.classList.add('translate-y-0', 'opacity-100', 'scale-100');
+        }
+
+        function hideQuizPanel() {
+            // 퀴즈 화면 아래로 슥 내리기
+            quizCardContainer.classList.add('translate-y-48', 'opacity-0', 'scale-95');
+            quizCardContainer.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
+        }
+
+        // 스코어 및 바구니 동기화
+        function updateScores() {
+            p1ScoreEl.innerText = `${p1Score} / 5`;
+            p2ScoreEl.innerText = `${p2Score} / 5`;
+
+            // 턴에 따라 최상단 안내판 변경
+            if (currentTurn === 1) {
+                turnAnnouncement.innerHTML = `📢 현재 차례: <span class="text-emerald-400 font-extrabold text-xl md:text-2xl drop-shadow">손녀 '바다' (플레이어 1)</span> 준비!`;
+            } else {
+                turnAnnouncement.innerHTML = `📢 현재 차례: <span class="text-sky-400 font-extrabold text-xl md:text-2xl drop-shadow">손자 '푸름' (플레이어 2)</span> 준비!`;
+            }
+
+            // 바구니 내부 수집품 동기화
+            renderBasketContents('p1', p1Collected);
+            renderBasketContents('p2', p2Collected);
+        }
+
+        const emojiMap = { crab: '🦀', octopus: '🐙', conch: '🐚' };
+
+        function renderBasketContents(playerPrefix, items) {
+            const itemsDiv = document.getElementById(`${playerPrefix}-basket-items`);
+            const emptySpan = document.getElementById(`${playerPrefix}-basket-empty`);
+            
+            if (items.length === 0) {
+                emptySpan.classList.remove('hidden');
+                itemsDiv.innerHTML = "";
+            } else {
+                emptySpan.classList.add('hidden');
+                itemsDiv.innerHTML = items.map(type => `
+                    <span class="text-2xl animate-bounce" style="animation-duration: 1.5s;">${emojiMap[type]}</span>
+                `).join('');
+            }
+        }
+
+        function submitAnswer(userChoice) {
+            const currentQuiz = QuizData[currentQuestionIndex];
+            const isCorrect = (userChoice === currentQuiz.answer);
+
+            // 퀴즈 대화창 감추기
+            hideQuizPanel();
+
+            // 판정 애니메이션 진행
+            playVerdictAnimation(isCorrect, currentQuiz);
+        }
+
+        function playVerdictAnimation(isCorrect, quiz) {
+            // 해산물 띄우기
+            spawnedSeafood.innerHTML = SeafoodSVGs[quiz.seafoodType];
+            spawnedSeafood.classList.remove('hidden', 'fly-to-p1', 'fly-to-p2', 'run-away-animation');
+            
+            // 축하/경고 타이틀 세팅
+            mudflatCelebration.classList.remove('opacity-0');
+            mudflatCelebration.classList.remove('scale-50');
+            mudflatCelebration.classList.add('scale-100', 'opacity-100');
+
+            if (isCorrect) {
+                // 딩동댕
+                sound.playCorrect();
+                mudflatTitleText.innerText = "딩동댕! 🎉";
+                mudflatTitleText.className = "variety-title text-5xl md:text-7xl mb-2 text-yellow-300";
+                mudflatSubText.innerHTML = `안전한 수칙 이해 완료! <br><span class="text-green-300 font-black text-xl md:text-3xl">${quiz.seafoodName}</span> 획득!`;
+
+                const activeBasket = document.getElementById(`p${currentTurn}-basket`);
+
+                // 0.8초 후 바구니로 비행
+                setTimeout(() => {
+                    const flyClass = currentTurn === 1 ? 'fly-to-p1' : 'fly-to-p2';
+                    spawnedSeafood.classList.add(flyClass);
+
+                    // 바구니 골인 시점에 바구니가 씰룩 흔들리고 조과통이 실시간으로 동기화됩니다.
+                    setTimeout(() => {
+                        activeBasket.classList.add('shake-active');
+                        if (currentTurn === 1) {
+                            p1Score++;
+                            p1Collected.push(quiz.seafoodType);
+                        } else {
+                            p2Score++;
+                            p2Collected.push(quiz.seafoodType);
+                        }
+                        updateScores();
+
+                        setTimeout(() => {
+                            activeBasket.classList.remove('shake-active');
+                        }, 600);
+                    }, 1000);
+                }, 800);
+
+                // 정답 시 바로 '다음 대결' 진행 버튼 노출
+                setTimeout(() => {
+                    nextBtnContainer.classList.remove('hidden');
+                }, 1800);
+
+            } else {
+                // 땡!
+                sound.playIncorrect();
+                mudflatTitleText.innerText = "땡! 🌊";
+                mudflatTitleText.className = "variety-title text-5xl md:text-7xl mb-2 text-red-500";
+                mudflatSubText.innerHTML = `위험해요! <br><span class="text-rose-300 font-bold text-lg md:text-2xl">${quiz.seafoodName}이(가) 도망칩니다!</span>`;
+
+                // 해산물 도망치기
+                setTimeout(() => {
+                    spawnedSeafood.classList.add('run-away-animation');
+                }, 400);
+
+                // 틀렸을 때는 안전 훈수 카드를 띄워서 지식을 전수합니다.
+                setTimeout(() => {
+                    explanationText.innerText = quiz.explanation;
+                    explanationCardContainer.classList.remove('opacity-0', 'translate-y-32', 'pointer-events-none');
+                    explanationCardContainer.classList.add('opacity-100', 'translate-y-0');
+                }, 1500);
+            }
+        }
+
+        function nextTurn() {
+            // 연출 잔상 완전히 가리기
+            spawnedSeafood.classList.add('hidden');
+            explanationCardContainer.classList.add('opacity-0', 'translate-y-32', 'pointer-events-none');
+            explanationCardContainer.classList.remove('opacity-100', 'translate-y-0');
+            nextBtnContainer.classList.add('hidden');
+
+            // 5점 우승 검사
+            if (p1Score >= 5) {
+                triggerVictory(1);
+                return;
+            } else if (p2Score >= 5) {
+                triggerVictory(2);
+                return;
+            }
+
+            // 문제 번호 전진
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= QuizData.length) {
+                shuffleQuiz();
+                currentQuestionIndex = 0;
+            }
+
+            // 플레이어 턴 교체
+            currentTurn = currentTurn === 1 ? 2 : 1;
+            
+            updateScores();
+            showQuizPanel();
+        }
+
+        // 최종 승리 축하 스크린
+        function triggerVictory(winnerNum) {
+            sound.playVictory();
+            victoryModal.classList.remove('hidden');
+
+            const winnerName = winnerNum === 1 ? "플레이어 1 (손녀 '바다')" : "플레이어 2 (손자 '푸름')";
+            winnerText.innerText = `👑 ${winnerName} 대승리! 👑`;
+
+            const winnerItems = winnerNum === 1 ? p1Collected : p2Collected;
+
+            // 최종 획득한 해산물 모아보기
+            victorySeafoods.innerHTML = winnerItems.map(type => `
+                <div class="bg-blue-950 border-2 border-yellow-400 rounded-2xl p-4 flex flex-col items-center shadow-lg w-24">
+                    <span class="text-4xl animate-bounce mb-1">${emojiMap[type]}</span>
+                    <span class="text-xs font-bold text-yellow-300">${type === 'crab' ? '꽃게' : type === 'octopus' ? '낙지' : '소라'}</span>
+                </div>
+            `).join('');
+        }
+
+        function resetGame() {
+            victoryModal.classList.add('hidden');
+            initGame();
+        }
+
+        // 윈도우 로딩 완료 후 게임 즉시 활성화
+        window.onload = function() {
+            initGame();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>바다의 등불 (Lantern of the Sea) - 실사풍 1인칭 3D</title>
+    <!-- Tailwind CSS for Modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=300;400;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #010307;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* 가상 조이스틱 스타일 */
+        .joystick-container {
+            width: 110px;
+            height: 110px;
+            background: rgba(8, 15, 30, 0.6);
+            border: 2px solid rgba(34, 211, 238, 0.4);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            display: none; /* 모바일 터치 시 활성화 */
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            z-index: 30;
+            backdrop-filter: blur(4px);
+        }
+        .joystick-knob {
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle, #22d3ee 0%, #0891b2 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.8);
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="w-full h-screen relative select-none">
+
+    <!-- 3D 렌더링 영역 -->
+    <div id="canvas-container" class="w-full h-full absolute inset-0 z-0"></div>
+
+    <!-- 모바일 조이스틱 레이어 -->
+    <div id="joystick" class="joystick-container">
+        <div id="knob" class="joystick-knob"></div>
+    </div>
+
+    <!-- 게임 UI 레이어 -->
+    <div id="ui-container" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 z-10">
+        
+        <!-- 상단 대시보드 -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center w-full gap-4">
+            <div class="flex gap-2">
+                <!-- 생존 스코어 -->
+                <div class="bg-slate-950/85 backdrop-blur-md border border-cyan-500/30 text-cyan-400 px-4 py-2.5 rounded-xl flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current text-cyan-400 animate-pulse" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="font-bold text-xs md:text-sm tracking-wider">구조된 생명: <span id="score-val" class="text-white text-base md:text-lg">0</span>명</span>
+                </div>
+
+                <!-- 보트 적재 칸수 -->
+                <div class="bg-slate-950/85 backdrop-blur-md border border-amber-500/30 text-amber-400 px-4 py-2.5 rounded-xl flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current text-amber-500" viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H7V9H1v2h2v11h18V11h2V9z"/></svg>
+                    <span class="font-bold text-xs md:text-sm tracking-wider">보트 탑승자: <span id="cargo-val" class="text-white text-base md:text-lg">0</span> / 3</span>
+                </div>
+            </div>
+            
+            <!-- 전등 배터리 미터기 -->
+            <div class="bg-slate-950/85 backdrop-blur-md border border-cyan-500/30 px-4 py-2.5 rounded-xl flex items-center gap-3 w-64 md:w-80">
+                <span class="text-yellow-400 text-xs font-bold whitespace-nowrap flex items-center gap-1">
+                    ⚡ 배터리 수명
+                </span>
+                <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-yellow-500/10">
+                    <div id="energy-bar" class="bg-gradient-to-r from-amber-500 via-yellow-400 to-cyan-300 h-full transition-all duration-100 ease-out" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 중앙 나침반 / 미니 가이드 -->
+        <div class="absolute top-24 left-1/2 -translate-x-1/2 bg-slate-950/90 border border-slate-800 text-[10px] md:text-xs text-slate-300 px-4 py-2 rounded-full flex items-center gap-2 pointer-events-none shadow-xl backdrop-blur-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            <span>중앙 등대의 <strong>수직 청색 광선</strong>이 안전한 피난처입니다.</span>
+        </div>
+
+        <!-- 하단 컨트롤 도구 및 알림 로그 -->
+        <div class="flex justify-between items-end w-full">
+            <!-- 조작법 설명서 -->
+            <div class="hidden md:flex flex-col gap-1.5 text-[11px] text-slate-400 bg-slate-950/85 p-4 rounded-xl border border-slate-800 backdrop-blur">
+                <p>⌨️ <span class="text-cyan-400 font-bold">W, A, S, D</span> : 보트 조종 (전진/회전)</p>
+                <p>🖱️ <span class="text-cyan-400 font-bold">마우스 드래그</span> : 손전등 시선 돌리기</p>
+                <p>🔦 <span class="text-yellow-400 font-bold">F 키 / 왼쪽 마우스 클릭</span> : 손전등 ON / OFF</p>
+                <p class="text-[10px] text-amber-500/90 mt-1">※ 손전등을 끄면 배터리를 절약하고 등대 불빛만 보며 다닐 수 있습니다.</p>
+            </div>
+
+            <!-- 모바일/우측 하단 직접 인터랙티브 전등 스위치 버튼 -->
+            <div class="flex flex-col items-center gap-2 pointer-events-auto">
+                <button id="flashlight-toggle-btn" class="w-16 h-16 rounded-full bg-slate-900/90 border border-yellow-500/40 shadow-lg flex justify-center items-center active:scale-90 hover:bg-slate-850 hover:border-yellow-400 transition-all z-20">
+                    <span id="switch-icon" class="text-2xl">🔦</span>
+                </button>
+                <span class="text-[10px] text-slate-400 bg-slate-950/80 px-2 py-1 rounded border border-slate-800 pointer-events-none">F키 또는 스위치 탭</span>
+            </div>
+
+            <!-- 실시간 구조 알림 창 -->
+            <div class="w-72 max-h-48 overflow-hidden flex flex-col gap-2 pointer-events-none text-xs" id="log-container">
+                <!-- 동적 로그 메시지 생성부 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 시작 및 게임오버 화면 (모달) -->
+    <div id="modal-screen" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md z-20 flex flex-col justify-center items-center p-6 text-center">
+        <div class="max-w-lg bg-slate-900/90 border border-cyan-500/40 rounded-2xl p-8 shadow-2xl shadow-cyan-950/50">
+            <!-- 타이틀 -->
+            <h1 id="modal-title" class="text-3xl md:text-5xl font-bold text-cyan-300 mb-4 tracking-widest drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+                바다의 등불 3D
+            </h1>
+            <p id="modal-desc" class="text-slate-300 text-sm md:text-base mb-6 leading-relaxed">
+                짙게 깔린 바다 안개 속, 당신은 한 척의 구조 보트를 이끌게 됩니다.<br>
+                생사조차 불투명한 칠흑의 밤바다에서 <span class="text-yellow-400 font-bold">생명의 전등</span>을 비추어 이들을 구해오세요.
+            </p>
+
+            <!-- 규칙 설명 카드 -->
+            <div id="rules-card" class="bg-slate-950/80 rounded-xl p-5 text-left text-xs md:text-sm text-slate-300 mb-6 space-y-3 border border-slate-800">
+                <p class="flex items-start gap-2">
+                    <span class="text-yellow-400 font-bold">❶</span>
+                    <span><strong>전등 스위치(F키 또는 클릭):</strong> 필요할 때만 불빛을 켜서 배터리를 철저히 절약하세요. 꺼진 상태에서는 조난자들이 추위와 고독에 빠집니다.</span>
+                </p>
+                <p class="flex items-start gap-2">
+                    <span class="text-cyan-400 font-bold">❷</span>
+                    <span><strong>조난자 탑승:</strong> 손전등을 비추어 진정시킨 뒤, 보트 선체로 완전히 다가가면 태울 수 있습니다 (최대 3명).</span>
+                </p>
+                <p class="flex items-start gap-2">
+                    <span class="text-emerald-400 font-bold">❸</span>
+                    <span><strong>등대 복귀:</strong> 하늘로 높이 솟은 청색 빛기둥(중앙지점)으로 복귀하면 이들을 안전하게 육지로 돌려보내고 <strong>배터리가 100% 충전</strong>됩니다.</span>
+                </p>
+            </div>
+
+            <!-- 스코어 기록 -->
+            <div id="game-over-stats" class="hidden mb-6 bg-slate-950/80 py-4 rounded-xl border border-red-500/20">
+                <p class="text-slate-400 text-xs">안전하게 하선 시킨 인원</p>
+                <p class="text-4xl font-bold text-yellow-400 my-1" id="final-score">0명</p>
+                <p class="text-slate-500 text-[11px]" id="stat-quote">"차가운 어둠 속에서 마주한 당신의 빛은 그들의 생명이 되었습니다."</p>
+            </div>
+
+            <button id="start-btn" class="pointer-events-auto w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-indigo-500 active:scale-95 transition-all duration-150">
+                구조 작전 시작
+            </button>
+        </div>
+    </div>
+
+    <!-- Three.js CDN 라이브러리 탑재 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- 전역 UI 및 리소스 선택 ---
+        const container = document.getElementById('canvas-container');
+        const uiScore = document.getElementById('score-val');
+        const uiCargo = document.getElementById('cargo-val');
+        const uiEnergy = document.getElementById('energy-bar');
+        const uiLog = document.getElementById('log-container');
+        const modalScreen = document.getElementById('modal-screen');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalRules = document.getElementById('rules-card');
+        const modalStats = document.getElementById('game-over-stats');
+        const finalScore = document.getElementById('final-score');
+        const statQuote = document.getElementById('stat-quote');
+        const startBtn = document.getElementById('start-btn');
+        const flashlightToggleBtn = document.getElementById('flashlight-toggle-btn');
+        const switchIcon = document.getElementById('switch-icon');
+
+        // Three.js 글로벌 공간 개체
+        let scene, camera, renderer;
+        let ambientLight, directionalLight, flashlight, flashlightTarget;
+        let flashlightCone; // 손전등의 안개 산란 광선 메쉬
+        let flashlightModel; // 플레이어 손에 든 물리 3D 손전등 메쉬
+        let lighthouseBeacon;
+        let waterPlane;
+        let starParticles; // 별밭
+
+        // 게임 제어 상태 및 환경 조도 타겟 데이터
+        let gameState = 'ready'; 
+        let score = 0;
+        let cargoCount = 0;
+        const cargoMax = 3;
+        let energy = 100;
+        const maxEnergy = 100;
+        let isFlashlightOn = true; // 수동 전등 제어 스위치 변수
+
+        // 전등 상태에 따른 환경 광원 조도 설정 (실사 풍 극대화)
+        const lightConfig = {
+            ambientOn: 0.18,      // 전등 켰을 때 은은하게 주변이 반사되는 빛 강도
+            ambientOff: 0.01,     // 전등 껐을 때 칠흑 같은 심해의 어둠 강도
+            directionalOn: 0.65,  // 전등 켰을 때 은빛 달빛 강도
+            directionalOff: 0.03  // 전등 껐을 때 거의 사라지는 달빛 강도
+        };
+
+        // 플레이어 카메라 및 해상 물리학 정보
+        const player = {
+            x: 0,
+            z: 40, 
+            angle: Math.PI, 
+            pitch: 0, 
+            speed: 0,
+            maxSpeed: 0.22,
+            accel: 0.012,
+            friction: 0.95,
+            rotationSpeed: 0.026
+        };
+
+        // 입력 상태
+        const keys = { w: false, s: false, a: false, d: false };
+        let isDragging = false;
+        let previousMouseX = 0;
+        let previousMouseY = 0;
+        let mouseDeltaX = 0; // sway(흔들림) 효과에 사용할 마우스 변화 누적량
+        let mouseDeltaY = 0;
+
+        // 모바일 터치 및 가상 조이스틱 조작
+        const joystick = document.getElementById('joystick');
+        const knob = document.getElementById('knob');
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let moveX = 0; 
+        let moveZ = 0; 
+        let isTouchDevice = false;
+
+        // 엔티티 컬렉션
+        let survivors = [];
+        let dews = [];
+
+        // 감성 묘사 로그 뭉치
+        const rescueQuotes = [
+            "체온을 되찾은 표류자가 가슴 깊이 흐느낍니다.",
+            "어깨에 두른 주황 구명조끼 위로 한 줄기 빛이 따스하게 안착했습니다.",
+            "등불 빛으로 밤바다 조난자를 공포에서 건져내 탑승시켰습니다.",
+            "희망을 감지한 사람의 숨소리가 드디어 보트 위에서 들려옵니다."
+        ];
+
+        const unloadQuotes = [
+            "구조선이 대원들의 박수 속에 무사히 생존자들을 하선시켰습니다.",
+            "등대 내부의 따뜻한 온기가 얼어붙은 이들의 손발을 녹입니다.",
+            "안전망 아래로 무사히 대피해 살아 숨 쉬는 기쁨을 나눕니다."
+        ];
+
+        const gameOverQuotes = [
+            "수명을 다한 등불 아래, 검은 파도만이 마지막을 지켰습니다.",
+            "소진된 전지 뒤편으로 조난선은 결국 무거운 침묵 속에 묻혔습니다.",
+            "그들을 비춘 온기는 심해 밑바닥까지 가라앉지 않고 흐를 것입니다."
+        ];
+
+        // --- 3D 가상 바다 세계 구축 ---
+        function init3D() {
+            // 1. Scene & 심해 가라앉은 안개(Fog)
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x010306);
+            scene.fog = new THREE.FogExp2(0x010306, 0.02); // 짙은 밤바다 물방울 안개
+
+            // 2. Camera (실제 관찰자 높이 조정)
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // 3. Renderer (그림자 및 사실적 픽셀 비율)
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            // 4. 조명(Lights) 설계 - 실사같은 밤하늘의 극적 효과
+            // 밤바다의 희미한 깊은 심연 기본광 (Ambient)
+            ambientLight = new THREE.AmbientLight(0x030a1c, 0.2);
+            scene.add(ambientLight);
+
+            // 실사 극대화: 밤하늘 저 멀리 떠 있는 달빛 (DirectionalLight)
+            // 물결 표면에 강렬하고 반짝이는 은빛 반사막(Specular reflection)을 선사합니다.
+            directionalLight = new THREE.DirectionalLight(0x4279a3, 0.65);
+            directionalLight.position.set(40, 100, -50);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // 손에 든 전등에서 뻗어가는 전용 스포트라이트 (SpotLight)
+            flashlight = new THREE.SpotLight(0xfff5db, 3.8); // 백열전구의 따뜻하고 디테일한 백색조
+            flashlight.distance = 120;
+            flashlight.angle = Math.PI / 5.2; // 최적의 원뿔 조사 범위
+            flashlight.penumbra = 0.5; // 가장자리 부드러운 산란광
+            flashlight.castShadow = true;
+            scene.add(flashlight);
+
+            // 스포트라이트 방향 지시용 타겟 오브젝트
+            flashlightTarget = new THREE.Object3D();
+            scene.add(flashlightTarget);
+            flashlight.target = flashlightTarget;
+
+            // 5. 밤하늘 은하계 별밭(Starfield) 입자 시스템 생성
+            createStars();
+
+            // 6. 3D 입체적인 전등 안개빛줄기 (Volumetric Light Cone) 생성
+            const coneGeo = new THREE.ConeGeometry(24, 110, 32, 1, true);
+            // 메쉬 중심을 밑면이 아닌 바깥으로 빼주기 위해 지오메트리를 약간 뒤로 이동
+            coneGeo.translate(0, -55, 0);
+            coneGeo.rotateX(Math.PI / 2);
+            const coneMat = new THREE.MeshBasicMaterial({
+                color: 0xfff5db,
+                transparent: true,
+                opacity: 0.08,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            flashlightCone = new THREE.Mesh(coneGeo, coneMat);
+            // 카메라가 손등에 쥔 듯이 손전등 광선과 완전 일치하도록 카메라 하위 소속으로 임시 바인딩
+            camera.add(flashlightCone);
+            scene.add(camera); // 카메라를 씬에 추가
+
+            // 7. 플레이어 손에 물리적으로 쥐어져 보이는 3D 메탈 손전등 모델링 제작
+            createHandFlashlight();
+
+            // 8. 일렁이는 고품격 입체 파도망 (Water Mesh)
+            const waterGeometry = new THREE.PlaneGeometry(400, 400, 64, 64);
+            const waterMaterial = new THREE.MeshStandardMaterial({
+                color: 0x020a16,
+                roughness: 0.12,
+                metalness: 0.9,
+                flatShading: true // 거친 파도 큐브의 면반사를 통한 극도의 실사 하이라이트 연출
+            });
+            waterPlane = new THREE.Mesh(waterGeometry, waterMaterial);
+            waterPlane.rotation.x = -Math.PI / 2;
+            waterPlane.position.y = -1;
+            scene.add(waterPlane);
+
+            // 9. 등대 타워 기지 건설
+            createLighthouse();
+
+            // 10. 모든 핵심 요소들이 씬에 올라간 상태에서 최초 1회 카메라 위치 싱크
+            updateCameraPosition();
+
+            // 화면 크기 반응 처리 조율
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // 별자리 가상 입자 시스템 빌드
+        function createStars() {
+            const starCount = 800;
+            const starGeo = new THREE.BufferGeometry();
+            const starPositions = new Float32Array(starCount * 3);
+
+            for (let i = 0; i < starCount * 3; i += 3) {
+                // 등대 주변 하늘 높이 흩뿌림
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                const radius = 180 + Math.random() * 100;
+
+                starPositions[i] = radius * Math.sin(phi) * Math.cos(theta);
+                starPositions[i + 1] = Math.abs(radius * Math.sin(phi) * Math.sin(theta)) + 15; // 바다 위 상공 배치
+                starPositions[i + 2] = radius * Math.cos(phi);
+            }
+
+            starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+            const starMat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.45,
+                transparent: true,
+                opacity: 0.85
+            });
+
+            starParticles = new THREE.Points(starGeo, starMat);
+            scene.add(starParticles);
+        }
+
+        // 손전등의 디테일한 택티컬 메탈 하드웨어 몸통 모델
+        function createHandFlashlight() {
+            const group = new THREE.Group();
+
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0x181a1e,
+                metalness: 0.95,
+                roughness: 0.35
+            });
+            const brassMat = new THREE.MeshStandardMaterial({
+                color: 0xd4af37,
+                metalness: 0.9,
+                roughness: 0.25
+            });
+
+            // 손전등 손잡이 부분 (Cylinder)
+            const handleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.35, 12);
+            // 고쳐진 부분: handleMat 변수가 정의되지 않아 발생한 ReferenceError 수정 (bodyMat 적용)
+            const handle = new THREE.Mesh(handleGeo, bodyMat); 
+            handle.rotation.x = Math.PI / 2;
+            handle.position.set(0, 0, 0);
+            group.add(handle);
+
+            // 손전등 헤드 바디
+            const headGeo = new THREE.CylinderGeometry(0.065, 0.04, 0.12, 12);
+            const head = new THREE.Mesh(headGeo, bodyMat);
+            head.rotation.x = Math.PI / 2;
+            head.position.set(0, 0, -0.22);
+            group.add(head);
+
+            // 전면 금속 링 베젤 경계
+            const bezelGeo = new THREE.CylinderGeometry(0.068, 0.068, 0.02, 12);
+            const bezel = new THREE.Mesh(bezelGeo, brassMat);
+            bezel.rotation.x = Math.PI / 2;
+            bezel.position.set(0, 0, -0.29);
+            group.add(bezel);
+
+            // 헤드 렌즈 내부의 백열 전구 발광 코어
+            const bulbGeo = new THREE.SphereGeometry(0.025, 8, 8);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.set(0, 0, -0.295);
+            group.add(bulb);
+
+            // 카메라의 자식 객체로 붙여 고정 1인칭 손 들기 구현
+            flashlightModel = group;
+            camera.add(flashlightModel);
+
+            // 우측 하단 든 위치 값 튜닝
+            flashlightModel.position.set(0.35, -0.25, -0.55);
+            // 약간 위를 향하도록 앵글 보정
+            flashlightModel.rotation.set(-0.06, 0.1, 0);
+        }
+
+        // 등대 건설
+        function createLighthouse() {
+            const lighthouseGroup = new THREE.Group();
+            lighthouseGroup.position.set(0, -1, 0);
+
+            // 콘크리트 무거운 기단
+            const baseGeo = new THREE.CylinderGeometry(6, 7, 3.5, 12);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e222b, roughness: 0.95 });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 1.75;
+            lighthouseGroup.add(base);
+
+            // 수직 기둥 타워
+            const towerGeo = new THREE.CylinderGeometry(2.4, 4.2, 22, 12);
+            const towerMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.88 });
+            const tower = new THREE.Mesh(towerGeo, towerMat);
+            tower.position.y = 12.5;
+            lighthouseGroup.add(tower);
+
+            // 전등 기구 룸 헤드
+            const headGeo = new THREE.CylinderGeometry(2.6, 2.6, 4.5, 12);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0x12141a, roughness: 0.6 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 24.5;
+            lighthouseGroup.add(head);
+
+            // 등대 하늘 높이 치솟는 청색 구조 기둥 광선 (하강 가이드라인)
+            const beaconGeo = new THREE.CylinderGeometry(0.4, 20, 450, 16, 1, true);
+            beaconGeo.translate(0, 225, 0);
+            beaconGeo.rotateX(Math.PI / 2);
+            const beaconMat = new THREE.MeshBasicMaterial({
+                color: 0x06b6d4,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            lighthouseBeacon = new THREE.Mesh(beaconGeo, beaconMat);
+            // 빔 기점을 헤드 안 쪽에 일치
+            lighthouseBeacon.position.set(0, 24.5, 0);
+            lighthouseBeacon.rotation.x = -Math.PI / 2;
+            lighthouseGroup.add(lighthouseBeacon);
+
+            // 바다 표면의 정박 안전 지대 범위 시각 고리
+            const ringGeo = new THREE.RingGeometry(18, 18.6, 48);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0x22d3ee,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.45
+            });
+            const safeRing = new THREE.Mesh(ringGeo, ringMat);
+            safeRing.rotation.x = -Math.PI / 2;
+            safeRing.position.y = 0.08;
+            lighthouseGroup.add(safeRing);
+
+            scene.add(lighthouseGroup);
+        }
+
+        // --- 생존자 및 자원 메쉬 디테일 업그레이드 ---
+        function createSurvivorMesh() {
+            const group = new THREE.Group();
+
+            // 1. 오렌지 구명 링 튜브 (유체감 있게 정교한 원환)
+            const tubeGeo = new THREE.TorusGeometry(1.0, 0.28, 10, 24);
+            const tubeMat = new THREE.MeshStandardMaterial({
+                color: 0xf97316,
+                roughness: 0.35,
+                metalness: 0.3
+            });
+            const tube = new THREE.Mesh(tubeGeo, tubeMat);
+            tube.rotation.x = Math.PI / 2;
+            tube.position.y = 0.25;
+            group.add(tube);
+
+            // 2. 머리 둥근 입체 메쉬
+            const headGeo = new THREE.SphereGeometry(0.5, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xfed7aa, roughness: 0.7 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 0.85;
+            group.add(head);
+
+            // 3. 디테일한 머리카락
+            const hairGeo = new THREE.SphereGeometry(0.52, 12, 12, 0, Math.PI * 2, 0, Math.PI / 1.8);
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+            const hair = new THREE.Mesh(hairGeo, hairMat);
+            hair.position.y = 0.9;
+            hair.rotation.x = -0.28;
+            group.add(hair);
+
+            return group;
+        }
+
+        function createDewMesh() {
+            const group = new THREE.Group();
+
+            // 은은하고 투명한 젤리 형태의 전지 에너지 기포
+            const sphereGeo = new THREE.SphereGeometry(0.45, 12, 12);
+            const sphereMat = new THREE.MeshStandardMaterial({
+                color: 0xfef08a,
+                emissive: 0xeab308,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.88,
+                roughness: 0.1
+            });
+            const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+            group.add(sphere);
+
+            return group;
+        }
+
+        // --- 마우스 및 키보드/터치 이벤트 리스너 바인딩 ---
+
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || e.key === 'ArrowUp') keys.w = true;
+            if (k === 's' || e.key === 'ArrowDown') keys.s = true;
+            if (k === 'a' || e.key === 'ArrowLeft') keys.a = true;
+            if (k === 'd' || e.key === 'ArrowRight') keys.d = true;
+
+            // F키를 눌러 수동 전등 전력 전면 차단 / 인가
+            if (k === 'f') {
+                toggleFlashlight();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || e.key === 'ArrowUp') keys.w = false;
+            if (k === 's' || e.key === 'ArrowDown') keys.s = false;
+            if (k === 'a' || e.key === 'ArrowLeft') keys.a = false;
+            if (k === 'd' || e.key === 'ArrowRight') keys.d = false;
+        });
+
+        // 손전등 ON/OFF 함수
+        function toggleFlashlight() {
+            if (gameState !== 'playing') return;
+            isFlashlightOn = !isFlashlightOn;
+
+            // 1. 스포트라이트 전원 제어
+            if (flashlight) flashlight.visible = isFlashlightOn;
+
+            // 2. 부피 광선 콘 효과 활성화 전환
+            if (flashlightCone) flashlightCone.visible = isFlashlightOn;
+
+            // 3. UI 지시 스위치 묘사 변화
+            if (isFlashlightOn) {
+                switchIcon.textContent = "🔦";
+                flashlightToggleBtn.classList.remove('border-red-500/40');
+                flashlightToggleBtn.classList.add('border-yellow-500/40');
+                addLog("손전등 배터리 회로 가동. 빛을 방사합니다.", true);
+            } else {
+                switchIcon.textContent = "🌑";
+                flashlightToggleBtn.classList.remove('border-yellow-500/40');
+                flashlightToggleBtn.classList.add('border-red-500/40');
+                addLog("전등 차단. 배터리 소모가 일시 정지됩니다.", false);
+            }
+        }
+
+        // 모바일/클릭 토글 버튼 바인딩
+        flashlightToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFlashlight();
+        });
+
+        // 뷰 시선 묵직한 지연 회전 마우스 제어
+        window.addEventListener('mousedown', (e) => {
+            if (gameState !== 'playing') return;
+            // 모바일 터치 중일 때는 드래그 중첩 패스
+            if (isTouchDevice) return; 
+            isDragging = true;
+            previousMouseX = e.clientX;
+            previousMouseY = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging || gameState !== 'playing') return;
+            const deltaX = e.clientX - previousMouseX;
+            const deltaY = e.clientY - previousMouseY;
+            previousMouseX = e.clientX;
+            previousMouseY = e.clientY;
+
+            // 시선 각 변화량 기록 및 보정
+            player.angle -= deltaX * 0.0055;
+            player.pitch = Math.max(-Math.PI / 4.5, Math.min(Math.PI / 4.5, player.pitch - deltaY * 0.004));
+
+            // 손 지연 반응(Sway)을 위해 누적값 증가
+            mouseDeltaX += deltaX * 0.04;
+            mouseDeltaY += deltaY * 0.04;
+        });
+
+        window.addEventListener('mouseup', () => isDragging = false);
+
+        // 모바일 환경 대응 터치 제어식
+        window.addEventListener('touchstart', (e) => {
+            isTouchDevice = true;
+            joystick.style.display = 'flex';
+
+            if (gameState !== 'playing') return;
+
+            const touch = e.touches[0];
+            // 좌반면 터치는 조이스틱 바인딩, 그 외는 카메라 전경 회전
+            if (touch.clientX < window.innerWidth / 2.3 && touch.clientY > window.innerHeight / 2) {
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+            } else {
+                isDragging = true;
+                previousMouseX = touch.clientX;
+                previousMouseY = touch.clientY;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (gameState !== 'playing') return;
+            const touches = e.touches;
+
+            for (let i = 0; i < touches.length; i++) {
+                const touch = touches[i];
+                if (touch.clientX < window.innerWidth / 2.3 && touch.clientY > window.innerHeight / 2) {
+                    // 가상 조이스틱 미끄러짐 연산
+                    const dx = touch.clientX - touchStartX;
+                    const dy = touch.clientY - touchStartY;
+                    const distance = Math.hypot(dx, dz);
+                    const maxDist = 45;
+
+                    let moveAngle = Math.atan2(dy, dx);
+                    let intensity = Math.min(distance, maxDist) / maxDist;
+
+                    const knobX = Math.cos(moveAngle) * intensity * maxDist;
+                    const knobY = Math.sin(moveAngle) * intensity * maxDist;
+                    knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+
+                    // 방향 설정
+                    moveX = Math.cos(moveAngle) * intensity;
+                    moveZ = Math.sin(moveAngle) * intensity;
+                } else if (isDragging) {
+                    // 시야 회전 터치 계산
+                    const deltaX = touch.clientX - previousMouseX;
+                    const deltaY = touch.clientY - previousMouseY;
+                    previousMouseX = touch.clientX;
+                    previousMouseY = touch.clientY;
+
+                    player.angle -= deltaX * 0.008;
+                    player.pitch = Math.max(-Math.PI / 4.5, Math.min(Math.PI / 4.5, player.pitch - deltaY * 0.006));
+
+                    mouseDeltaX += deltaX * 0.06;
+                    mouseDeltaY += deltaY * 0.06;
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) {
+                isDragging = false;
+                knob.style.transform = 'translate(0px, 0px)';
+                moveX = 0;
+                moveZ = 0;
+            }
+        });
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- 오브젝트 무작위 생성 핸들러 ---
+        function spawnSurvivor() {
+            const spawnAngle = Math.random() * Math.PI * 2;
+            const distance = 40 + Math.random() * 55;
+            const sX = Math.cos(spawnAngle) * distance;
+            const sZ = Math.sin(spawnAngle) * distance;
+
+            const mesh = createSurvivorMesh();
+            mesh.position.set(sX, -1.0, sZ);
+            scene.add(mesh);
+
+            survivors.push({
+                x: sX,
+                z: sZ,
+                mesh: mesh,
+                fear: 0,
+                age: Math.floor(Math.random() * 45) + 15,
+                gender: Math.random() > 0.5 ? '남성' : '여성',
+                bobOffset: Math.random() * Math.PI
+            });
+        }
+
+        function spawnDew() {
+            const spawnAngle = Math.random() * Math.PI * 2;
+            const distance = 25 + Math.random() * 65;
+            const dX = Math.cos(spawnAngle) * distance;
+            const dZ = Math.sin(spawnAngle) * distance;
+
+            const mesh = createDewMesh();
+            mesh.position.set(dX, 0.2, dZ);
+            scene.add(mesh);
+
+            dews.push({
+                x: dX,
+                z: dZ,
+                mesh: mesh,
+                pulse: Math.random() * Math.PI
+            });
+        }
+
+        // 실시간 안내 스크롤 로그 전송
+        function addLog(text, isPositive = true) {
+            const logEl = document.createElement('div');
+            logEl.className = `px-3.5 py-2 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 flex items-center gap-2 ${
+                isPositive ? 'bg-cyan-950/85 text-cyan-300 border-cyan-500/20' : 'bg-red-950/85 text-red-300 border-red-500/20'
+            }`;
+            logEl.innerHTML = `
+                <span class="w-2 h-2 rounded-full ${isPositive ? 'bg-cyan-400' : 'bg-red-500'} animate-ping"></span>
+                <span>${text}</span>
+            `;
+            uiLog.prepend(logEl);
+            
+            setTimeout(() => {
+                logEl.style.opacity = '0';
+                logEl.style.transform = 'translateY(-10px)';
+                setTimeout(() => logEl.remove(), 400);
+            }, 4500);
+        }
+
+        // --- 실사풍 물리 기반 카메라 및 손전등 보빙 업데이트 ---
+        function updateCameraPosition() {
+            if (!camera) return;
+            camera.position.x = player.x;
+            camera.position.z = player.z;
+            
+            // 보트 흔들림 파도 보빙 연출 추가
+            const time = Date.now();
+            const boatWaveBob = Math.sin(time * 0.0016) * 0.08 + Math.cos(time * 0.001) * 0.04;
+            camera.position.y = 0.5 + boatWaveBob;
+
+            // 시야 정밀 바라봄 방향각 수치 보정
+            const targetX = player.x + Math.sin(player.angle) * Math.cos(player.pitch);
+            const targetZ = player.z + Math.cos(player.angle) * Math.cos(player.pitch);
+            const targetY = camera.position.y + Math.sin(player.pitch);
+
+            camera.lookAt(targetX, targetY, targetZ);
+
+            // 손전등 조명 기구를 카메라 좌표와 안전하게 동기화
+            if (flashlight) {
+                flashlight.position.copy(camera.position);
+            }
+            // 안개 속 산란을 위해 스포트라이트 빛이 좀 더 부각될 수 있도록 깊이 설정
+            if (flashlightTarget) {
+                flashlightTarget.position.set(targetX * 5, targetY * 5, targetZ * 5);
+            }
+        }
+
+        // --- 핵심 렌더 엔진 애니메이션 흐름 ---
+        let spawnTimer = 0;
+        let dewTimer = 0;
+
+        function animate() {
+            if (gameState !== 'playing') return;
+            requestAnimationFrame(animate);
+
+            const time = Date.now();
+
+            // 1. 파도 수치화 일렁임 (실사풍 Specular 반사 변화 제공)
+            const positionAttribute = waterPlane.geometry.attributes.position;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < positionAttribute.count; i++) {
+                v.fromBufferAttribute(positionAttribute, i);
+                // 좀 더 무작위하고 조밀한 해수 유체파 구현
+                const waveHeight = Math.sin(v.x * 0.08 + time * 0.0014) * 0.42 + 
+                                   Math.cos(v.y * 0.06 + time * 0.001) * 0.38 + 
+                                   Math.sin((v.x + v.y) * 0.04 + time * 0.0008) * 0.2;
+                positionAttribute.setZ(i, waveHeight);
+            }
+            positionAttribute.needsUpdate = true;
+            waterPlane.geometry.computeVertexNormals();
+
+            // 1.5 환경 조명 동적 조율 (손전등의 ON/OFF에 따른 시각적 암전 효과 구현)
+            const currentTargetAmbient = isFlashlightOn ? lightConfig.ambientOn : lightConfig.ambientOff;
+            const currentTargetDirectional = isFlashlightOn ? lightConfig.directionalOn : lightConfig.directionalOff;
+
+            // 눈이 어둠에 적응하는 연출을 위해 선형 보간(Lerp) 적용
+            if (ambientLight) {
+                ambientLight.intensity += (currentTargetAmbient - ambientLight.intensity) * 0.08;
+            }
+            if (directionalLight) {
+                directionalLight.intensity += (currentTargetDirectional - directionalLight.intensity) * 0.08;
+            }
+
+            // 2. 보트 역학 가감속 및 키보드/터치 혼합 업데이트
+            if (isTouchDevice) {
+                player.speed = Math.min(player.maxSpeed, player.speed + player.accel);
+                if (moveX !== 0 || moveZ !== 0) {
+                    const targetAngle = Math.atan2(moveX, moveZ);
+                    let angleDiff = targetAngle - player.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    player.angle += angleDiff * player.rotationSpeed;
+                }
+            } else {
+                if (keys.w) {
+                    player.speed = Math.min(player.maxSpeed, player.speed + player.accel);
+                } else if (keys.s) {
+                    player.speed = Math.max(-player.maxSpeed / 2.2, player.speed - player.accel);
+                } else {
+                    player.speed *= player.friction;
+                }
+
+                if (keys.a) player.angle += player.rotationSpeed;
+                if (keys.d) player.angle -= player.rotationSpeed;
+            }
+
+            player.x += Math.sin(player.angle) * player.speed;
+            player.z += Math.cos(player.angle) * player.speed;
+
+            // 보이지 않는 넓은 바다 벽 경계 차단
+            const playerDist = Math.hypot(player.x, player.z);
+            if (playerDist > 110) {
+                const borderAngle = Math.atan2(player.x, player.z);
+                player.x = Math.sin(borderAngle) * 110;
+                player.z = Math.cos(borderAngle) * 110;
+                player.speed *= -0.5; // 가상 반동
+                addLog("짙은 안개와 세찬 폭풍우가 보트를 뒤흔들며 뒤로 밀어냅니다.", false);
+            }
+
+            // 카메라 위치 갱신
+            updateCameraPosition();
+
+            // 3. 전등 수동 Sway & 보빙 지연 효과 반영 (손전등 메쉬 흔들림 물리 구현)
+            if (flashlightModel) {
+                // 플레이어가 걷거나 파도가 칠 때의 자연스러운 손 움직임
+                const walkCycle = time * 0.0035;
+                const speedFactor = Math.abs(player.speed) / player.maxSpeed;
+                
+                // 보트 속도가 빠를수록 보빙 흔들림 가속 및 보강
+                const bobX = Math.sin(walkCycle) * 0.015 * (1 + speedFactor);
+                const bobY = Math.cos(walkCycle * 2) * 0.018 * (1 + speedFactor);
+
+                // 마우스 급회전 시의 지연 흔들림 누적 보강(Sway)
+                mouseDeltaX *= 0.9; // 탄성 감쇠
+                mouseDeltaY *= 0.9;
+
+                // 타겟팅 위치 튜닝
+                flashlightModel.position.set(
+                    0.35 + bobX + (mouseDeltaX * -0.002), 
+                    -0.25 + bobY + (mouseDeltaY * 0.0015), 
+                    -0.55
+                );
+                
+                // 손목 꺾임의 미세한 지연 로테이션 시뮬레이션
+                flashlightModel.rotation.set(
+                    -0.06 + (mouseDeltaY * 0.004), 
+                    0.1 + (mouseDeltaX * 0.004), 
+                    mouseDeltaX * 0.002
+                );
+            }
+
+            // 4. 배터리 소모 전력 정밀 처리
+            if (isFlashlightOn) {
+                // 전등을 켰을 때만 배터리가 줄어듦 (구출율 난이도 비례)
+                const drainRate = 0.05 + (score * 0.0015);
+                energy = Math.max(0, energy - drainRate);
+            }
+            uiEnergy.style.width = `${energy}%`;
+
+            if (energy <= 20) {
+                uiEnergy.classList.add('animate-pulse');
+                uiEnergy.style.background = '#ef4444'; // 위험 등급
+                // 전구 피뢰침 떨림 현상 깜빡임 연출
+                if (isFlashlightOn && flashlight && flashlightCone) {
+                    flashlight.intensity = (Math.random() > 0.08) ? 3.8 : 0.4;
+                    flashlightCone.material.opacity = (flashlight.intensity > 1) ? 0.08 : 0.01;
+                }
+            } else {
+                uiEnergy.classList.remove('animate-pulse');
+                uiEnergy.style.background = '';
+                if (isFlashlightOn && flashlight && flashlightCone) {
+                    flashlight.intensity = 3.8;
+                    flashlightCone.material.opacity = 0.08;
+                }
+            }
+
+            // 배터리 차단 전원 중지
+            if (energy <= 0 && isFlashlightOn) {
+                isFlashlightOn = false;
+                if (flashlight) flashlight.visible = false;
+                if (flashlightCone) flashlightCone.visible = false;
+                addLog("전지 수명이 완전 소멸되었습니다. 손전등이 고사했습니다.", false);
+                endGame();
+                return;
+            }
+
+            // 5. 중앙 등대 안전 기지 감지
+            const distToLighthouse = Math.hypot(player.x, player.z);
+            if (distToLighthouse < 18) {
+                if (cargoCount > 0) {
+                    score += cargoCount;
+                    uiScore.textContent = score;
+                    addLog(`[안전망 안착] 조난자 ${cargoCount}명을 무사히 이송 처리했습니다!`, true);
+                    
+                    const randQuote = unloadQuotes[Math.floor(Math.random() * unloadQuotes.length)];
+                    addLog(randQuote, true);
+
+                    cargoCount = 0;
+                    uiCargo.textContent = '0';
+                }
+                
+                // 등대 전원 공급망을 통한 고속 충전
+                if (energy < 100) {
+                    energy = Math.min(maxEnergy, energy + 1.5);
+                }
+            }
+
+            // 6. 스폰 타이머
+            spawnTimer += 1;
+            if (spawnTimer > 320) {
+                if (survivors.length < 5) spawnSurvivor();
+                spawnTimer = 0;
+            }
+
+            dewTimer += 1;
+            if (dewTimer > 250) {
+                if (dews.length < 10) spawnDew();
+                dewTimer = 0;
+            }
+
+            // 7. 표류자 수동 시선 유기성 감지 연산
+            for (let i = survivors.length - 1; i >= 0; i--) {
+                const s = survivors[i];
+                s.bobOffset += 0.024;
+                
+                s.mesh.position.y = -0.9 + Math.sin(s.bobOffset) * 0.16;
+                s.mesh.rotation.z = Math.sin(s.bobOffset * 0.4) * 0.06;
+
+                const dx = s.x - player.x;
+                const dz = s.z - player.z;
+                const distToPlayer = Math.hypot(dx, dz);
+
+                // 빛 조사 적중 유효 내적값 연산
+                const vectorToSurvivor = new THREE.Vector3(dx, 0, dz).normalize();
+                const forwardVector = new THREE.Vector3(Math.sin(player.angle), 0, Math.cos(player.angle)).normalize();
+                const dot = forwardVector.dot(vectorToSurvivor);
+
+                const angleThreshold = Math.cos(flashlight ? flashlight.angle : Math.PI / 5.2); 
+                // 손전등이 켜져 있고 방향과 사거리 내에 도달했는지 확인
+                const isIlluminated = isFlashlightOn && flashlight && (dot > angleThreshold) && (distToPlayer < flashlight.distance);
+
+                if (isIlluminated) {
+                    s.fear = Math.max(0, s.fear - 0.45); // 진정
+                    // 배를 향해 부드럽게 헤엄쳐 다가옴
+                    s.x -= vectorToSurvivor.x * 0.035;
+                    s.z -= vectorToSurvivor.z * 0.035;
+                    s.mesh.position.set(s.x, s.mesh.position.y, s.z);
+                } else {
+                    // 전등이 꺼졌거나 비추지 않을 시 공포 가속
+                    s.fear = Math.min(100, s.fear + 0.16);
+                }
+
+                // 공포 수준 가시화
+                const tubeMesh = s.mesh.children[0];
+                tubeMesh.material.color.setHSL(0.08 * (1 - s.fear / 100), 1, 0.45);
+
+                // 구출 수거 탑승
+                if (distToPlayer < 4.8) {
+                    if (cargoCount < cargoMax) {
+                        cargoCount++;
+                        uiCargo.textContent = cargoCount;
+
+                        const rQuote = rescueQuotes[Math.floor(Math.random() * rescueQuotes.length)];
+                        addLog(`[임시 구조] ${s.age}세 ${s.gender} 조난자를 탑승시켰습니다.`, true);
+                        addLog(rQuote, true);
+
+                        scene.remove(s.mesh);
+                        survivors.splice(i, 1);
+                        continue;
+                    } else {
+                        addLog("보트 탑승 인원 만선! 더 이상 수용 공간이 없습니다.", false);
+                    }
+                }
+
+                // 고립 사망
+                if (s.fear >= 100) {
+                    addLog(`${s.age}세 ${s.gender} 조난자가 어둠의 냉기를 이기지 못하고 깊게 가라앉았습니다...`, false);
+                    scene.remove(s.mesh);
+                    survivors.splice(i, 1);
+                }
+            }
+
+            // 8. 전지 에너지 원소들 유도 결속
+            for (let i = dews.length - 1; i >= 0; i--) {
+                const dew = dews[i];
+                dew.pulse += 0.045;
+                dew.mesh.position.y = 0.6 + Math.sin(dew.pulse) * 0.12;
+
+                const distToPlayer = Math.hypot(dew.x - player.x, dew.z - player.z);
+                
+                // 손전등이 켜져 있을 때 일정 거리에 있으면 빨려 들어오는 흡입식 자기력 구현
+                if (distToPlayer < 14) {
+                    const angle = Math.atan2(player.x - dew.x, player.z - dew.z);
+                    dew.x += Math.sin(angle) * 0.35;
+                    dew.z += Math.cos(angle) * 0.35;
+                    dew.mesh.position.set(dew.x, dew.mesh.position.y, dew.z);
+                }
+
+                // 습득
+                if (distToPlayer < 3.2) {
+                    energy = Math.min(maxEnergy, energy + 20);
+                    addLog("빛의 이슬 수집. 손전등 배터리 +20% 충전", true);
+                    
+                    scene.remove(dew.mesh);
+                    dews.splice(i, 1);
+                }
+            }
+
+            // 등대 광원 회전 연출
+            if (lighthouseBeacon) {
+                lighthouseBeacon.rotation.y += 0.004;
+            }
+
+            // 렌더 프레임 출력
+            renderer.render(scene, camera);
+        }
+
+        // --- 게임의 구조적 통제 시스템 ---
+        function startGame() {
+            gameState = 'playing';
+            score = 0;
+            cargoCount = 0;
+            energy = 100;
+            isFlashlightOn = true;
+            
+            uiScore.textContent = '0';
+            uiCargo.textContent = '0';
+            uiLog.innerHTML = '';
+
+            // 초기 설정 원복
+            switchIcon.textContent = "🔦";
+            if (flashlight) flashlight.visible = true;
+            if (flashlightCone) flashlightCone.visible = true;
+            flashlightToggleBtn.classList.remove('border-red-500/40');
+            flashlightToggleBtn.classList.add('border-yellow-500/40');
+
+            survivors.forEach(s => scene.remove(s.mesh));
+            dews.forEach(d => scene.remove(d.mesh));
+            survivors = [];
+            dews = [];
+
+            player.x = 0;
+            player.z = 45;
+            player.angle = Math.PI;
+            player.pitch = 0;
+            player.speed = 0;
+
+            modalScreen.classList.add('hidden');
+
+            // 기본 개체 선제 투입
+            for (let i = 0; i < 3; i++) spawnSurvivor();
+            for (let i = 0; i < 4; i++) spawnDew();
+
+            animate();
+            addLog("구조 일지가 시작되었습니다. 등불의 전력을 아끼며 사람들을 구하세요.", true);
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+
+            // 손전등 완전 정전 연출
+            isFlashlightOn = false;
+            if (flashlight) flashlight.visible = false;
+            if (flashlightCone) flashlightCone.visible = false;
+
+            modalTitle.textContent = "더 깊은 어둠 속으로";
+            modalTitle.className = "text-3xl md:text-5xl font-bold text-red-500 mb-4 tracking-widest drop-shadow-[0_0_20px_rgba(239,68,68,0.4)]";
+            modalDesc.innerHTML = "차가운 파도의 포효 속에 마침내 보트의 전원이 완전히 끊겨 암전되었습니다.<br>비록 더 어두워졌으나 당신이 비춘 잔불은 바다 위 생명의 이정표가 될 것입니다.";
+            
+            modalRules.classList.add('hidden');
+            modalStats.classList.remove('hidden');
+            finalScore.textContent = `${score}명`;
+
+            const randQuote = gameOverQuotes[Math.floor(Math.random() * gameOverQuotes.length)];
+            statQuote.textContent = `"${randQuote}"`;
+            
+            startBtn.textContent = "다시 등불 수색하기";
+            modalScreen.classList.remove('hidden');
+        }
+
+        window.onload = function() {
+            init3D();
+            renderer.render(scene, camera);
+        };
+
+        startBtn.addEventListener('click', startGame);
+
+    </script>
+</body>
+</html>

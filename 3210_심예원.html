@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야간 안전 강화 및 가로등 추가 설치 시뮬레이션 게임</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Pretendard', sans-serif;
+        }
+        canvas {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-yellow-500 selection:text-slate-950">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-yellow-500 text-slate-950 p-1.5 rounded-lg">
+                    <i data-lucide="lightbulb" class="w-5 h-5 animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-md md:text-lg font-extrabold tracking-tight">빛나는 거리 (Luminous Street)</h1>
+                    <p class="text-xs text-slate-400">야간 안전 가로등 설치 제안 시뮬레이터</p>
+                </div>
+            </div>
+            <button id="btn-info" class="text-slate-400 hover:text-white transition p-1">
+                <i data-lucide="info" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 flex flex-col gap-4">
+        
+        <!-- Game Stats & Controls -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+                <div class="p-2 bg-yellow-500/10 rounded-lg text-yellow-500">
+                    <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">설치된 가로등</div>
+                    <div id="stat-lights" class="text-lg font-bold">0 / 6</div>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
+                    <i data-lucide="heart" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">안심 시민 수</div>
+                    <div id="stat-citizens" class="text-lg font-bold">0 명</div>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+                <div class="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">야간 사고 위험도</div>
+                    <div id="stat-danger" class="text-lg font-bold text-red-400">위험 (100%)</div>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+                <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                    <i data-lucide="award" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">확보된 안전 예산</div>
+                    <div id="stat-budget" class="text-lg font-bold text-blue-400">0G</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Screen -->
+        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex-grow flex flex-col justify-center items-center min-h-[350px] md:min-h-[450px]">
+            <!-- Canvas Game Area -->
+            <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+            <!-- Pre-game / Start Screen -->
+            <div id="start-screen" class="absolute inset-0 bg-slate-950/95 flex flex-col justify-center items-center p-6 text-center z-20">
+                <div class="mb-4 bg-yellow-500 text-slate-950 p-4 rounded-full animate-bounce">
+                    <i data-lucide="shield-alert" class="w-12 h-12"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-black mb-2 text-yellow-400">어두운 밤거리 안전 지키기</h2>
+                <p class="text-sm md:text-base text-slate-300 max-w-md mb-6 leading-relaxed">
+                    조명이 부족해 어둡고 위험한 밤거리입니다. <br>
+                    안전 예산(골드)을 모아 <strong class="text-yellow-400">가로등을 추가 설치</strong>하고 시민들을 위협하는 야간 위험 요소를 제거해 안전한 도시를 만드세요!
+                </p>
+                <button id="btn-start" class="px-8 py-3.5 bg-yellow-500 text-slate-950 font-extrabold rounded-xl shadow-lg hover:bg-yellow-400 active:scale-95 transition-all text-lg flex items-center gap-2">
+                    도시 순찰 및 설치 시작 <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                </button>
+            </div>
+
+            <!-- Game Over / Victory Screen -->
+            <div id="end-screen" class="absolute inset-0 bg-slate-950/95 flex flex-col justify-center items-center p-6 text-center z-20 hidden">
+                <div id="end-icon-container" class="mb-4 p-4 rounded-full text-slate-950">
+                    <!-- Icon will be set dynamically -->
+                </div>
+                <h2 id="end-title" class="text-2xl md:text-3xl font-black mb-2"></h2>
+                <p id="end-desc" class="text-sm md:text-base text-slate-300 max-w-md mb-6 leading-relaxed"></p>
+                <div class="flex gap-3">
+                    <button id="btn-restart" class="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl border border-slate-700 hover:bg-slate-700 transition flex items-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> 다시 도전하기
+                    </button>
+                    <button id="btn-proposal" class="px-6 py-3 bg-yellow-500 text-slate-950 font-extrabold rounded-xl hover:bg-yellow-400 transition flex items-center gap-2">
+                        제안서 요약 보기 <i data-lucide="file-text" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Helper (Mobile friendly) -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="text-xs text-slate-400 text-center md:text-left">
+                <span class="font-bold text-white"><i data-lucide="mouse-pointer" class="inline w-3.5 h-3.5 mr-1 text-yellow-500"></i> 조작법:</span> 
+                화면을 터치하거나 마우스를 움직여 <span class="text-yellow-400 font-semibold">보안관(노란 원)</span>을 이동시키세요. <br class="hidden md:block">
+                어둠 속의 <span class="text-blue-400 font-semibold">시민들(파란 원)</span>에게 다가가 구조하고, <span class="text-red-400 font-semibold">위험 차량/위험물(빨간 원)</span>을 피하세요.
+            </div>
+            
+            <button id="btn-buy-light" class="w-full md:w-auto px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> 
+                가로등 추가 설치 (비용: <span id="light-cost">10</span>G)
+            </button>
+        </div>
+        
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 px-4 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto">
+            © 2026 야간 안전 솔루션 - 가로등 확충 사업 제안 캠페인
+        </div>
+    </footer>
+
+    <!-- Info / Proposal Modal -->
+    <div id="modal-info" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex justify-center items-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 relative max-h-[85vh] overflow-y-auto">
+            <button id="btn-modal-close" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="flex items-center gap-2 mb-4">
+                <i data-lucide="shield-check" class="w-6 h-6 text-yellow-500"></i>
+                <h3 class="text-xl font-bold">야간 안전 강화 제안서 요약</h3>
+            </div>
+            <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+                <div class="border-l-4 border-yellow-500 pl-3">
+                    <h4 class="font-bold text-white text-base">왜 가로등이 필요한가요?</h4>
+                    <p class="mt-1">야간 보행자 교통사고 및 범죄 발생률은 가로등과 보안등의 밀집도와 직접적인 상관관계가 있습니다. 어두운 거리는 운전자의 시야를 제한하고 보행자의 불안감을 고조시킵니다.</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-3">
+                    <h4 class="font-bold text-white text-base">제안하는 핵심 해결책</h4>
+                    <ul class="list-disc list-inside mt-1 space-y-1">
+                        <li><strong>스마트 센서 가로등:</strong> 사람이나 차량의 움직임을 감지하여 자동 밝기 조절</li>
+                        <li><strong>사고 다발 지역 집중 설치:</strong> 골목길, 교차로, 횡단보도 집중 조명 배치</li>
+                        <li><strong>조도(밝기) 균일화:</strong> 어두운 음영 구역(블라인드 스폿) 제로화</li>
+                    </ul>
+                </div>
+                <div class="border-l-4 border-emerald-500 pl-3">
+                    <h4 class="font-bold text-white text-base">기대 효과</h4>
+                    <p class="mt-1">가로등 설치 시 야간 범죄율 평균 16% 이상 감소, 야간 교통사고 발생률 최대 30% 감소 효과가 입증되었습니다. 밝고 안전한 도시는 야간 보행 권리를 보장합니다.</p>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <button id="btn-modal-start" class="px-6 py-2.5 bg-yellow-500 text-slate-950 font-bold rounded-lg hover:bg-yellow-400 transition w-full">
+                    게임으로 체험하러 가기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Section -->
+    <script>
+        // Lucide Icons Initialization
+        lucide.createIcons();
+
+        // Canvas Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Responsive Canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game Configuration & State
+        const CONFIG = {
+            maxLights: 6,
+            lightCost: 10,
+            citizenSpawnInterval: 120, // frames
+            dangerSpawnInterval: 180,  // frames
+            safetyRadiusBase: 50
+        };
+
+        let state = {
+            isRunning: false,
+            score: 0, // Citizens rescued
+            budget: 0, // Budget gold
+            lightsCount: 0,
+            dangerPercent: 100,
+            player: {
+                x: 0,
+                y: 0,
+                radius: 12,
+                speed: 4,
+                targetX: 0,
+                targetY: 0
+            },
+            citizens: [],
+            dangers: [],
+            particles: [],
+            // Preset coordinates for streetlights to be built in the map
+            fixedLights: [],
+            frameCount: 0
+        };
+
+        // Initialize Fixed Streetlight Locations based on Canvas Size
+        function initFixedLights() {
+            state.fixedLights = [
+                { x: canvas.width * 0.15, y: canvas.height * 0.25, active: false, radius: 100 },
+                { x: canvas.width * 0.5,  y: canvas.height * 0.18, active: false, radius: 110 },
+                { x: canvas.width * 0.85, y: canvas.height * 0.3,  active: false, radius: 100 },
+                { x: canvas.width * 0.2,  y: canvas.height * 0.75, active: false, radius: 110 },
+                { x: canvas.width * 0.55, y: canvas.height * 0.82, active: false, radius: 120 },
+                { x: canvas.width * 0.8,  y: canvas.height * 0.7,  active: false, radius: 105 }
+            ];
+        }
+
+        // Custom particles for visual effects
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.03 + 0.01;
+                this.radius = Math.random() * 3 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Spawn Functions
+        function spawnCitizen() {
+            const margin = 20;
+            const x = Math.random() * (canvas.width - margin * 2) + margin;
+            const y = Math.random() * (canvas.height - margin * 2) + margin;
+            
+            // Do not spawn too close to the player
+            const dist = Math.hypot(x - state.player.x, y - state.player.y);
+            if (dist < 80) return;
+
+            state.citizens.push({
+                x: x,
+                y: y,
+                radius: 8,
+                pulse: 0
+            });
+        }
+
+        function spawnDanger() {
+            const margin = 20;
+            // Spawns from borders and moves across
+            const side = Math.floor(Math.random() * 4);
+            let x, y, vx, vy;
+            const speed = Math.random() * 1.5 + 0.8 + (1.5 * (1 - (state.lightsCount / CONFIG.maxLights))); // slower if bright
+
+            if (side === 0) { // Top
+                x = Math.random() * canvas.width;
+                y = -10;
+                vx = (Math.random() - 0.5) * 2;
+                vy = speed;
+            } else if (side === 1) { // Right
+                x = canvas.width + 10;
+                y = Math.random() * canvas.height;
+                vx = -speed;
+                vy = (Math.random() - 0.5) * 2;
+            } else if (side === 2) { // Bottom
+                x = Math.random() * canvas.width;
+                y = canvas.height + 10;
+                vx = (Math.random() - 0.5) * 2;
+                vy = -speed;
+            } else { // Left
+                x = -10;
+                y = Math.random() * canvas.height;
+                vx = speed;
+                vy = (Math.random() - 0.5) * 2;
+            }
+
+            state.dangers.push({
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                radius: 12,
+                type: Math.random() > 0.5 ? 'vehicle' : 'pothole' // Vehicle moves, pothole stays/moves slow
+            });
+        }
+
+        // Event Listeners for Movement
+        function updateTargetPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            state.player.targetX = clientX - rect.left;
+            state.player.targetY = clientY - rect.top;
+        }
+
+        canvas.addEventListener('mousemove', updateTargetPos);
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            updateTargetPos(e);
+        }, { passive: false });
+
+        canvas.addEventListener('touchstart', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            state.player.targetX = e.touches[0].clientX - rect.left;
+            state.player.targetY = e.touches[0].clientY - rect.top;
+            // Set position immediately on start to avoid jumping across screen
+            if (!state.isRunning) return;
+            state.player.x = state.player.targetX;
+            state.player.y = state.player.targetY;
+        }, { passive: true });
+
+        // Buy Streetlight Button
+        const btnBuyLight = document.getElementById('btn-buy-light');
+        btnBuyLight.addEventListener('click', buyStreetlight);
+
+        function buyStreetlight() {
+            if (state.budget < CONFIG.lightCost) return;
+            
+            // Find the first inactive streetlight and activate it
+            const inactiveLight = state.fixedLights.find(l => !l.active);
+            if (inactiveLight) {
+                inactiveLight.active = true;
+                state.lightsCount++;
+                state.budget -= CONFIG.lightCost;
+                
+                // Explode particles at the new light position
+                for (let i = 0; i < 30; i++) {
+                    state.particles.push(new Particle(inactiveLight.x, inactiveLight.y, '#F59E0B'));
+                }
+
+                // Smoothly adjust Danger Index
+                state.dangerPercent = Math.max(0, 100 - Math.floor((state.lightsCount / CONFIG.maxLights) * 100));
+
+                updateUI();
+                checkVictory();
+            }
+        }
+
+        // Check if point is inside any active streetlight's beam
+        function isPointInLight(x, y) {
+            // Player provides a tiny localized personal light
+            const distToPlayer = Math.hypot(x - state.player.x, y - state.player.y);
+            if (distToPlayer < 65) return true;
+
+            // Check all active streetlights
+            for (const light of state.fixedLights) {
+                if (light.active) {
+                    const dist = Math.hypot(x - light.x, y - light.y);
+                    if (dist < light.radius) return true;
+                }
+            }
+            return false;
+        }
+
+        // Game Update Logic
+        function update() {
+            if (!state.isRunning) return;
+
+            state.frameCount++;
+
+            // 1. Move Player towards target
+            const dx = state.player.targetX - state.player.x;
+            const dy = state.player.targetY - state.player.y;
+            const dist = Math.hypot(dx, dy);
+            
+            if (dist > 2) {
+                state.player.x += (dx / dist) * state.player.speed;
+                state.player.y += (dy / dist) * state.player.speed;
+            }
+
+            // Keep player inside canvas boundary
+            state.player.x = Math.max(state.player.radius, Math.min(canvas.width - state.player.radius, state.player.x));
+            state.player.y = Math.max(state.player.radius, Math.min(canvas.height - state.player.radius, state.player.y));
+
+            // 2. Spawn elements
+            if (state.frameCount % CONFIG.citizenSpawnInterval === 0 && state.citizens.length < 5) {
+                spawnCitizen();
+            }
+            // Spawn danger based on how dark it is (more streetlights = fewer dangers spawn)
+            const adjustedDangerInterval = CONFIG.dangerSpawnInterval + (state.lightsCount * 45);
+            if (state.frameCount % Math.floor(adjustedDangerInterval) === 0 && state.dangers.length < 8) {
+                spawnDanger();
+            }
+
+            // 3. Update Citizens (pulse effect)
+            state.citizens.forEach(c => {
+                c.pulse += 0.05;
+            });
+
+            // 4. Update Dangers (movement)
+            state.dangers.forEach(d => {
+                d.x += d.vx;
+                d.y += d.vy;
+            });
+
+            // Remove out-of-bounds dangers
+            state.dangers = state.dangers.filter(d => {
+                return (d.x > -50 && d.x < canvas.width + 50 && d.y > -50 && d.y < canvas.height + 50);
+            });
+
+            // 5. Update Particles
+            state.particles.forEach(p => p.update());
+            state.particles = state.particles.filter(p => p.alpha > 0);
+
+            // 6. Handle Collisions
+            // Player & Citizen Collision (Rescue / Secure)
+            state.citizens = state.citizens.filter(c => {
+                const dist = Math.hypot(c.x - state.player.x, c.y - state.player.y);
+                if (dist < state.player.radius + c.radius) {
+                    state.score++;
+                    state.budget += 5; // Yield budget to install lights
+                    
+                    // Score particle effect
+                    for (let i = 0; i < 12; i++) {
+                        state.particles.push(new Particle(c.x, c.y, '#3B82F6'));
+                    }
+                    
+                    updateUI();
+                    return false; // Remove citizen
+                }
+                return true;
+            });
+
+            // Player & Danger Collision (Accident / Crash)
+            state.dangers.forEach(d => {
+                const dist = Math.hypot(d.x - state.player.x, d.y - state.player.y);
+                
+                // CRUCIAL: Accidents are highly likely to happen in 어두운 사각지대 (dark spots)
+                // If danger hits player in a lit zone, we might evade it more easily or represent safety.
+                // In game mechanics, if player is in dark zone, the danger hitbox is slightly wider representing "blind spots".
+                const inLight = isPointInLight(d.x, d.y);
+                const collisionThreshold = inLight 
+                    ? (state.player.radius + d.radius - 3) 
+                    : (state.player.radius + d.radius + 4); // Bigger hit box in dark for "lack of reaction time"
+
+                if (dist < collisionThreshold) {
+                    endGame(false); // Lost due to night accident
+                }
+            });
+        }
+
+        // Render Game
+        function draw() {
+            // Clear Frame with Dark Midnight color
+            ctx.fillStyle = '#020617'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background Street grid
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw Streetlight Beams (Visualizing Safe zones)
+            state.fixedLights.forEach(light => {
+                // Base Pole
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(light.x - 3, light.y - 12, 6, 12);
+                ctx.fillStyle = '#64748b';
+                ctx.beginPath();
+                ctx.arc(light.x, light.y - 12, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (light.active) {
+                    // Draw Golden Ambient Light Cones
+                    const gradient = ctx.createRadialGradient(light.x, light.y, 5, light.x, light.y, light.radius);
+                    gradient.addColorStop(0, 'rgba(253, 224, 71, 0.35)'); // Bright center
+                    gradient.addColorStop(0.5, 'rgba(234, 179, 8, 0.15)'); // Soft glow
+                    gradient.addColorStop(1, 'rgba(253, 224, 71, 0)'); // Fades out
+
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(light.x, light.y, light.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Active bulb glow
+                    ctx.fillStyle = '#FBBF24';
+                    ctx.beginPath();
+                    ctx.arc(light.x, light.y - 12, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Inactive red indicator
+                    ctx.fillStyle = '#EF4444';
+                    ctx.beginPath();
+                    ctx.arc(light.x, light.y - 12, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Text helper over the light indicating it can be active
+                    ctx.fillStyle = '#475569';
+                    ctx.font = '10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('미설치 구역', light.x, light.y + 12);
+                }
+            });
+
+            // Draw Player's Personal Lantern Cone
+            const playerGrad = ctx.createRadialGradient(state.player.x, state.player.y, 2, state.player.x, state.player.y, 65);
+            playerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            playerGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = playerGrad;
+            ctx.beginPath();
+            ctx.arc(state.player.x, state.player.y, 65, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Citizens (Visible if inside light or near player)
+            state.citizens.forEach(c => {
+                const inLight = isPointInLight(c.x, c.y);
+                
+                if (inLight) {
+                    // Pulse Ring
+                    ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.radius + Math.sin(c.pulse) * 4, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Body
+                    ctx.fillStyle = '#3B82F6';
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Safety Indicator
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 9px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('시민', c.x, c.y - 12);
+                } else {
+                    // Silhouetted, highly unnoticeable (Representing the danger of darkness)
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Barely visible help text
+                    ctx.fillStyle = '#475569';
+                    ctx.font = '9px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('어둠 속 시민', c.x, c.y - 12);
+                }
+            });
+
+            // Draw Dangers (Vehicles/Hazards)
+            state.dangers.forEach(d => {
+                const inLight = isPointInLight(d.x, d.y);
+
+                if (inLight) {
+                    // Clearly visible hazard
+                    ctx.fillStyle = '#EF4444';
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Alert ring
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.radius + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Warning sign
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('위험!', d.x, d.y - 15);
+                } else {
+                    // Darkness makes hazards extremely hard to see (danger!)
+                    ctx.fillStyle = '#3f1111'; // Dark red
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#2d0606';
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Barely visible "hazard" hint
+                    ctx.fillStyle = '#5c1d1d';
+                    ctx.font = '9px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⚠️', d.x, d.y - 15);
+                }
+            });
+
+            // Draw Particles
+            state.particles.forEach(p => p.draw());
+
+            // Draw Player (Night Guardian)
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FBBF24';
+            ctx.fillStyle = '#F59E0B';
+            ctx.beginPath();
+            ctx.arc(state.player.x, state.player.y, state.player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset shadow
+
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(state.player.x, state.player.y, state.player.radius + 2, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Label for safety officer
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('안전요원', state.player.x, state.player.y - 18);
+        }
+
+        // Main Loop
+        function loop() {
+            update();
+            draw();
+            if (state.isRunning) {
+                requestAnimationFrame(loop);
+            }
+        }
+
+        // Update Dashboard Data
+        function updateUI() {
+            document.getElementById('stat-lights').innerText = `${state.lightsCount} / ${CONFIG.maxLights}`;
+            document.getElementById('stat-citizens').innerText = `${state.score} 명`;
+            document.getElementById('stat-budget').innerText = `${state.budget}G`;
+            
+            const dangerEl = document.getElementById('stat-danger');
+            dangerEl.innerText = `${state.dangerPercent}%`;
+            
+            // Text color coding for Danger Levels
+            if (state.dangerPercent > 70) {
+                dangerEl.className = 'text-lg font-bold text-red-500';
+            } else if (state.dangerPercent > 30) {
+                dangerEl.className = 'text-lg font-bold text-amber-500';
+            } else {
+                dangerEl.className = 'text-lg font-bold text-emerald-500';
+            }
+
+            // Button cost state
+            btnBuyLight.disabled = state.budget < CONFIG.lightCost || state.lightsCount >= CONFIG.maxLights;
+            if (state.lightsCount >= CONFIG.maxLights) {
+                btnBuyLight.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i> 설치 완료!`;
+            } else {
+                btnBuyLight.innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5"></i> 가로등 추가 설치 (비용: <span id="light-cost">${CONFIG.lightCost}</span>G)`;
+            }
+            lucide.createIcons();
+        }
+
+        // Check for Game Victory
+        function checkVictory() {
+            if (state.lightsCount >= CONFIG.maxLights) {
+                endGame(true);
+            }
+        }
+
+        // Start Game
+        const btnStart = document.getElementById('btn-start');
+        btnStart.addEventListener('click', startGame);
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            
+            // Reset state
+            state.isRunning = true;
+            state.score = 0;
+            state.budget = 0;
+            state.lightsCount = 0;
+            state.dangerPercent = 100;
+            state.citizens = [];
+            state.dangers = [];
+            state.particles = [];
+            state.frameCount = 0;
+
+            // Align player to center
+            state.player.x = canvas.width / 2;
+            state.player.y = canvas.height / 2;
+            state.player.targetX = canvas.width / 2;
+            state.player.targetY = canvas.height / 2;
+
+            initFixedLights();
+            updateUI();
+            loop();
+        }
+
+        // End Game
+        function endGame(isVictory) {
+            state.isRunning = false;
+
+            const endScreen = document.getElementById('end-screen');
+            const iconContainer = document.getElementById('end-icon-container');
+            const endTitle = document.getElementById('end-title');
+            const endDesc = document.getElementById('end-desc');
+
+            endScreen.classList.remove('hidden');
+
+            if (isVictory) {
+                iconContainer.className = "mb-4 p-4 rounded-full bg-emerald-500 text-slate-950 animate-bounce";
+                iconContainer.innerHTML = `<i data-lucide="party-popper" class="w-12 h-12"></i>`;
+                endTitle.className = "text-2xl md:text-3xl font-black mb-2 text-emerald-400";
+                endTitle.innerText = "축하합니다! 밤거리가 완벽히 밝아졌습니다!";
+                endDesc.innerHTML = `모든 구역에 <strong>가로등 추가 설치가 완료</strong>되었습니다.<br>시민들이 야간 사각지대 걱정 없이 걸을 수 있으며, <br>야간 위협이 줄어들어 도시 위험도가 <span class="text-emerald-400 font-bold">0%</span>가 되었습니다!`;
+            } else {
+                iconContainer.className = "mb-4 p-4 rounded-full bg-red-500 text-slate-950 animate-pulse";
+                iconContainer.innerHTML = `<i data-lucide="shield-alert" class="w-12 h-12"></i>`;
+                endTitle.className = "text-2xl md:text-3xl font-black mb-2 text-red-500";
+                endTitle.innerText = "야간 도로 안전사고 발생!";
+                endDesc.innerHTML = `어두운 사각지대에서 돌발적인 야간 위험 요소와 부딪혔습니다. <br>가로등이 부족할수록 조도 확보가 안 되어 사고 대처가 힘들어집니다. <br><span class="text-yellow-400 font-bold">예산(골드)을 부지런히 모아 즉시 가로등을 세우세요!</span>`;
+            }
+            lucide.createIcons();
+        }
+
+        // Restart Trigger
+        document.getElementById('btn-restart').addEventListener('click', startGame);
+
+        // Modal triggers
+        const modal = document.getElementById('modal-info');
+        const btnInfo = document.getElementById('btn-info');
+        const btnModalClose = document.getElementById('btn-modal-close');
+        const btnModalStart = document.getElementById('btn-modal-start');
+        const btnProposal = document.getElementById('btn-proposal');
+
+        btnInfo.addEventListener('click', () => modal.classList.remove('hidden'));
+        btnModalClose.addEventListener('click', () => modal.classList.add('hidden'));
+        btnModalStart.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            startGame();
+        });
+        btnProposal.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        // Initialize empty field to start
+        initFixedLights();
+        draw();
+    </script>
+</body>
+</html>

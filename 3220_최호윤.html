@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>집으로 가는 길, 가장 따뜻한 보디가드</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Noto Sans KR, Gowun Batang) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .fancy-title {
+            font-family: 'Gowun Batang', serif;
+        }
+        /* 조명 갓 및 오버레이 효과 */
+        .darkness-overlay {
+            transition: background 1s ease;
+        }
+        /* 태양광 바닥 조명 애니메이션 효과 */
+        .solar-light-glow {
+            box-shadow: 0 0 15px 5px rgba(253, 224, 71, 0.6);
+            animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.15); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- 상단 네비게이션 헤더 -->
+    <header class="border-b border-gray-800 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-yellow-400 text-gray-900 p-2 rounded-full flex items-center justify-center w-10 h-10">
+                    <i class="fa-solid fa-lightbulb text-xl animate-bounce"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-yellow-400">안심 귀갓길 만들기 캠페인</h1>
+                    <p class="text-xs text-gray-400">집으로 가는 길, 가장 따뜻한 보디가드</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs bg-gray-800 text-gray-300 px-3 py-1 rounded-full">공익 체험형 시뮬레이션</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- 왼쪽: 게임 스크린 & 대화상자 -->
+        <div class="flex-grow lg:w-2/3 flex flex-col gap-4">
+            <!-- 캠페인 소개 카드 -->
+            <div class="bg-gray-900/50 border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="text-xs text-yellow-400 font-semibold uppercase tracking-wider">Campaign Mission</div>
+                    <h2 class="text-xl font-bold fancy-title text-white">어두운 시골길에 보دي가드를 선물해 주세요!</h2>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        가로등이 없어 어둡고 울퉁불퉁한 시골길. 돌부리 <strong class="text-orange-400">낙상 위험</strong>과 <strong class="text-red-400">물웅덩이</strong>가 보행자를 위협합니다. <br>
+                        <strong class="text-yellow-300">바닥 조명</strong>과 <strong class="text-cyan-300">로고젝터</strong>를 켜서 안전하게 귀가시켜 주세요!
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="resetGame()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-sm transition font-medium flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> 다시 하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 메인 게임 보드 -->
+            <div id="game-container" class="relative w-full h-[450px] bg-slate-950 rounded-3xl overflow-hidden border-2 border-gray-800 shadow-2xl flex flex-col justify-end">
+                
+                <!-- 밤하늘 배경 데코 (달, 별) -->
+                <div class="absolute top-8 left-12 text-yellow-100 opacity-80 z-0 flex items-center gap-2">
+                    <i class="fa-solid fa-moon text-4xl text-yellow-200"></i>
+                    <span class="text-xs font-semibold text-yellow-100/50">시골길의 밤 (PM 10:00)</span>
+                </div>
+                <div class="absolute top-16 right-20 text-white/20 text-xs z-0 space-y-1">
+                    <div>★</div>
+                    <div class="translate-x-4">★</div>
+                </div>
+
+                <!-- [화면 직접 클릭 핫스팟 1] 태양광 바닥 조명 제어 버튼 -->
+                <button id="screen-solar-btn" onclick="toggleSolarLight()" class="absolute bottom-28 left-1/4 -translate-x-1/2 z-40 bg-slate-900/95 hover:bg-yellow-500 hover:text-slate-950 text-yellow-400 border border-yellow-500/50 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.5)] cursor-pointer group">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span id="screen-solar-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span id="screen-solar-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+                    </span>
+                    <span id="screen-solar-text">바닥 조명 설치하기</span>
+                </button>
+
+                <!-- [화면 직접 클릭 핫스팟 2] 안심 로고젝터 제어 버튼 -->
+                <button id="screen-logojector-btn" onclick="toggleLogojector()" class="absolute top-28 right-1/3 translate-x-1/2 z-40 bg-slate-900/95 hover:bg-cyan-500 hover:text-slate-950 text-cyan-400 border border-cyan-500/50 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.5)] cursor-pointer group">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span id="screen-logo-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span id="screen-logo-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                    </span>
+                    <span id="screen-logojector-text">안심 로고젝터 설치하기</span>
+                </button>
+
+                <!-- 전체 화면 어두움 오버레이 (조명이 켜질수록 투명해짐) -->
+                <div id="darkness-overlay" class="absolute inset-0 bg-black/85 z-10 pointer-events-none transition-all duration-1000"></div>
+
+                <!-- [조명 효과 1] 태양광 바닥 조명 (길을 따라 켜지는 LED 점등) -->
+                <div id="solar-lights-group" class="absolute bottom-16 left-0 right-0 h-8 z-20 flex justify-around px-8 opacity-0 transition-opacity duration-1000 pointer-events-none">
+                    <!-- 점점이 켜지는 솔라 블록들 -->
+                    <div class="w-4 h-4 bg-yellow-300 rounded-full solar-light-glow"></div>
+                    <div class="w-4 h-4 bg-yellow-300 rounded-full solar-light-glow delay-100"></div>
+                    <div class="w-4 h-4 bg-yellow-300 rounded-full solar-light-glow delay-200"></div>
+                    <div class="w-4 h-4 bg-yellow-300 rounded-full solar-light-glow delay-300"></div>
+                    <div class="w-4 h-4 bg-yellow-300 rounded-full solar-light-glow delay-505"></div>
+                </div>
+
+                <!-- [조명 효과 2] LED 안심 로고젝터 (바닥에 안심 메시지 투사) -->
+                <div id="logojector-light" class="absolute bottom-6 left-1/2 -translate-x-1/2 w-64 h-24 bg-cyan-500/20 rounded-full filter blur-md opacity-0 transition-opacity duration-700 z-20 pointer-events-none flex items-center justify-center"></div>
+                <div id="logojector-text" class="absolute bottom-10 left-1/2 -translate-x-1/2 text-center text-cyan-200 opacity-0 transition-all duration-700 z-20 pointer-events-none font-bold fancy-title text-sm tracking-widest leading-tight">
+                    <i class="fa-solid fa-shield-halved mr-1 text-cyan-300"></i> 안심하고 걸으세요 <br>
+                    <span class="text-xs text-cyan-300 font-normal">여기는 보디가드 안심 길목입니다</span>
+                </div>
+
+                <!-- 위험 요소 1: 바닥 돌부리 (낙상 위험) -->
+                <div id="fall-hazard" class="absolute bottom-12 left-1/3 z-20 transition-all duration-500 flex flex-col items-center">
+                    <!-- 낙상 경고창 -->
+                    <div id="fall-hazard-icon" class="w-10 h-10 bg-orange-600/90 text-white rounded-full flex items-center justify-center animate-bounce shadow-lg">
+                        <i class="fa-solid fa-person-falling"></i>
+                    </div>
+                    <span id="fall-hazard-label" class="bg-orange-950/90 text-orange-300 border border-orange-800 text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold">돌부리 낙상위험!</span>
+                </div>
+
+                <!-- 위험 요소 2: 길가 웅덩이/빙판 (경고판 표시) -->
+                <div id="obstacle-hazard" class="absolute bottom-12 right-1/3 z-20 transition-all duration-500 flex flex-col items-center">
+                    <!-- 위험할 땐 빨간 경고, 밝아지면 무력화 -->
+                    <div id="hazard-icon" class="w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center animate-bounce shadow-lg">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <span id="hazard-label" class="bg-red-950/90 text-red-300 border border-red-800 text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold">웅덩이 위험!</span>
+                </div>
+
+                <!-- 시골길 바닥 지형 (단순 그래픽) -->
+                <div class="w-full h-32 bg-gradient-to-t from-zinc-900 to-zinc-950 border-t border-zinc-800 z-5 flex items-end justify-between px-10 pb-2">
+                    <div class="text-zinc-700 text-xs"><i class="fa-solid fa-seedling"></i> 잡초지대</div>
+                    <div class="text-zinc-800 text-xs"><i class="fa-solid fa-mountain"></i> 논두렁 인근</div>
+                </div>
+
+                <!-- 캐릭터 (귀가하는 주민) -->
+                <div id="character" class="absolute bottom-10 left-10 z-30 transition-all duration-1000 ease-in-out flex flex-col items-center">
+                    <!-- 말풍선 -->
+                    <div id="character-bubble" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl mb-2 relative shadow-lg">
+                        <span id="bubble-text">너무 어두워서 발밑이 안 보여요... 무서워요.</span>
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-900"></div>
+                    </div>
+                    <!-- 아이콘 캐릭터 -->
+                    <div class="relative">
+                        <!-- 손전등 불빛 (기본적으로 매우 나약함) -->
+                        <div id="hand-flashlight" class="absolute top-4 left-4 w-12 h-8 bg-yellow-500/10 rounded-full filter blur-sm origin-left -rotate-12"></div>
+                        <div class="w-12 h-12 bg-indigo-600 rounded-full border-2 border-indigo-400 flex items-center justify-center text-white shadow-lg text-2xl">
+                            <i id="character-emoji" class="fa-solid fa-user-injured text-yellow-300 animate-pulse"></i>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-indigo-300 mt-1">안심이 (귀가 주민)</span>
+                </div>
+
+                <!-- 목적지 (우리집) -->
+                <div class="absolute bottom-12 right-8 z-30 flex flex-col items-center">
+                    <div class="relative">
+                        <!-- 집 창문 불빛 -->
+                        <div class="absolute top-2 left-3 w-4 h-3 bg-yellow-300/40 rounded-sm"></div>
+                        <i class="fa-solid fa-house-chimney text-5xl text-amber-800 drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"></i>
+                    </div>
+                    <span class="bg-amber-950/80 border border-amber-800 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold mt-1">스위트 홈</span>
+                </div>
+
+                <!-- 실시간 위험 알림 바 -->
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-sm bg-black/70 border border-gray-800 rounded-full px-4 py-2 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                        <span id="status-bar-text" class="text-gray-300">어둠 속에서 발을 헛디딜 수 있습니다!</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-gray-400">안심 지수:</span>
+                        <span id="safety-score" class="font-black text-red-400">10%</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 하단 인터랙티브 메시지 보드 -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 flex-shrink-0 text-xl">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <div class="text-xs md:text-sm text-gray-300 leading-relaxed">
+                    <span class="text-yellow-400 font-bold">미션 방법:</span> 게임 화면 안에 보이는 <strong class="text-yellow-300">노란색 설치 버튼</strong> 및 <strong class="text-cyan-300">하늘색 설치 버튼</strong>을 직접 클릭하거나, 우측 조작 제어 스위치들을 켜서 어둠을 밝혀주세요!
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 조작 스위치 및 설명 서적 -->
+        <div class="lg:w-1/3 flex flex-col gap-6">
+            
+            <!-- 조작 컨트롤러 -->
+            <div class="bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-toggle-on text-yellow-400"></i> 안심 시설 제어 시스템
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-1">스위치를 눌러 조명을 가동하세요.</p>
+                </div>
+
+                <hr class="border-gray-800">
+
+                <!-- 스위치 1: 태양광 바닥 조명 -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                                <i class="fa-solid fa-circle-dot text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">태양광 바닥 조명</h4>
+                                <p class="text-[11px] text-gray-400">낮에 충전하고 밤에 켜지는 바닥 점등</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 토글 버튼 -->
+                        <button id="btn-solar" onclick="toggleSolarLight()" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-gray-700">
+                            <span id="toggle-solar-span" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+                        </button>
+                    </div>
+                    <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-850 text-xs text-gray-400">
+                        <i class="fa-solid fa-circle-check text-yellow-500 mr-1"></i> 전기가 필요 없는 태양광 친환경 자가발전으로 시골 어두운 보행길 경계를 명확하게 표시해 줍니다.
+                    </div>
+                </div>
+
+                <!-- 스위치 2: LED 안심 로고젝터 -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400">
+                                <i class="fa-solid fa-lightbulb text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">LED 안심 로고젝터</h4>
+                                <p class="text-[11px] text-gray-400">바닥에 안전 문구와 이미지를 투사</p>
+                            </div>
+                        </div>
+
+                        <!-- 토글 버튼 -->
+                        <button id="btn-logojector" onclick="toggleLogojector()" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-gray-700">
+                            <span id="toggle-logojector-span" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+                        </button>
+                    </div>
+                    <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-850 text-xs text-gray-400">
+                        <i class="fa-solid fa-circle-check text-cyan-500 mr-1"></i> 밤길 범죄 예방을 위한 가시성 높은 따뜻한 격려 문구와 라이팅으로 범죄자에게 경각심을, 주민에겐 심리적 안정을 제공합니다.
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 왜 가로등/바닥 조명일까요? (공익 정보 카드) -->
+            <div class="bg-gradient-to-br from-indigo-950 to-purple-950 border border-indigo-900 rounded-3xl p-6 space-y-4">
+                <h4 class="text-sm font-bold text-indigo-300 tracking-wider uppercase">Why Solar & LED?</h4>
+                <div class="space-y-3 text-xs leading-relaxed text-indigo-200">
+                    <p class="border-l-2 border-indigo-500 pl-2">
+                        일반 가로등은 전선 가설이 까다로운 시골이나 좁은 골목길에 설치하기 어렵습니다. 
+                    </p>
+                    <p class="border-l-2 border-indigo-500 pl-2">
+                        <span class="text-yellow-300 font-bold">태양광 바닥 조명</span>은 간편한 매립으로 좁은 보도 경계를 선명하게 알려 보행 실족 사고를 방지합니다.
+                    </p>
+                    <p class="border-l-2 border-indigo-500 pl-2">
+                        <span class="text-cyan-300 font-bold">LED 안심 로고젝터</span>는 "누군가 당신의 길을 지켜주고 있다"는 강력한 시각적 안심 효과를 제공하여 야간 범죄율을 크게 저하시킵니다.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- 게임 클리어 모달 (안내창) -->
+    <div id="clear-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-yellow-500/50 rounded-3xl p-8 max-w-lg w-full text-center space-y-6 shadow-[0_0_50px_rgba(234,179,8,0.15)]">
+            <div class="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-400 mx-auto text-4xl animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-white fancy-title">안전한 귀갓길 만들기 성공!</h3>
+                <p class="text-sm text-yellow-400 font-semibold">"집으로 가는 길, 가장 따뜻한 보디가드"</p>
+                <p class="text-xs text-gray-400 pt-2 leading-relaxed">
+                    여러분들의 관심과 스마트 안심 조명 장비 덕분에 <br>어두컴컴하던 시골 골목길이 따뜻하고 안전하게 변화했습니다.
+                </p>
+            </div>
+
+            <!-- 성과 대시보드 -->
+            <div class="grid grid-cols-2 gap-3 bg-slate-950 p-4 rounded-2xl border border-gray-800 text-left">
+                <div class="space-y-1">
+                    <div class="text-[10px] text-gray-400 uppercase">보행자 상태</div>
+                    <div class="text-sm font-bold text-emerald-400 flex items-center gap-1">
+                        <i class="fa-solid fa-face-smile"></i> 무사고 안심 귀가
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <div class="text-[10px] text-gray-400 uppercase">위험 해소 항목</div>
+                    <div class="text-sm font-bold text-cyan-400 flex items-center gap-1">
+                        <i class="fa-solid fa-shield"></i> 바닥 장애물 / 야간 범죄
+                    </div>
+                </div>
+            </div>
+
+            <!-- 캠페인 동참 유도 메시지 -->
+            <div class="text-xs text-gray-300 bg-gray-800/50 p-3.5 rounded-xl border border-gray-800 leading-relaxed text-left">
+                💡 <strong>기억해 주세요!</strong> 태양광 바닥조명과 LED 안심 로고젝터는 밤길 시야를 200% 개선하고 골목길 심리 불안감을 75% 이상 낮추는 탁월한 공공 예방 안전 설비입니다. 우리 동네 치안 사각지대 개선에 많은 관심과 지지를 보내주세요!
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="resetGame()" class="flex-1 py-3 bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold rounded-xl transition duration-200">
+                    다시 플레이하기
+                </button>
+                <button onclick="closeModal()" class="px-5 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl transition duration-200">
+                    창 닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="bg-gray-950 text-gray-500 text-xs py-4 text-center border-t border-gray-900">
+        <div class="max-w-6xl mx-auto px-4 space-y-1">
+            <p>© 2026 안심 보디가드 밤길 보행 안전 캠페인. All rights reserved.</p>
+            <p>본 페이지는 시골·골목길 조명 시설 부족 문제를 널리 알리고 참여를 독려하기 위해 설계된 캠페인 자료입니다.</p>
+        </div>
+    </footer>
+
+    <!-- 게임 스크립트 로직 -->
+    <script>
+        // 게임 환경 변수
+        let isSolarOn = false;
+        let isLogojectorOn = false;
+        let safetyScore = 10;
+        let gameActive = true;
+        let characterPos = 10; // 캐릭터의 가로 위치 (percentage)
+        
+        // DOM 요소 단축변수
+        const darknessOverlay = document.getElementById('darkness-overlay');
+        const solarLightsGroup = document.getElementById('solar-lights-group');
+        const logojectorLight = document.getElementById('logojector-light');
+        const logojectorText = document.getElementById('logojector-text');
+        
+        const character = document.getElementById('character');
+        const bubbleText = document.getElementById('bubble-text');
+        const characterEmoji = document.getElementById('character-emoji');
+        const characterBubble = document.getElementById('character-bubble');
+        const safetyScoreEl = document.getElementById('safety-score');
+        const statusBarText = document.getElementById('status-bar-text');
+
+        // 사이드 스위치
+        const btnSolar = document.getElementById('btn-solar');
+        const toggleSolarSpan = document.getElementById('toggle-solar-span');
+        const btnLogojector = document.getElementById('btn-logojector');
+        const toggleLogojectorSpan = document.getElementById('toggle-logojector-span');
+
+        // 게임 스크린 내부 클릭 스위치
+        const screenSolarBtn = document.getElementById('screen-solar-btn');
+        const screenSolarText = document.getElementById('screen-solar-text');
+        const screenSolarPing = document.getElementById('screen-solar-ping');
+        const screenSolarDot = document.getElementById('screen-solar-dot');
+
+        const screenLogoBtn = document.getElementById('screen-logojector-btn');
+        const screenLogoText = document.getElementById('screen-logojector-text');
+        const screenLogoPing = document.getElementById('screen-logo-ping');
+        const screenLogoDot = document.getElementById('screen-logo-dot');
+
+        // 위험 요소들
+        const fallHazardIcon = document.getElementById('fall-hazard-icon');
+        const fallHazardLabel = document.getElementById('fall-hazard-label');
+
+        const hazardIcon = document.getElementById('hazard-icon');
+        const hazardLabel = document.getElementById('hazard-label');
+        const clearModal = document.getElementById('clear-modal');
+
+        // 캐릭터 이동 스케줄러 타이머
+        let walkInterval;
+
+        // 태양광 조명 제어
+        function toggleSolarLight() {
+            if (!gameActive) return;
+            isSolarOn = !isSolarOn;
+            
+            if (isSolarOn) {
+                // 우측 스위치 켜짐 상태로 변경
+                btnSolar.classList.remove('bg-gray-700');
+                btnSolar.classList.add('bg-yellow-500');
+                toggleSolarSpan.classList.remove('translate-x-0');
+                toggleSolarSpan.classList.add('translate-x-5');
+                solarLightsGroup.classList.remove('opacity-0');
+                solarLightsGroup.classList.add('opacity-100');
+
+                // 스크린 내 버튼 활성화 비주얼 변경
+                screenSolarBtn.classList.remove('bg-slate-900/95', 'text-yellow-400', 'border-yellow-500/50', 'hover:bg-yellow-500', 'hover:text-slate-950');
+                screenSolarBtn.classList.add('bg-yellow-500', 'text-slate-950', 'border-yellow-400');
+                screenSolarText.innerText = "바닥 조명 작동 중 (끄기)";
+                screenSolarPing.classList.add('hidden'); // 불이 켜지면 잔잔히 유지하도록 핑 제거
+                screenSolarDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-950";
+            } else {
+                // 우측 스위치 꺼짐 상태로 변경
+                btnSolar.classList.remove('bg-yellow-500');
+                btnSolar.classList.add('bg-gray-700');
+                toggleSolarSpan.classList.remove('translate-x-5');
+                toggleSolarSpan.classList.add('translate-x-0');
+                solarLightsGroup.classList.remove('opacity-100');
+                solarLightsGroup.classList.add('opacity-0');
+
+                // 스크린 내 버튼 기본 비주얼 변경
+                screenSolarBtn.classList.remove('bg-yellow-500', 'text-slate-950', 'border-yellow-400');
+                screenSolarBtn.classList.add('bg-slate-900/95', 'text-yellow-400', 'border-yellow-500/50', 'hover:bg-yellow-500', 'hover:text-slate-950');
+                screenSolarText.innerText = "바닥 조명 설치하기";
+                screenSolarPing.classList.remove('hidden');
+                screenSolarDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500";
+            }
+            updateScene();
+        }
+
+        // 로고젝터 조명 제어
+        function toggleLogojector() {
+            if (!gameActive) return;
+            isLogojectorOn = !isLogojectorOn;
+
+            if (isLogojectorOn) {
+                // 우측 스위치 켜짐 상태로 변경
+                btnLogojector.classList.remove('bg-gray-700');
+                btnLogojector.classList.add('bg-cyan-500');
+                toggleLogojectorSpan.classList.remove('translate-x-0');
+                toggleLogojectorSpan.classList.add('translate-x-5');
+                logojectorLight.classList.remove('opacity-0');
+                logojectorLight.classList.add('opacity-100');
+                logojectorText.classList.remove('opacity-0');
+                logojectorText.classList.add('opacity-100');
+
+                // 스크린 내 버튼 활성화 비주얼 변경
+                screenLogoBtn.classList.remove('bg-slate-900/95', 'text-cyan-400', 'border-cyan-500/50', 'hover:bg-cyan-500', 'hover:text-slate-950');
+                screenLogoBtn.classList.add('bg-cyan-500', 'text-slate-950', 'border-cyan-400');
+                screenLogoText.innerText = "안심 로고젝터 작동 중 (끄기)";
+                screenLogoPing.classList.add('hidden');
+                screenLogoDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-950";
+            } else {
+                // 우측 스위치 꺼짐 상태로 변경
+                btnLogojector.classList.remove('bg-cyan-500');
+                btnLogojector.classList.add('bg-gray-700');
+                toggleLogojectorSpan.classList.remove('translate-x-5');
+                toggleLogojectorSpan.classList.add('translate-x-0');
+                logojectorLight.classList.remove('opacity-100');
+                logojectorLight.classList.add('opacity-0');
+                logojectorText.classList.remove('opacity-100');
+                logojectorText.classList.add('opacity-0');
+
+                // 스크린 내 버튼 기본 비주얼 변경
+                screenLogoBtn.classList.remove('bg-cyan-500', 'text-slate-950', 'border-cyan-400');
+                screenLogoBtn.classList.add('bg-slate-900/95', 'text-cyan-400', 'border-cyan-500/50', 'hover:bg-cyan-500', 'hover:text-slate-950');
+                screenLogoText.innerText = "안심 로고젝터 설치하기";
+                screenLogoPing.classList.remove('hidden');
+                screenLogoDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500";
+            }
+            updateScene();
+        }
+
+        // 빛의 유무에 맞춰 오버레이 및 수치 갱신
+        function updateScene() {
+            // 어두움 조절
+            let opacityVal = 0.85;
+            if (isSolarOn) opacityVal -= 0.4;
+            if (isLogojectorOn) opacityVal -= 0.4;
+            darknessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${opacityVal})`;
+
+            // 안전 지수 계산
+            let tempScore = 10;
+            if (isSolarOn) tempScore += 45;
+            if (isLogojectorOn) tempScore += 45;
+            safetyScore = tempScore;
+
+            // 안심 지수 색상 코드 처리
+            safetyScoreEl.innerText = `${safetyScore}%`;
+            if (safetyScore >= 90) {
+                safetyScoreEl.className = "font-black text-emerald-400";
+            } else if (safetyScore >= 50) {
+                safetyScoreEl.className = "font-black text-yellow-400";
+            } else {
+                safetyScoreEl.className = "font-black text-red-400";
+            }
+
+            // 장애물들 상태 변경 (바닥 조명이 들어오면 클리어)
+            if (isSolarOn) {
+                // 1. 돌부리 낙상 위험 해결
+                fallHazardIcon.className = "w-10 h-10 bg-emerald-500/90 text-white rounded-full flex items-center justify-center shadow-lg transition-colors";
+                fallHazardIcon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+                fallHazardLabel.className = "bg-emerald-950/90 text-emerald-300 border border-emerald-800 text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold";
+                fallHazardLabel.innerText = "조명 가동: 장애물 확인";
+
+                // 2. 웅덩이 위험 해결
+                hazardIcon.className = "w-10 h-10 bg-emerald-500/90 text-white rounded-full flex items-center justify-center shadow-lg transition-colors";
+                hazardIcon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+                hazardLabel.className = "bg-emerald-950/90 text-emerald-300 border border-emerald-800 text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold";
+                hazardLabel.innerText = "조명 가동: 위험 회피";
+            } else {
+                // 원래 위험 상태 복구
+                fallHazardIcon.className = "w-10 h-10 bg-orange-600/90 text-white rounded-full flex items-center justify-center animate-bounce shadow-lg";
+                fallHazardIcon.innerHTML = `<i class="fa-solid fa-person-falling"></i>`;
+                fallHazardLabel.className = "bg-orange-950/90 text-orange-300 border border-orange-800 text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold";
+                fallHazardLabel.innerText = "돌부리 낙상위험!";
+
+                hazardIcon.className = "w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center animate-bounce shadow-lg";
+                hazardIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+                hazardLabel.className = "bg-red-950/90 text-red-300 border border-red-800 text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold";
+                hazardLabel.innerText = "웅덩이 위험!";
+            }
+
+            // 피드백 문구 변경
+            if (isSolarOn && isLogojectorOn) {
+                statusBarText.innerText = "길이 정말 안전하고 따뜻해졌어요! 집으로 전진합니다!";
+                bubbleText.innerText = "안심 바닥조명 덕분에 한결 든든해요. 로고젝터 메시지도 따뜻하네요!";
+                characterEmoji.className = "fa-solid fa-laugh-beam text-emerald-400 animate-bounce";
+            } else if (isSolarOn) {
+                statusBarText.innerText = "바닥 조명이 보행로를 안내합니다. 조금 더 가볼까요?";
+                bubbleText.innerText = "바닥 조명 덕에 어디가 보도 경계인지 선명히 잘 보여요!";
+                characterEmoji.className = "fa-solid fa-smile text-yellow-300";
+            } else if (isLogojectorOn) {
+                statusBarText.innerText = "로고젝터 문구가 밤길을 따뜻하게 지켜줍니다.";
+                bubbleText.innerText = "어두워도 안심하라는 예쁜 글씨 덕분에 용기가 나요!";
+                characterEmoji.className = "fa-solid fa-smile-wink text-cyan-300";
+            } else {
+                statusBarText.innerText = "어둠 속에서 발을 헛디딜 수 있습니다! 조명을 켜주세요.";
+                bubbleText.innerText = "너무 어두워서 낙상 사고나 깊은 물웅덩이가 있을까 봐 무서워요...";
+                characterEmoji.className = "fa-solid fa-user-injured text-yellow-500 animate-pulse";
+            }
+        }
+
+        // 보행 진행 로직
+        function startWalkingLoop() {
+            walkInterval = setInterval(() => {
+                if (!gameActive) return;
+
+                // [신규] 1단계: 돌부리 낙상 위험 지점 부근 (지점 비율: 22% ~ 40%)
+                if (characterPos >= 22 && characterPos <= 40 && !isSolarOn) {
+                    bubbleText.innerText = "앗! 앞에 돌부리(낙상 위험)가 어두워서 안 보여요. 넘어질 뻔했어요!";
+                    statusBarText.innerText = "🚨 바닥 조명을 켜서 발밑 낙상 위험(돌부리)을 제거해 주세요!";
+                    characterEmoji.className = "fa-solid fa-grimace text-orange-400 animate-shake";
+                    return;
+                }
+
+                // 2단계: 웅덩이 위험 지점 부근 (지점 비율: 42% ~ 62%)
+                if (characterPos >= 42 && characterPos <= 62 && !isSolarOn) {
+                    // 바닥 조명이 꺼진 채로 위험 지점에 도달하면 멈추고 경고
+                    bubbleText.innerText = "앗! 눈앞에 깊은 물웅덩이가 보이지 않아 앞으로 가기 힘듭니다!";
+                    statusBarText.innerText = "🚨 바닥 조명을 켜서 길가 수중 장애물 위협을 제거해 주세요!";
+                    characterEmoji.className = "fa-solid fa-grimace text-red-400 animate-shake";
+                    return; 
+                }
+
+                // 3단계: 로고젝터 구역 부근 (지점 비율: 60% ~ 78%)
+                if (characterPos >= 60 && characterPos <= 78 && !isLogojectorOn) {
+                    bubbleText.innerText = "길이 무척 고요하고 컴컴하네요.. 치안 예방을 위해 로고젝터를 비춰주세요!";
+                    statusBarText.innerText = "🚨 로고젝터를 가동하여 골목 밤길을 따뜻하게 정화하세요!";
+                    characterEmoji.className = "fa-solid fa-frown-open text-cyan-400";
+                    return;
+                }
+
+                // 이동 가능할 때 전진
+                if (characterPos < 80) {
+                    characterPos += 3.5;
+                    character.style.left = characterPos + '%';
+                } else {
+                    // 목적지 골인!
+                    gameActive = false;
+                    clearInterval(walkInterval);
+                    characterPos = 82;
+                    character.style.left = characterPos + '%';
+                    triggerGameClear();
+                }
+            }, 1000);
+        }
+
+        // 게임 성공 완료 처리
+        function triggerGameClear() {
+            bubbleText.innerText = "집에 무사히 도착했어요! 가장 따뜻한 보디가드와 함께였어요!";
+            characterEmoji.className = "fa-solid fa-laugh-squint text-emerald-300";
+            statusBarText.innerText = "★ 미션 클리어! 귀가 안심로 성공!";
+            
+            setTimeout(() => {
+                clearModal.classList.remove('hidden');
+            }, 1500);
+        }
+
+        // 게임 리셋
+        function resetGame() {
+            clearInterval(walkInterval);
+            isSolarOn = false;
+            isLogojectorOn = false;
+            safetyScore = 10;
+            characterPos = 10;
+            gameActive = true;
+
+            // 스위치 및 내부 버튼 엘리먼트들 일괄 초기화
+            btnSolar.className = "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-gray-700";
+            toggleSolarSpan.className = "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0";
+            solarLightsGroup.classList.add('opacity-0');
+            solarLightsGroup.classList.remove('opacity-100');
+
+            screenSolarBtn.className = "absolute bottom-28 left-1/4 -translate-x-1/2 z-40 bg-slate-900/95 hover:bg-yellow-500 hover:text-slate-950 text-yellow-400 border border-yellow-500/50 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.5)] cursor-pointer group";
+            screenSolarText.innerText = "바닥 조명 설치하기";
+            screenSolarPing.classList.remove('hidden');
+            screenSolarDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500";
+
+            btnLogojector.className = "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-gray-700";
+            toggleLogojectorSpan.className = "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0";
+            logojectorLight.classList.add('opacity-0');
+            logojectorLight.classList.remove('opacity-100');
+            logojectorText.classList.add('opacity-0');
+            logojectorText.classList.remove('opacity-100');
+
+            screenLogoBtn.className = "absolute top-28 right-1/3 translate-x-1/2 z-40 bg-slate-900/95 hover:bg-cyan-500 hover:text-slate-950 text-cyan-400 border border-cyan-500/50 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.5)] cursor-pointer group";
+            screenLogoText.innerText = "안심 로고젝터 설치하기";
+            screenLogoPing.classList.remove('hidden');
+            screenLogoDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500";
+
+            character.style.left = '10%';
+            clearModal.classList.add('hidden');
+
+            updateScene();
+            startWalkingLoop();
+        }
+
+        function closeModal() {
+            clearModal.classList.add('hidden');
+        }
+
+        // 페이지 온로드 시 초기 실행
+        window.onload = function() {
+            resetGame();
+        };
+    </script>
+</body>
+</html>

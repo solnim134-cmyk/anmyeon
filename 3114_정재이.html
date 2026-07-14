@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>온온(溫溫) - 따뜻한 골목 지도 & 소통 캔버스</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 구글 폰트 (고운 바탕 & Plus Jakarta Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Gowun Batang', 'serif'],
+            sans: ['Plus Jakarta Sans', 'Noto Sans KR', 'sans-serif'],
+          },
+          colors: {
+            warm: {
+              50: '#FBF9F6',   /* 부드러운 오트밀 백그라운드 */
+              100: '#F5EFEB',  /* 밝은 샌드 베이지 */
+              200: '#EAE1D8',  /* 중립 차분한 베이지 */
+              dark: '#2E3333', /* 세련된 차콜 */
+              accent: '#D96B52', /* 따뜻한 테라코타 오렌지 */
+              sage: '#7FA08E',   /* 정온한 세이지 그린 */
+              indigo: '#5A738E', /* 밤하늘빛 소프트 블루 */
+              mustard: '#E8A855' /* 온화한 머스타드 */
+            }
+          },
+          boxShadow: {
+            soft: '0 8px 30px rgba(0, 0, 0, 0.03)',
+            floating: '0 20px 40px rgba(46, 51, 51, 0.08)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 미니멀 에디토리얼 서체 혼용 */
+    .title-serif {
+      font-family: 'Gowun Batang', serif;
+    }
+    
+    /* 얇고 정밀한 캔버스 배경 스무스 텍스처 */
+    .paper-texture-canvas {
+      background-color: #FBF9F6;
+      background-image: 
+        radial-gradient(rgba(0, 0, 0, 0.015) 15%, transparent 15%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.01) 1px, transparent 1px);
+      background-size: 8px 8px, 40px 40px;
+    }
+
+    /* 슬라이더 커스텀 */
+    input[type="range"]::-webkit-slider-thumb {
+      background: #D96B52;
+      border: 2px solid #FBF9F6;
+      border-radius: 99px;
+      width: 16px;
+      height: 16px;
+      box-shadow: 0 4px 10px rgba(217, 107, 82, 0.3);
+    }
+  </style>
+</head>
+<body class="bg-warm-50 text-warm-dark font-sans min-h-screen flex flex-col selection:bg-warm-accent/20">
+
+  <!-- 상단 네비게이션 (유리막 블러 느낌의 글래스모피즘 헤더) -->
+  <header class="bg-warm-50/80 backdrop-blur-md border-b border-warm-100 py-4 px-6 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <!-- 로고 브랜딩 -->
+      <a href="#" onclick="switchTab('map')" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 bg-warm-accent rounded-2xl flex items-center justify-center text-white shadow-soft transform group-hover:scale-105 transition-transform">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.905 0-5.54-1.037-7.584-2.75" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight leading-none title-serif">온온 <span class="font-sans text-xs font-normal text-warm-sage px-1.5 py-0.5 bg-warm-100 rounded-md">溫溫</span></h1>
+          <p class="text-[10px] uppercase tracking-widest text-warm-dark/50 mt-1">Warm Alleys & Shared Canvas</p>
+        </div>
+      </a>
+
+      <!-- 미니멀리스틱 메뉴 스위처 -->
+      <nav class="flex gap-1 bg-warm-100 p-1 rounded-full text-xs font-semibold">
+        <button onclick="switchTab('map')" id="tab-btn-map" class="px-4 py-2 rounded-full transition-all bg-white text-warm-dark shadow-sm">
+          🗺️ 안전 지도
+        </button>
+        <button onclick="switchTab('stories')" id="tab-btn-stories" class="px-4 py-2 rounded-full transition-all text-warm-dark/70 hover:text-warm-dark">
+          🌿 동네 길 이야기
+        </button>
+        <button onclick="switchTab('canvas')" id="tab-btn-canvas" class="px-4 py-2 rounded-full transition-all text-warm-dark/70 hover:text-warm-dark">
+          🖌️ 파스텔 캔버스
+        </button>
+        <button onclick="switchTab('report')" id="tab-btn-report" class="px-4 py-2 rounded-full transition-all text-white bg-warm-accent">
+          🚨 신고 제보
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 메인 본문 영역 -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+
+    <!-- ==========================================
+         [1. 안전 지도 탭]
+         ========================================== -->
+    <section id="tab-map" class="space-y-6">
+      <!-- 감성적인 저명성 히어로 카드 -->
+      <div class="bg-white border border-warm-100 p-6 rounded-3xl shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <span class="text-xs uppercase tracking-wider font-semibold text-warm-sage">Warm Neighbor Safety Guide</span>
+          <h2 class="text-3xl font-bold title-serif text-warm-dark">따스한 눈길로 살피는 동네 골목</h2>
+          <p class="text-sm text-warm-dark/60">주민들이 발품 팔아 기록한 보살핌 지도입니다. 어두운 지점은 알리고, 함께 걷기 좋은 곳을 만들어갑니다.</p>
+        </div>
+        <!-- 정갈한 범례 태그 그룹 -->
+        <div class="flex flex-wrap gap-2 text-xs font-semibold">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warm-mustard/10 text-warm-mustard border border-warm-mustard/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-warm-mustard animate-pulse"></span>가로등 보완 필요
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warm-sage/10 text-warm-sage border border-warm-sage/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-warm-sage"></span>보행 안심 지역
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warm-accent/10 text-warm-accent border border-warm-accent/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-warm-accent"></span>사각지대 제보
+          </span>
+        </div>
+      </div>
+
+      <!-- 미니멀 2분할 뷰 포트 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 미니멀리스트 맵 프레임 (좌 2/3) -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="relative bg-[#EFECE6] rounded-3xl border border-warm-100 overflow-hidden shadow-soft aspect-[4/3] md:aspect-[16/10] w-full" id="village-map">
+            
+            <!-- 세련된 현대 벡터 그래픽 풍 마을 구조 (정교한 SVG 맵) -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 800 500" preserveAspectRatio="none">
+              <!-- 베이스 대지 -->
+              <rect width="800" height="500" fill="#EFECE6" />
+              
+              <!-- 모던 물줄기 라인 (스플라인 곡선) -->
+              <path d="M 0,420 C 150,380 300,470 500,430 C 650,400 750,450 800,430 L 800,500 L 0,500 Z" fill="#D2E3EB" />
+              <text x="710" y="475" class="title-serif text-sm font-bold tracking-widest opacity-40 fill-[#5A738E]">River Side</text>
+
+              <!-- 은은하게 빛나는 도보 녹지 구역 -->
+              <path d="M -50,50 C 120,30 250,90 350,150 L 150,320 L -50,220 Z" fill="#D9E6E0" />
+              <text x="80" y="110" class="title-serif text-xs font-semibold opacity-40 fill-warm-sage">Central Park</text>
+
+              <!-- 세련되고 정확하게 배치된 현대식 도로 뼈대 (그레이/화이트 더블 스트로크) -->
+              <g stroke="#E4DFD6" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                <path d="M 120,500 L 120,120 C 120,80 200,60 400,60 L 700,60 C 740,60 740,150 740,300 L 740,400" />
+                <path d="M 120,240 L 740,240" />
+                <path d="M 450,60 L 450,420" />
+              </g>
+              <g stroke="#FDFBF9" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                <path d="M 120,500 L 120,120 C 120,80 200,60 400,60 L 700,60 C 740,60 740,150 740,300 L 740,400" />
+                <path d="M 120,240 L 740,240" />
+                <path d="M 450,60 L 450,420" />
+              </g>
+
+              <!-- 아기자기하며 감각적인 건물 도면 일러스트 -->
+              <g transform="translate(680, 100)" stroke="#727979" stroke-width="1.5" fill="none" class="opacity-80">
+                <rect x="0" y="0" width="36" height="36" rx="6" fill="#FDFBF9" />
+                <line x1="18" y1="0" x2="18" y2="36" />
+                <line x1="0" y1="18" x2="36" y2="18" />
+                <text x="5" y="50" class="font-sans text-[9px] tracking-tight font-bold fill-warm-dark opacity-60">안전센터</text>
+              </g>
+
+              <g transform="translate(240, 140)" stroke="#727979" stroke-width="1.5" fill="none" class="opacity-80">
+                <rect x="0" y="0" width="28" height="28" rx="4" fill="#FDFBF9" />
+                <text x="-6" y="40" class="font-sans text-[9px] tracking-tight font-bold fill-warm-dark opacity-60">숲속 북까페</text>
+              </g>
+            </svg>
+
+            <!-- 실제 핀들이 동적 생성되는 가상 포트 -->
+            <div id="map-pins-container" class="absolute inset-0"></div>
+
+            <!-- 미니멀 사용가이드 -->
+            <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm p-4 rounded-2xl max-w-[260px] border border-warm-100 shadow-soft pointer-events-none space-y-1">
+              <p class="font-bold text-xs flex items-center gap-1.5"><span class="text-warm-accent">💡</span> 핀 제보 안내</p>
+              <p class="text-[10px] text-warm-dark/70 leading-normal">원하는 지도 위의 지점을 <span class="text-warm-accent font-semibold underline">직접 마우스로 클릭</span>하여 새로운 방범 소식을 손쉽게 보태실 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 실시간 취약보고 대시보드 리스트 (우 1/3) -->
+        <div class="bg-white rounded-3xl border border-warm-100 p-5 shadow-soft flex flex-col h-[400px] lg:h-[500px]">
+          <h3 class="text-lg font-bold title-serif border-b border-warm-100 pb-3 mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2">📢 동네 가림 구역 보고</span>
+            <span class="text-[10px] bg-warm-accent text-white px-2 py-0.5 rounded-full" id="report-count">4건</span>
+          </h3>
+          
+          <div id="active-reports-list" class="flex-1 overflow-y-auto space-y-3 pr-1">
+            <!-- JS 동적 주입 -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         [2. 동네 이야기 & 좋은 길 탭]
+         ========================================== -->
+    <section id="tab-stories" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-warm-100 pb-5">
+        <div class="space-y-1">
+          <h2 class="text-3xl font-bold title-serif text-warm-dark">정겨운 이야기길</h2>
+          <p class="text-sm text-warm-dark/60">빛나고 편안한 동네 산책 코스, 소소한 기쁨이 묻어나는 장소를 나눕니다.</p>
+        </div>
+        <button onclick="openAddStoryModal()" class="px-5 py-2.5 bg-warm-accent text-white text-xs font-semibold rounded-full hover:bg-warm-accent/90 shadow-soft transition-all">
+          ✏️ 우리 이야기 더하기
+        </button>
+      </div>
+
+      <!-- 플랫 필터 내비 -->
+      <div class="flex gap-1.5">
+        <button onclick="filterStories('all')" id="story-filter-all" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-warm-dark text-white transition-all">전체보기</button>
+        <button onclick="filterStories('산책로')" id="story-filter-path" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white border border-warm-100 text-warm-dark/70 hover:bg-warm-100 transition-all">🚶‍♀️ 걷기 편한 길</button>
+        <button onclick="filterStories('일상')" id="story-filter-daily" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white border border-warm-100 text-warm-dark/70 hover:bg-warm-100 transition-all">🏡 골목 정다운 풍경</button>
+        <button onclick="filterStories('관광명소')" id="story-filter-attract" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white border border-warm-100 text-warm-dark/70 hover:bg-warm-100 transition-all">🌟 추천 안심 명소</button>
+      </div>
+
+      <!-- 이야기 그리드 카드 -->
+      <div id="stories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- JS 동적 생성 카드 -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         [3. 공공 캔버스 탭]
+         ========================================== -->
+    <section id="tab-canvas" class="hidden space-y-6">
+      <div class="bg-white border border-warm-100 p-5 rounded-3xl shadow-soft">
+        <h2 class="text-2xl font-bold title-serif text-warm-dark">🎨 밤길을 수놓는 파스텔 공공 캔버스</h2>
+        <p class="text-xs text-warm-dark/60 mt-1">이웃에게 남기고 싶은 한마디 메시지, 마음을 따뜻하게 물들이는 그림을 살포시 그려 릴레이 해보세요.</p>
+      </div>
+
+      <!-- 수성 파스텔 붓 터치 인터페이스 -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- 도구 상자 패널 (에디토리얼 슬림 타입) -->
+        <div class="bg-white rounded-3xl border border-warm-100 p-5 shadow-soft space-y-6 flex flex-col justify-between">
+          <div class="space-y-6">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-warm-dark/70 border-b border-warm-100 pb-2">물감 도구함</h3>
+            
+            <!-- 컬러 서클 프리셋 -->
+            <div class="space-y-2">
+              <label class="text-[11px] font-bold text-warm-dark/60 uppercase">스며드는 색상</label>
+              <div class="grid grid-cols-5 gap-3">
+                <button onclick="changeColor('#D96B52')" class="w-8 h-8 rounded-full bg-[#D96B52] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="테라코타"></button>
+                <button onclick="changeColor('#7FA08E')" class="w-8 h-8 rounded-full bg-[#7FA08E] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="세이지 그린"></button>
+                <button onclick="changeColor('#E8A855')" class="w-8 h-8 rounded-full bg-[#E8A855] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="머스타드"></button>
+                <button onclick="changeColor('#5A738E')" class="w-8 h-8 rounded-full bg-[#5A738E] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="미드나잇"></button>
+                <button onclick="changeColor('#8D7E99')" class="w-8 h-8 rounded-full bg-[#8D7E99] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="라벤더"></button>
+                <button onclick="changeColor('#979DA0')" class="w-8 h-8 rounded-full bg-[#979DA0] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="페일 그레이"></button>
+                <button onclick="changeColor('#B39D82')" class="w-8 h-8 rounded-full bg-[#B39D82] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="샌드 오트"></button>
+                <button onclick="changeColor('#2E3333')" class="w-8 h-8 rounded-full bg-[#2E3333] border-2 border-white shadow-soft hover:scale-110 active:scale-95 transition-all" title="차콜"></button>
+                <button onclick="changeColor('#FBF9F6', true)" class="w-8 h-8 rounded-full bg-white border border-warm-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-xs" title="지우개">🧹</button>
+              </div>
+            </div>
+
+            <!-- 스무스 브러쉬 브리딩 굵기 -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-[11px] font-bold text-warm-dark/60">
+                <span>붓 번짐 반경</span>
+                <span id="brush-size-val">15px</span>
+              </div>
+              <input type="range" id="brush-size" min="5" max="50" value="15" oninput="updateBrushSize(this.value)" class="w-full accent-warm-accent bg-warm-100 rounded-lg appearance-none h-1 cursor-pointer">
+            </div>
+
+            <!-- 브러쉬 스타일 안내 -->
+            <div class="bg-warm-50 p-3 rounded-2xl text-[11px] text-warm-dark/70 leading-normal space-y-1">
+              <p class="font-bold text-warm-accent">🎨 스며드는 수채 물감 필터:</p>
+              <p>마우스를 올리거나 천천히 그릴수록, 캔버스 종이에 물감이 부드럽게 번져 스며드는 서정적인 고스트 레이어 효과가 극대화됩니다.</p>
+            </div>
+          </div>
+
+          <!-- 기능 조작단 -->
+          <div class="space-y-2 pt-4 border-t border-warm-100">
+            <button onclick="clearCanvas()" class="w-full py-2.5 text-xs font-semibold bg-warm-100 hover:bg-warm-200 rounded-full transition-all">
+              🧼 칠판 지우기
+            </button>
+            <button onclick="publishMural()" class="w-full py-3 text-xs font-bold bg-warm-accent hover:bg-warm-accent/90 text-white rounded-full transition-all shadow-soft">
+              🖼️ 벽화 전시관에 올리기
+            </button>
+          </div>
+        </div>
+
+        <!-- 실물 캔버스 종이 구역 (우 3/4) -->
+        <div class="lg:col-span-3 space-y-4">
+          <div class="relative w-full rounded-3xl border border-warm-100 overflow-hidden shadow-soft paper-texture-canvas flex items-center justify-center p-1.5" id="canvas-wrapper">
+            <canvas id="mural-draw-board" class="cursor-crosshair w-full rounded-2xl block bg-transparent" width="700" height="420"></canvas>
+            
+            <div class="absolute top-4 right-4 text-[10px] opacity-30 text-right pointer-events-none select-none">
+              🖌️ 온온 미니멀 캔버스 벽면<br>
+              마을 수채화 드로잉
+            </div>
+          </div>
+
+          <!-- 릴레이 전시 보드 목록 -->
+          <div class="space-y-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-warm-dark/70 flex items-center gap-2">
+              <span>🖼️ 이웃들의 수채 벽화 갤러리</span>
+            </h3>
+            <div id="mural-gallery" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <!-- JS 동적 업로드 그림 릴레이 전시 -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================
+         [4. 안심 제보 탭]
+         ========================================== -->
+    <section id="tab-report" class="hidden max-w-xl mx-auto">
+      <div class="bg-white rounded-3xl border border-warm-100 p-6 md:p-8 shadow-soft space-y-6">
+        <div class="text-center border-b border-warm-100 pb-5">
+          <span class="text-3xl">🚨</span>
+          <h2 class="text-2xl font-bold title-serif text-warm-dark mt-2">어두운 골목 보호제보</h2>
+          <p class="text-xs text-warm-dark/50 mt-1">개선이 긴급한 가로등 고장, CCTV 사각구간을 작성해주세요. 즉각 리포팅됩니다.</p>
+        </div>
+
+        <!-- 현대적 인풋 폼 구조 -->
+        <form id="report-form" onsubmit="handleReportSubmit(event)" class="space-y-5">
+          
+          <div>
+            <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-2">제보 종류 <span class="text-warm-accent">*</span></label>
+            <div class="grid grid-cols-3 gap-2 text-xs font-semibold">
+              <label class="border border-warm-accent rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer bg-warm-accent/5" id="label-type-light">
+                <input type="radio" name="reportType" value="가로등 부족" checked class="sr-only" onchange="styleReportRadio()">
+                <span class="text-xl">💡</span>
+                <span class="mt-1">가로등 부족</span>
+              </label>
+              <label class="border border-warm-100 rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer bg-white hover:bg-warm-100" id="label-type-cctv">
+                <input type="radio" name="reportType" value="CCTV 부족" class="sr-only" onchange="styleReportRadio()">
+                <span class="text-xl">📹</span>
+                <span class="mt-1">CCTV 부족</span>
+              </label>
+              <label class="border border-warm-100 rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer bg-white hover:bg-warm-100" id="label-type-danger">
+                <input type="radio" name="reportType" value="위험 지역" class="sr-only" onchange="styleReportRadio()">
+                <span class="text-xl">🚧</span>
+                <span class="mt-1">어둡고 위험</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">위치 정보 <span class="text-warm-accent">*</span></label>
+            <input type="text" id="report-place-name" required placeholder="예: 솔숲공원 입구 가로등 고장" class="w-full px-4 py-2.5 text-sm bg-warm-50 border border-warm-100 rounded-xl focus:outline-none focus:ring-1 focus:ring-warm-accent focus:bg-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">세부 사유 정보 <span class="text-warm-accent">*</span></label>
+            <textarea id="report-description" required rows="3" placeholder="예: 주변 가로등 불빛이 너무 어두워 바닥의 계단 턱이 밤에는 전혀 식별되지 않습니다." class="w-full px-4 py-2.5 text-sm bg-warm-50 border border-warm-100 rounded-xl focus:outline-none focus:ring-1 focus:ring-warm-accent focus:bg-white transition-all"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">현장 상황 첨부 (선택)</label>
+            <div class="border border-dashed border-warm-200 rounded-2xl p-5 bg-warm-50/50 text-center relative cursor-pointer hover:bg-warm-100/50 transition-all">
+              <input type="file" id="report-photo" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewPhoto(this)">
+              <div id="photo-placeholder" class="space-y-1">
+                <span class="text-2xl">📸</span>
+                <p class="text-[11px] font-bold text-warm-dark/60">모바일 촬영 이미지 가져오기</p>
+                <p class="text-[9px] text-warm-dark/40">이곳을 클릭하여 사진 업로드</p>
+              </div>
+              <div id="photo-preview-box" class="hidden">
+                <img id="photo-preview-img" src="" alt="미리보기" class="max-h-24 mx-auto rounded-lg border border-warm-100">
+                <button type="button" onclick="removePhoto(event)" class="text-[10px] text-warm-accent font-semibold underline mt-1">제보 사진 취소</button>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" id="report-x" value="280">
+          <input type="hidden" id="report-y" value="180">
+
+          <div class="pt-2">
+            <button type="submit" class="w-full py-3.5 bg-warm-accent hover:bg-warm-accent/90 text-white font-semibold text-sm rounded-full shadow-soft transition-all">
+              🌻 안전 보호 제보 발송
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       [5. 커뮤니티 글쓰기 팝업 모달]
+       ========================================== -->
+  <div id="story-modal" class="fixed inset-0 bg-warm-dark/40 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl border border-warm-100 max-w-lg w-full p-6 space-y-5 shadow-floating relative">
+      <button onclick="closeAddStoryModal()" class="absolute top-4 right-4 text-warm-dark/40 hover:text-warm-dark text-lg transition-colors">✕</button>
+      
+      <h3 class="text-xl font-bold title-serif border-b border-warm-100 pb-2">✏️ 동네 정감 나누기</h3>
+      
+      <form id="story-form" onsubmit="handleStorySubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">카테고리</label>
+          <select id="story-tag" class="w-full px-4 py-2.5 text-sm bg-warm-50 border border-warm-100 rounded-xl">
+            <option value="산책로">🚶‍♀️ 안심하고 걷기 편한 길</option>
+            <option value="일상">🏡 골목의 작고 귀여운 일상</option>
+            <option value="관광명소">🌟 주민 추천 숨은 안심 스팟</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">글 제목</label>
+          <input type="text" id="story-title" required placeholder="예: 노란 저녁 조명이 밝아 안전한 등댓길 데크" class="w-full px-4 py-2.5 text-sm bg-warm-50 border border-warm-100 rounded-xl">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">작성인 이름</label>
+          <input type="text" id="story-author" required placeholder="예: 수호대장" class="w-full px-4 py-2.5 text-sm bg-warm-50 border border-warm-100 rounded-xl">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-warm-dark/70 uppercase mb-1.5">기록할 소식 내용</label>
+          <textarea id="story-content" required rows="4" placeholder="밤에도 가로등 조명이 끊기지 않고 바다를 바라보며 벤치 쉼터에 안전하게 머무를 수 있어서 산책하기 최고의 코스입니다." class="w-full px-4 py-2.5 text-sm bg-warm-50 border border-warm-100 rounded-xl"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-warm-accent hover:bg-warm-accent/90 text-white font-semibold text-xs rounded-full shadow-soft transition-all">
+          📮 이야기 꽃 심기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 커스텀 Confirm 레이어 다이얼로그 (지우기 및 행동 컨펌 용) -->
+  <div id="confirm-modal" class="fixed inset-0 bg-warm-dark/30 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 border border-warm-100 shadow-floating text-center">
+      <div class="text-3xl text-warm-accent">❔</div>
+      <h4 class="font-bold text-md title-serif" id="confirm-title">선택 사항 확인</h4>
+      <p class="text-xs text-warm-dark/60 leading-normal" id="confirm-msg">진행하시겠습니까?</p>
+      <div class="flex gap-2 pt-2 justify-center">
+        <button id="confirm-cancel-btn" class="px-5 py-2 text-xs font-semibold bg-warm-100 rounded-full hover:bg-warm-200 transition-all">취소</button>
+        <button id="confirm-ok-btn" class="px-5 py-2 text-xs font-bold bg-warm-accent text-white rounded-full hover:bg-warm-accent/90 transition-all shadow-soft">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 에디토리얼 슬림 푸터 -->
+  <footer class="bg-white border-t border-warm-100 text-warm-dark/80 py-8 px-6 mt-12 text-center text-xs space-y-2">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="text-left space-y-1">
+        <p class="font-bold title-serif text-sm">💡 ON-ON : 따뜻하게 스며드는 안심 골목길</p>
+        <p class="opacity-60 text-[10px]">골목 라이프 네트워크 & 공공 안전 허브 협동조합</p>
+      </div>
+      <div class="opacity-60 text-center md:text-right text-[10px]">
+        <p>© 2026 ON-ON Platform. All Rights Reserved.</p>
+        <p class="text-warm-sage mt-1">본 웹사이트는 지역 데이터 공조 및 안전한 마을 브랜딩 협의체의 주도하에 운영됩니다.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 알림 팝업 토스트 (얼럿 대용) -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-warm-dark/95 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-floating translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-[99] max-w-sm flex items-center gap-3">
+    <span class="text-lg" id="toast-icon">✨</span>
+    <div>
+      <h4 class="font-bold text-xs" id="toast-title">공지</h4>
+      <p class="text-[10px] text-warm-50/70 mt-0.5" id="toast-message">글이 완료되었습니다.</p>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================
+       전역 데이터 및 스토리지
+       ======================================================== */
+    let currentTab = 'map';
+    let selectedColor = '#D96B52';
+    let isEraser = false;
+    let brushSize = 15;
+    let selectedPhotoData = '';
+    let activeStoryFilter = 'all';
+
+    // 가짜 핀 데이터 (오트밀 모던 에디션)
+    let reportPins = [
+      { id: 1, type: '가로등 부족', title: '강변 산책길 고목 데크 부근', desc: '나무 그늘 때문에 밤에는 계단 보행등이 전혀 보이지 않아 낙상 위험이 잦습니다.', x: 120, y: 150, votes: 5, date: '1일 전' },
+      { id: 2, type: 'CCTV 부족', title: '숲속 북까페 인근 외곽 주차 구역', desc: '주차장 뒤편 수풀 숲 구간에 안심 CCTV가 부재하여 인근 상가 점원들이 불안해합니다.', x: 260, y: 180, votes: 12, date: '2일 전' },
+      { id: 3, type: '위험 지역', title: '강변 야간 수변 안전 펜스 공가', desc: '일부 난간 펜스 이음부 노화로, 야간 산책객의 안전 확보가 절실히 필요한 상황입니다.', x: 410, y: 280, votes: 7, date: '3일 전' },
+      { id: 4, type: '가로등 부족', title: '안전센터 진입로 삼거리 사선 구석', desc: '우회전 커브를 돌기 전 어두워서 통행하는 보행자 안전사고 빈도가 빈번합니다.', x: 620, y: 120, votes: 21, date: '4일 전' }
+    ];
+
+    // 가짜 커뮤니티 데이터
+    let storiesData = [
+      { id: 1, tag: '산책로', title: '소담길 밤마실 안심 코스 지도 보태기 🚶‍♀️', author: '안전지기', content: '강변 산책로에서 데크길 수목 보완 지점만 피해서 가면 새벽 시간대에도 수변 조명이 고루 비치고 보도를 안심하고 완보하기 훌륭합니다.', date: '방금 전', likes: 25, icon: '🚶‍♀️' },
+      { id: 2, tag: '일상', title: '북까페 수풀림 골목 담벼락 들국화 보러오세요', author: '도담이네', content: '이번 주 북까페 사잇길에 보라색 들국화 무리가 활짝 피어서 골목 조도가 훨씬 화사해진 느낌입니다. 이웃들 산책하며 지나실 때 마음 한 자락 쉬어 가세요.', date: '3시간 전', likes: 18, icon: '🏡' },
+      { id: 3, tag: '관광명소', title: '수변 전망대 쉼터 벤치 라이브 버스킹 소식', author: '클래식파', content: '매주 목요일 저녁 7시반, 중앙 공원 데크 입구 가로등 아래에서 힐링 기타 미니 버스킹이 소소하게 열리고 있습니다. 주민 누구나 오셔서 담소를 즐기세요.', date: '5시간 전', likes: 45, icon: '🌟' }
+    ];
+
+    // 가상 수채화 전시 갤러리 (프리미엄 썸네일)
+    let muralGalleryData = [
+      { id: 1, img: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150"><rect width="100%" height="100%" fill="%23F5EFEB"/><circle cx="100" cy="70" r="24" fill="%23D96B52" opacity="0.6"/><text x="45" y="120" font-family="Gowun Batang" font-size="14" fill="%232E3333">온온한 저녁길</text></svg>' },
+      { id: 2, img: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150"><rect width="100%" height="100%" fill="%23F5EFEB"/><path d="M 40,100 C 100,40 160,100 120,120" fill="none" stroke="%237FA08E" stroke-width="6" opacity="0.5"/><text x="50" y="125" font-family="Gowun Batang" font-size="13" fill="%232E3333">초록의 위안</text></svg>' }
+    ];
+
+    /* ========================================================
+       초기화 구동 지점
+       ======================================================== */
+    window.onload = function() {
+      renderMapPins();
+      renderActiveReports();
+      renderStories();
+      renderMuralGallery();
+      initDrawingCanvas();
+      initMapClickInteractivity();
+    };
+
+    /* ========================================================
+       커스텀 확인 모달 다이얼로그 (alert/confirm 대체)
+       ======================================================== */
+    function customConfirm(title, msg, onConfirm) {
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-title').innerText = title;
+      document.getElementById('confirm-msg').innerText = msg;
+      
+      modal.classList.remove('hidden');
+
+      const btnCancel = document.getElementById('confirm-cancel-btn');
+      const btnOk = document.getElementById('confirm-ok-btn');
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        btnCancel.onclick = null;
+        btnOk.onclick = null;
+      };
+
+      btnCancel.onclick = () => {
+        cleanup();
+      };
+
+      btnOk.onclick = () => {
+        onConfirm();
+        cleanup();
+      };
+    }
+
+    /* ========================================================
+       STREAMING_CHUNK:Structuring Navigation...
+       탭 전환 컨트롤러
+       ======================================================== */
+    function switchTab(tabId) {
+      currentTab = tabId;
+      
+      document.getElementById('tab-map').classList.add('hidden');
+      document.getElementById('tab-stories').classList.add('hidden');
+      document.getElementById('tab-canvas').classList.add('hidden');
+      document.getElementById('tab-report').classList.add('hidden');
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      const buttons = {
+        map: document.getElementById('tab-btn-map'),
+        stories: document.getElementById('tab-btn-stories'),
+        canvas: document.getElementById('tab-btn-canvas'),
+        report: document.getElementById('tab-btn-report')
+      };
+
+      for (const [key, btn] of Object.entries(buttons)) {
+        if (key === tabId) {
+          if (key === 'report') {
+            btn.className = "px-4 py-2 rounded-full transition-all text-white bg-warm-accent shadow-sm";
+          } else {
+            btn.className = "px-4 py-2 rounded-full transition-all bg-white text-warm-dark shadow-sm";
+          }
+        } else {
+          if (key === 'report') {
+            btn.className = "px-4 py-2 rounded-full transition-all text-white/80 bg-warm-accent/70 hover:bg-warm-accent";
+          } else {
+            btn.className = "px-4 py-2 rounded-full transition-all text-warm-dark/70 hover:text-warm-dark";
+          }
+        }
+      }
+
+      if (tabId === 'canvas') {
+        setTimeout(resizeDrawBoard, 150);
+      }
+    }
+
+    /* ========================================================
+       STREAMING_CHUNK:Structuring Map Pins and Reports...
+       안심 지도 제보 시각화 및 인터랙션
+       ======================================================== */
+    function renderMapPins() {
+      const pinContainer = document.getElementById('map-pins-container');
+      pinContainer.innerHTML = '';
+
+      reportPins.forEach(pin => {
+        let colorClass = 'bg-warm-mustard';
+        let strokeColor = 'border-amber-400';
+        let emoji = '💡';
+        
+        if (pin.type === 'CCTV 부족') {
+          colorClass = 'bg-warm-indigo';
+          strokeColor = 'border-slate-400';
+          emoji = '📹';
+        } else if (pin.type === '위험 지역') {
+          colorClass = 'bg-warm-accent';
+          strokeColor = 'border-rose-400';
+          emoji = '🚧';
+        }
+
+        const marker = document.createElement('div');
+        marker.className = "absolute z-20 cursor-pointer group";
+        marker.style.left = `${(pin.x / 800) * 100}%`;
+        marker.style.top = `${(pin.y / 500) * 100}%`;
+        marker.style.transform = 'translate(-50%, -50%)';
+
+        marker.innerHTML = `
+          <div class="absolute inset-0 w-8 h-8 rounded-full ${colorClass} opacity-30 animate-ping"></div>
+          
+          <div class="relative w-8 h-8 rounded-full border-2 ${strokeColor} ${colorClass} text-white flex items-center justify-center shadow-soft transform hover:scale-125 transition-transform">
+            <span class="text-xs">${emoji}</span>
+          </div>
+
+          <!-- 에디토리얼 글래스 호버 카드 -->
+          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-white/95 backdrop-blur-sm border border-warm-100 p-3 rounded-2xl shadow-floating pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 text-xs">
+            <div class="font-bold text-warm-dark/50 text-[10px] uppercase tracking-wider flex items-center gap-1">
+              <span>${emoji}</span> ${pin.type}
+            </div>
+            <p class="font-bold text-warm-dark text-xs mt-1 title-serif leading-tight">${pin.title}</p>
+            <p class="text-[10px] text-warm-dark/70 mt-1 line-clamp-2">${pin.desc}</p>
+            <div class="mt-2 flex items-center justify-between text-[9px] text-warm-accent font-semibold pt-1 border-t border-warm-50">
+              <span>공감지수 ${pin.votes}</span>
+              <span>${pin.date}</span>
+            </div>
+          </div>
+        `;
+
+        marker.onclick = () => {
+          showToast('📌 골목 정보 링크', `"${pin.title}" 세부보고서로 이동합니다.`, '📍');
+          const element = document.getElementById(`report-card-${pin.id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            element.classList.add('bg-warm-100');
+            setTimeout(() => element.classList.remove('bg-warm-100'), 1500);
+          }
+        };
+
+        pinContainer.appendChild(marker);
+      });
+    }
+
+    function renderActiveReports() {
+      const container = document.getElementById('active-reports-list');
+      container.innerHTML = '';
+      document.getElementById('report-count').innerText = `${reportPins.length}건`;
+
+      reportPins.forEach(pin => {
+        let typeBadge = 'bg-warm-mustard/10 text-warm-mustard border-warm-mustard/20';
+        if (pin.type === 'CCTV 부족') typeBadge = 'bg-warm-indigo/10 text-warm-indigo border-warm-indigo/20';
+        if (pin.type === '위험 지역') typeBadge = 'bg-warm-accent/10 text-warm-accent border-warm-accent/20';
+
+        const card = document.createElement('div');
+        card.id = `report-card-${pin.id}`;
+        card.className = "p-4 border border-warm-100 rounded-2xl bg-white transition-all hover:shadow-soft space-y-2 relative";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold border ${typeBadge}">${pin.type}</span>
+            <span class="text-[9px] text-warm-dark/40">${pin.date}</span>
+          </div>
+          <h4 class="font-bold text-xs text-warm-dark title-serif leading-snug">${pin.title}</h4>
+          <p class="text-[11px] text-warm-dark/60 leading-relaxed">${pin.desc}</p>
+          
+          <div class="flex items-center justify-between pt-2 mt-1 border-t border-dashed border-warm-100 text-[11px]">
+            <button onclick="upvoteReport(${pin.id}, event)" class="inline-flex items-center gap-1 font-semibold text-warm-accent hover:scale-105 active:scale-95 transition-transform bg-warm-accent/5 hover:bg-warm-accent/10 px-2.5 py-1 rounded-full text-[10px]">
+              <span>🧡 안심공감</span> <strong id="vote-count-${pin.id}">${pin.votes}</strong>
+            </button>
+            <span class="text-[9px] text-warm-sage">지자체 공유 예정</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function upvoteReport(id, event) {
+      event.stopPropagation();
+      const pin = reportPins.find(p => p.id === id);
+      if (pin) {
+        pin.votes += 1;
+        document.getElementById(`vote-count-${id}`).innerText = pin.votes;
+        showToast('🧡 안심 공감 표출', `동네 주민들이 어두움을 더 조속히 개선하도록 목소리를 보탰습니다.`, '💡');
+        renderMapPins();
+      }
+    }
+
+    function initMapClickInteractivity() {
+      const mapDiv = document.getElementById('village-map');
+      
+      mapDiv.onclick = function(e) {
+        if (e.target.closest('#map-pins-container > div')) return;
+
+        const rect = mapDiv.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        const percentX = (clickX / rect.width) * 800;
+        const percentY = (clickY / rect.height) * 500;
+
+        document.getElementById('report-x').value = Math.round(percentX);
+        document.getElementById('report-y').value = Math.round(percentY);
+
+        showToast('📍 지도 클릭 연결', '지정하신 구역의 신속한 신규 안전 제보를 접수합니다.', '🚩');
+        switchTab('report');
+        document.getElementById('report-place-name').focus();
+      };
+    }
+
+    /* ========================================================
+       STREAMING_CHUNK:Structuring Story Flow...
+       동네 이야기 & 추천 코스 관리 제어부
+       ======================================================== */
+    function renderStories() {
+      const grid = document.getElementById('stories-grid');
+      grid.innerHTML = '';
+
+      const filtered = storiesData.filter(s => {
+        if (activeStoryFilter === 'all') return true;
+        return s.tag === activeStoryFilter;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-warm-dark/40 font-semibold text-sm">
+            해당 소식 카테고리에 제보된 담소가 아직 부재합니다. 첫 붓을 보태주세요. 🌿
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(s => {
+        let tagColor = 'bg-warm-mustard/10 text-warm-mustard border-warm-mustard/20';
+        if (s.tag === '산책로') tagColor = 'bg-warm-sage/10 text-warm-sage border-warm-sage/20';
+        if (s.tag === '관광명소') tagColor = 'bg-warm-indigo/10 text-warm-indigo border-warm-indigo/20';
+
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-3xl border border-warm-100 p-5 shadow-soft flex flex-col justify-between space-y-4 hover:-translate-y-0.5 transition-all";
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-3 py-1 rounded-full text-[10px] font-bold border ${tagColor} flex items-center gap-1">
+                <span>${s.icon}</span> ${s.tag}
+              </span>
+              <span class="text-[10px] text-warm-dark/40">${s.date}</span>
+            </div>
+            
+            <h4 class="font-bold text-lg text-warm-dark leading-tight title-serif">${s.title}</h4>
+            <p class="text-[10px] text-warm-dark/50 font-bold">작성자: ${s.author}</p>
+            <p class="text-xs text-warm-dark/70 leading-relaxed">${s.content}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 mt-1 border-t border-dashed border-warm-100">
+            <button onclick="likeStory(${s.id})" class="text-[10px] font-semibold text-warm-accent bg-warm-accent/5 hover:bg-warm-accent/10 px-3 py-1.5 rounded-full transition-transform active:scale-95 flex items-center gap-1">
+              <span>💖 고마운 제보</span> <strong>${s.likes}</strong>
+            </button>
+            <span class="text-[10px] text-warm-sage font-bold">공유안심망</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterStories(tag) {
+      activeStoryFilter = tag;
+      const filters = ['all', '산책로', '일상', '관광명소'];
+      const elementIds = {
+        all: 'story-filter-all',
+        '산책로': 'story-filter-path',
+        일상: 'story-filter-daily',
+        '관광명소': 'story-filter-attract'
+      };
+
+      filters.forEach(f => {
+        const btn = document.getElementById(elementIds[f]);
+        if (f === tag) {
+          btn.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-warm-dark text-white transition-all";
+        } else {
+          btn.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-white border border-warm-100 text-warm-dark/70 hover:bg-warm-100 transition-all";
+        }
+      });
+
+      renderStories();
+    }
+
+    function likeStory(id) {
+      const story = storiesData.find(s => s.id === id);
+      if (story) {
+        story.likes += 1;
+        renderStories();
+        showToast('💖 담소 추천 완료', `"${story.author}"님의 안심 골목길 발걸음에 추천을 선사했습니다.`, '🌿');
+      }
+    }
+
+    function openAddStoryModal() {
+      document.getElementById('story-modal').classList.remove('hidden');
+    }
+
+    function closeAddStoryModal() {
+      document.getElementById('story-modal').classList.add('hidden');
+    }
+
+    function handleStorySubmit(e) {
+      e.preventDefault();
+      
+      const tag = document.getElementById('story-tag').value;
+      const title = document.getElementById('story-title').value;
+      const author = document.getElementById('story-author').value;
+      const content = document.getElementById('story-content').value;
+
+      let icon = '🏡';
+      if (tag === '산책로') icon = '🚶‍♀️';
+      if (tag === '관광명소') icon = '🌟';
+
+      const newStory = {
+        id: storiesData.length + 1,
+        tag: tag,
+        title: title,
+        author: author,
+        content: content,
+        date: '방금 전',
+        likes: 1,
+        icon: icon
+      };
+
+      storiesData.unshift(newStory);
+      document.getElementById('story-form').reset();
+      closeAddStoryModal();
+      
+      renderStories();
+      showToast('🎉 담소 등록 완료', '당신의 소중한 산책길 쉼표 한마디가 공유되었습니다.', '💌');
+    }
+
+    /* ========================================================
+       신고 제보 폼 제어부
+       ======================================================== */
+    function styleReportRadio() {
+      const types = ['light', 'cctv', 'danger'];
+      types.forEach(type => {
+        const input = document.querySelector(`#label-type-${type} input`);
+        const label = document.getElementById(`label-type-${type}`);
+        if (input.checked) {
+          label.className = "border border-warm-accent rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer bg-warm-accent/5 font-semibold scale-105 transition-all";
+        } else {
+          label.className = "border border-warm-100 rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer bg-white hover:bg-warm-50 transition-all";
+        }
+      });
+    }
+
+    function previewPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          selectedPhotoData = e.target.result;
+          document.getElementById('photo-placeholder').classList.add('hidden');
+          document.getElementById('photo-preview-box').classList.remove('hidden');
+          document.getElementById('photo-preview-img').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function removePhoto(event) {
+      event.preventDefault();
+      document.getElementById('report-photo').value = '';
+      selectedPhotoData = '';
+      document.getElementById('photo-placeholder').classList.remove('hidden');
+      document.getElementById('photo-preview-box').classList.add('hidden');
+    }
+
+    function handleReportSubmit(e) {
+      e.preventDefault();
+      
+      const type = document.querySelector('input[name="reportType"]:checked').value;
+      const title = document.getElementById('report-place-name').value;
+      const desc = document.getElementById('report-description').value;
+      const x = parseInt(document.getElementById('report-x').value);
+      const y = parseInt(document.getElementById('report-y').value);
+
+      const newReport = {
+        id: reportPins.length + 1,
+        type: type,
+        title: title,
+        desc: desc,
+        x: x || 300,
+        y: y || 200,
+        votes: 1,
+        date: '방금 전'
+      };
+
+      reportPins.unshift(newReport);
+      
+      document.getElementById('report-form').reset();
+      removePhoto({ preventDefault: () => {} });
+      styleReportRadio();
+      
+      renderMapPins();
+      renderActiveReports();
+
+      showToast('💌 안심제보 완료', '작성해주신 골목 어두움 소중한 정보가 즉각 지도에 보완 표시되었습니다.', '🚨');
+      switchTab('map');
+    }
+
+
+    /* ========================================================
+       STREAMING_CHUNK:Structuring Drawing Canvas...
+       3. 프리미엄 번짐 파스텔 수채화 드로잉 엔진 (HTML5 Canvas)
+       ======================================================== */
+    let canvas, ctx;
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function initDrawingCanvas() {
+      canvas = document.getElementById('mural-draw-board');
+      ctx = canvas.getContext('2d');
+
+      resizeDrawBoard();
+      window.addEventListener('resize', resizeDrawBoard);
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function resizeDrawBoard() {
+      if (!canvas) return;
+      const wrapper = document.getElementById('canvas-wrapper');
+      
+      const tempImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      canvas.width = wrapper.clientWidth - 12;
+      canvas.height = Math.max(300, wrapper.clientWidth * 0.55);
+
+      ctx.putImageData(tempImgData, 0, 0);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      lastX = e.clientX - rect.left;
+      lastY = e.clientY - rect.top;
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+
+      drawWatercolorStroke(lastX, lastY, currentX, currentY);
+
+      lastX = currentX;
+      lastY = currentY;
+    }
+
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      lastX = touch.clientX - rect.left;
+      lastY = touch.clientY - rect.top;
+      isDrawing = true;
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const currentX = touch.clientX - rect.left;
+      const currentY = touch.clientY - rect.top;
+
+      drawWatercolorStroke(lastX, lastY, currentX, currentY);
+
+      lastX = currentX;
+      lastY = currentY;
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    /* 번져서 겹겹이 칠해지는 고급스러운 파스텔 수채 수성 브러시 터치 */
+    function drawWatercolorStroke(x1, y1, x2, y2) {
+      const distance = Math.hypot(x2 - x1, y2 - y1);
+      const steps = Math.max(1, Math.floor(distance / 1.5));
+
+      if (isEraser) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = brushSize;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
+        return;
+      }
+
+      ctx.globalCompositeOperation = 'source-over';
+      
+      // 물감이 겹겹이 스며들며 은은한 수채화 반투명 구 레이어를 덧그려 포개어 번짐을 연출
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const cx = x1 + (x2 - x1) * t;
+        const cy = y1 + (y2 - y1) * t;
+        const currentRadius = brushSize / 2;
+
+        // 물감 중심부 (진하게 번지는 축)
+        let coreGrad = ctx.createRadialGradient(cx, cy, currentRadius * 0.1, cx, cy, currentRadius);
+        coreGrad.addColorStop(0, hexToRgba(selectedColor, 0.18));
+        coreGrad.addColorStop(0.5, hexToRgba(selectedColor, 0.05));
+        coreGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, currentRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 번짐용 외곽 퍼짐 (더 은은하고 넓게 침투하는 효과 수동 드로잉)
+        let bloomGrad = ctx.createRadialGradient(cx, cy, currentRadius * 0.5, cx, cy, currentRadius * 1.5);
+        bloomGrad.addColorStop(0, hexToRgba(selectedColor, 0.04));
+        bloomGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+        ctx.fillStyle = bloomGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, currentRadius * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function hexToRgba(hex, alpha) {
+      if (hex.startsWith('rgba')) return hex;
+      let c;
+      if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length== 3){
+          c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x' + c.join('');
+        return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+      }
+      return hex;
+    }
+
+    function changeColor(color, eraser = false) {
+      selectedColor = color;
+      isEraser = eraser;
+      if (eraser) {
+        showToast('🧼 지우개 스위치', '칠판의 흔적을 투명하고 깔끔하게 닦아냅니다.', '🎨');
+      } else {
+        showToast('🎨 수성 물감 선택', '부드럽게 번져나가는 새로운 수채화 톤이 변경되었습니다.', '🖌️');
+      }
+    }
+
+    function updateBrushSize(val) {
+      brushSize = val;
+      document.getElementById('brush-size-val').innerText = `${val}px`;
+    }
+
+    function clearCanvas() {
+      customConfirm('🎨 캔버스 완전 포맷', '소중하게 그리시던 드로잉을 모두 비우고 리셋하시겠습니까?', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        showToast('🧹 종이 정비 완료', '도화지가 완전히 깨끗하게 비워졌습니다.', '🎨');
+      });
+    }
+
+    function publishMural() {
+      const isBlank = isCanvasBlank();
+      if (isBlank) {
+        showToast('⚠️ 도화지 공백 안내', '그려두신 수채화 터치가 발견되지 않았습니다. 붓을 살포시 그어주세요.', '🎨');
+        return;
+      }
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 200;
+      tempCanvas.height = 150;
+      const tCtx = tempCanvas.getContext('2d');
+
+      // 미니멀 오트밀 베이지 정돈 대지
+      tCtx.fillStyle = '#F5EFEB';
+      tCtx.fillRect(0, 0, 200, 150);
+
+      // 격자 미립 무늬 수채화 질감 전사
+      tCtx.strokeStyle = 'rgba(0,0,0,0.015)';
+      tCtx.lineWidth = 0.5;
+      for(let i=0; i<200; i+=8){
+        tCtx.beginPath(); tCtx.moveTo(i, 0); tCtx.lineTo(i, 150); tCtx.stroke();
+        tCtx.beginPath(); tCtx.moveTo(0, i); tCtx.lineTo(200, i); tCtx.stroke();
+      }
+
+      tCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 200, 150);
+      const dataUrl = tempCanvas.toDataURL('image/png');
+
+      muralGalleryData.unshift({
+        id: muralGalleryData.length + 1,
+        img: dataUrl
+      });
+
+      renderMuralGallery();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      showToast('🖼️ 릴레이 전시 완료', '그려주신 예쁜 예술이 온온 릴레이 갤러리에 업로드되었습니다.', '🎨');
+    }
+
+    function renderMuralGallery() {
+      const gall = document.getElementById('mural-gallery');
+      gall.innerHTML = '';
+
+      muralGalleryData.slice(0, 8).forEach(item => {
+        const d = document.createElement('div');
+        d.className = "bg-white p-2 border border-warm-100 rounded-2xl shadow-soft hover:scale-105 active:scale-95 transition-all cursor-pointer relative group overflow-hidden";
+        d.innerHTML = `
+          <img src="${item.img}" class="w-full aspect-[4/3] object-cover rounded-xl" alt="주민 릴레이 벽화">
+          <div class="absolute inset-0 bg-warm-dark/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        `;
+        
+        d.onclick = () => {
+          const img = new Image();
+          img.onload = () => {
+            customConfirm('🎨 이어 그리기', '이 낙서 이미지를 캔버스로 이어받아 덧칠을 진행하시겠습니까?', () => {
+              ctx.drawImage(img, 0, 0, img.width, img.height, canvas.width*0.1, canvas.height*0.1, canvas.width*0.8, canvas.height*0.8);
+              showToast('🖌️ 릴레이 드로잉 착수', '불러온 다른 주민의 그림 위에 자유로운 붓 터치를 올려보세요!', '🎨');
+            });
+          };
+          img.src = item.img;
+        };
+
+        gall.appendChild(d);
+      });
+    }
+
+    function isCanvasBlank() {
+      const buffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+      return !buffer.some(color => color !== 0);
+    }
+
+    /* ========================================================
+       유틸리티 토스트 메시지 바인더
+       ======================================================== */
+    let toastTimeout;
+    function showToast(title, msg, icon = '✨') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-icon').innerText = icon;
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-message').innerText = msg;
+
+      toast.className = "fixed bottom-6 right-6 bg-warm-dark/95 backdrop-blur-sm text-white px-5 py-3.5 rounded-2xl shadow-floating translate-y-0 opacity-100 transition-all duration-300 z-[99] max-w-sm flex items-center gap-3 border border-white/10";
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.className = "fixed bottom-6 right-6 bg-warm-dark/95 backdrop-blur-sm text-white px-5 py-3.5 rounded-2xl shadow-floating translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-[99] max-w-sm flex items-center gap-3 border border-white/10";
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

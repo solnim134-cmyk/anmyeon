@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주차 전쟁: 태안 탈출기! 3D</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons for Beautiful UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js for premium retro audio effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap');
+        
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            perspective: 1200px; /* Enable global 3D perspective */
+            overflow-x: hidden;
+        }
+        .title-font {
+            font-family: 'Jua', sans-serif;
+        }
+
+        /* 3D Scene and Container */
+        .scene-3d {
+            perspective: 1000px;
+            perspective-origin: 50% 40%;
+            transform-style: preserve-3d;
+        }
+        
+        /* Isometric Grid Angle */
+        .grid-3d {
+            transform-style: preserve-3d;
+            transform: rotateX(50deg) rotateZ(-45deg);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Shake animation for the entire 3D Parking Grid during hazard */
+        @keyframes emergency-shake-3d {
+            0% { transform: rotateX(50deg) rotateZ(-45deg) translate3d(0px, 0px, 0px); }
+            20% { transform: rotateX(52deg) rotateZ(-43deg) translate3d(-4px, 2px, 5px); }
+            40% { transform: rotateX(48deg) rotateZ(-47deg) translate3d(3px, -3px, -4px); }
+            60% { transform: rotateX(51deg) rotateZ(-44deg) translate3d(-2px, -1px, 3px); }
+            80% { transform: rotateX(49deg) rotateZ(-46deg) translate3d(4px, 4px, -2px); }
+            100% { transform: rotateX(50deg) rotateZ(-45deg) translate3d(0px, 0px, 0px); }
+        }
+        .shake-active-3d {
+            animation: emergency-shake-3d 0.2s infinite;
+        }
+
+        /* 3D CSS block styling for parking spots */
+        .spot-3d-block {
+            position: relative;
+            transform-style: preserve-3d;
+            height: 80px;
+            width: 80px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Concrete Base Thickness (Sides of the parking spot) */
+        .spot-3d-block::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: #1e293b;
+            transform: rotateX(-90deg);
+            transform-origin: bottom;
+            border-bottom: 2px solid #0f172a;
+        }
+        .spot-3d-block::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -8px;
+            width: 8px;
+            height: 100%;
+            background: #334155;
+            transform: rotateY(90deg);
+            transform-origin: right;
+            border-left: 2px solid #0f172a;
+        }
+
+        /* 3D Toy Car Block (Extruded Box) */
+        .car-3d-box {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            bottom: 10px;
+            left: 10px;
+            transform-style: preserve-3d;
+            transform: translateZ(0px) scaleZ(0);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .car-3d-box.active {
+            transform: translateZ(25px) scaleZ(1);
+        }
+
+        /* Individual faces of the 3D Car Cube */
+        .car-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: visible;
+            border-radius: 6px;
+            font-size: 2rem;
+        }
+
+        /* Front Face (Facing South-East) */
+        .face-front {
+            background: linear-gradient(135deg, rgba(239,68,68,0.9), rgba(185,28,28,0.9));
+            transform: rotateX(-90deg) translateZ(30px);
+            height: 35px;
+            bottom: 0;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: inset 0 8px 10px rgba(255,255,255,0.2);
+        }
+
+        /* Back Face (Facing North-West) */
+        .face-back {
+            background: linear-gradient(135deg, rgba(153,27,27,0.9), rgba(127,29,29,0.9));
+            transform: rotateX(90deg) translateZ(30px);
+            height: 35px;
+            top: 0;
+            border: 2px solid rgba(0,0,0,0.3);
+        }
+
+        /* Left Side Face */
+        .face-left {
+            background: linear-gradient(135deg, rgba(220,38,38,0.95), rgba(153,27,27,0.95));
+            transform: rotateY(-90deg) translateZ(30px);
+            width: 35px;
+            left: 0;
+            border: 2px solid rgba(0,0,0,0.2);
+        }
+
+        /* Right Side Face */
+        .face-right {
+            background: linear-gradient(135deg, rgba(248,113,113,0.95), rgba(185,28,28,0.95));
+            transform: rotateY(90deg) translateZ(30px);
+            width: 35px;
+            right: 0;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Top Roof Face */
+        .face-top {
+            background: linear-gradient(135deg, rgba(252,165,165,1), rgba(220,38,38,1));
+            transform: translateZ(17.5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 3px solid rgba(255,255,255,0.5);
+        }
+
+        /* Dynamic 3D shadow projected underneath the car */
+        .car-shadow {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            filter: blur(6px);
+            transform: translateZ(-2px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .active .car-shadow {
+            opacity: 1;
+        }
+
+        /* Color variations for camper and luxury cars */
+        /* Camper Mode (Orange/Amber) */
+        .camper-3d .face-front { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .camper-3d .face-back { background: linear-gradient(135deg, #d97706, #78350f); }
+        .camper-3d .face-left { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .camper-3d .face-right { background: linear-gradient(135deg, #fbbf24, #b45309); }
+        .camper-3d .face-top { background: linear-gradient(135deg, #fef08a, #f59e0b); }
+
+        /* Luxury Supercar Mode (Purple/Indigo) */
+        .luxury-3d .face-front { background: linear-gradient(135deg, #a855f7, #6b21a8); }
+        .luxury-3d .face-back { background: linear-gradient(135deg, #8b5cf6, #4c1d95); }
+        .luxury-3d .face-left { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+        .luxury-3d .face-right { background: linear-gradient(135deg, #c084fc, #6b21a8); }
+        .luxury-3d .face-top { background: linear-gradient(135deg, #e9d5ff, #a855f7); }
+
+        /* Squash & Stretch effect when clicked */
+        @keyframes block-hit {
+            0% { transform: translateZ(25px) scale3d(1.2, 1.2, 0.4); }
+            45% { transform: translateZ(35px) scale3d(0.8, 0.8, 1.3); }
+            100% { transform: translateZ(25px) scale3d(1, 1, 1); }
+        }
+        .hit-impact-active {
+            animation: block-hit 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Floating Bus animation */
+        @keyframes float-bus {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .floating-bus-3d {
+            animation: float-bus 2.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- 메인 게임 가상 조종 컨테이너 -->
+    <div class="relative w-full max-w-md bg-slate-900 rounded-3xl shadow-2xl border-4 border-indigo-500 p-5 overflow-hidden text-white">
+        
+        <!-- 게임 헤더 정보 -->
+        <div class="text-center mb-4">
+            <span class="bg-gradient-to-r from-purple-600 to-red-600 text-[10px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest animate-pulse border border-purple-400">
+                <i class="fa-solid fa-cube mr-1"></i> REAL 3D ISOMETRIC PLAY
+            </span>
+            <h1 class="title-font text-3xl text-indigo-200 mt-2.5 mb-1.5 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-car-burst text-red-500 animate-bounce"></i> 주차 전쟁 3D : 헬모드
+            </h1>
+            <p class="text-[11px] text-indigo-300/80 font-bold">입체감 폭발! 솟아오르는 3D 불법 차량 블록을 후려쳐 참교육하세요!</p>
+        </div>
+
+        <!-- 점수 및 혼잡도 대시보드 -->
+        <div class="flex justify-between items-center bg-slate-950/80 rounded-2xl p-4 mb-5 border border-indigo-900/50 backdrop-blur-sm">
+            <div class="text-center">
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">구출 성공</p>
+                <p class="text-2xl font-black text-indigo-400" id="score-val">0</p>
+            </div>
+            <div class="h-10 w-[1px] bg-indigo-900/50"></div>
+            <div class="text-center">
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">주차 공간 혼잡</p>
+                <p class="text-2xl font-black text-rose-500" id="occupancy-val">0 / 7</p>
+            </div>
+            <div class="h-10 w-[1px] bg-indigo-900/50"></div>
+            <div class="text-center">
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">마비 진행율</p>
+                <p class="text-lg font-black text-emerald-400 title-font" id="level-val">평화로움</p>
+            </div>
+        </div>
+
+        <!-- 3D 아이소메트릭 주차 공간 (가장 가상적인 무대) -->
+        <div class="scene-3d w-full aspect-square flex items-center justify-center bg-slate-950/40 rounded-3xl border-2 border-indigo-900/30 p-2 overflow-hidden mb-4">
+            <div id="parking-grid" class="grid-3d grid grid-cols-3 gap-x-6 gap-y-7 p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 border-4 border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+                
+                <!-- 1번 주차 블록 -->
+                <button onclick="clearSpot(0)" id="spot-0" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P1</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 2번 주차 블록 -->
+                <button onclick="clearSpot(1)" id="spot-1" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P2</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 3번 주차 블록 -->
+                <button onclick="clearSpot(2)" id="spot-2" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P3</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 4번 주차 블록 -->
+                <button onclick="clearSpot(3)" id="spot-3" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P4</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 5번 주차 블록 -->
+                <button onclick="clearSpot(4)" id="spot-4" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P5</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 6번 주차 블록 -->
+                <button onclick="clearSpot(5)" id="spot-5" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P6</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 7번 주차 블록 -->
+                <button onclick="clearSpot(6)" id="spot-6" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P7</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 8번 주차 블록 -->
+                <button onclick="clearSpot(7)" id="spot-7" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P8</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+                <!-- 9번 주차 블록 -->
+                <button onclick="clearSpot(8)" id="spot-8" class="spot-3d-block bg-slate-800 hover:bg-indigo-900/40 border-2 border-slate-700 rounded-xl focus:outline-none flex items-center justify-center relative shadow-inner">
+                    <span class="absolute top-1 left-1.5 text-[9px] text-slate-500 font-bold">P9</span>
+                    <div class="hp-gauge absolute top-1.5 right-1.5 flex gap-0.5 z-30"></div>
+                    <div class="car-shadow"></div>
+                    <div class="car-3d-box">
+                        <div class="car-face face-front"></div>
+                        <div class="car-face face-back"></div>
+                        <div class="car-face face-left"></div>
+                        <div class="car-face face-right"></div>
+                        <div class="car-face face-top">🚗</div>
+                    </div>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- 빌런 도감 가이드 정보 -->
+        <div class="bg-indigo-950/80 rounded-xl p-3 border border-indigo-800/80 text-[11px] mb-3">
+            <p class="font-bold mb-1 text-xs text-indigo-300"><i class="fa-solid fa-circle-question mr-1"></i> 극악무도 3D 빌런 타격 매뉴얼</p>
+            <div class="grid grid-cols-3 gap-2 text-center text-slate-300">
+                <div class="bg-slate-900/80 p-1.5 rounded border border-red-900/50">
+                    <span class="text-base">🚗</span> <p class="font-bold text-[10px]">일반 승용차</p><span class="text-red-400 font-black">터치 1회</span>
+                </div>
+                <div class="bg-slate-900/80 p-1.5 rounded border border-amber-900/50">
+                    <span class="text-base">🚐</span> <p class="font-bold text-[10px]">무단 캠핑카</p><span class="text-amber-400 font-black">연속 2회</span>
+                </div>
+                <div class="bg-slate-900/80 p-1.5 rounded border border-purple-900/50">
+                    <span class="text-base">🏎️</span> <p class="font-bold text-[10px]">이중 주차카</p><span class="text-purple-400 font-black">광클 3회</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 캠페인 한줄 홍보 -->
+        <div class="bg-teal-950/50 rounded-xl p-2.5 border border-teal-800/80 flex items-center gap-2">
+            <span class="text-xl">🚌</span>
+            <p class="text-[10px] text-teal-300 leading-snug">
+                자가용은 편히 숙소 주차장에 두고, **태안 관광 대중 셔틀버스**를 이용하시면 3D 헬게이트 주차 대란을 완벽히 피할 수 있습니다!
+            </p>
+        </div>
+
+        <!-- [오버레이 1] 시작 화면 -->
+        <div id="start-overlay" class="absolute inset-0 bg-slate-950/95 z-40 flex flex-col items-center justify-center p-6 text-center transition-all duration-300">
+            <div class="floating-bus-3d text-6xl mb-4">🚨🚌💥</div>
+            <h2 class="title-font text-3xl text-indigo-300 mb-1">주차 전쟁 3D : 헬모드</h2>
+            <span class="bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full mb-5 uppercase tracking-widest animate-pulse">
+                HELL-MODE SIMULATION
+            </span>
+            <p class="text-xs text-slate-300 max-w-xs mb-6 leading-relaxed">
+                캠핑카와 이중 주차 슈퍼카가 추가된 **리얼 3D 입체 스테이지**가 열렸습니다. <b>7대 이상 주차되면 게임 오버!</b> 순발력 높은 손가락 피지컬로 대혼란을 사수하세요!
+            </p>
+            <button onclick="activateAudioAndStart()" class="title-font text-base px-8 py-3.5 bg-gradient-to-r from-red-600 via-indigo-600 to-indigo-700 hover:from-red-500 hover:to-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-950 hover:scale-105 active:scale-95 transition-all duration-150">
+                3D 참교육 부팅하기 <i class="fa-solid fa-gamepad ml-1"></i>
+            </button>
+        </div>
+
+        <!-- [오버레이 2] 게임오버 & 캠페인 팝업 -->
+        <div id="gameover-overlay" class="absolute inset-0 bg-slate-950/95 z-40 flex flex-col items-center justify-center p-6 text-center hidden transition-all duration-300">
+            <div class="text-5xl mb-2 animate-bounce">🚨🤬💥</div>
+            <h2 class="title-font text-3xl text-red-500 mb-1">교통 마비! 주차장 폭발!</h2>
+            <p class="text-xs text-slate-400 mb-4">무개념 빌런 차들이 끝끝내 꼬리를 물어 지옥 같은 정체가 발생했습니다.</p>
+
+            <!-- 결과 대시보드 -->
+            <div class="bg-red-950/40 border border-red-900/60 rounded-2xl p-4 w-full mb-4">
+                <p class="text-xs text-red-400 font-bold">당신이 처치한 3D 빌런 차량 수</p>
+                <p class="text-4xl font-black text-red-500 title-font my-1"><span id="final-score">0</span>대</p>
+                <p class="text-[11px] text-slate-300" id="final-comment">손가락이 따라가지 못했습니다!</p>
+            </div>
+
+            <!-- 캠페인 홍보 박스 -->
+            <div class="bg-gradient-to-br from-indigo-950/80 to-slate-900/80 border-2 border-teal-500/80 rounded-2xl p-4 w-full text-left mb-5 shadow-inner">
+                <h4 class="font-bold text-teal-400 text-xs flex items-center gap-1.5 mb-1.5">
+                    <i class="fa-solid fa-lightbulb"></i> 해결 불가능해 보이는 교통 마비, 정답은?
+                </h4>
+                <p class="text-[10.5px] text-slate-300 leading-relaxed">
+                    관광 차량이 아무리 밀려들어도 무한한 주차장을 제공할 수는 없습니다. 태안 주요 관광지 거점을 막힘없이 시원하게 이을 수 있는 <b>'관광객 전용 무료 순환 셔틀버스 대거 확충'</b>만이 완벽한 솔루션입니다!
+                </p>
+                <div class="mt-2.5 text-[10px] font-bold text-indigo-300 flex justify-between items-center">
+                    <span>#내차는_숙소에_이동은_셔틀로</span>
+                    <span class="bg-indigo-900 px-2 py-0.5 rounded text-indigo-200">서명운동 참가하기 ➔</span>
+                </div>
+            </div>
+
+            <!-- 하단 액션 버튼 그룹 -->
+            <div class="flex gap-3 w-full">
+                <button onclick="startGame()" class="flex-1 py-3 bg-slate-800 text-slate-200 hover:bg-slate-700 font-bold rounded-xl active:scale-95 transition-all text-xs border border-slate-700">
+                    <i class="fa-solid fa-rotate-left"></i> 재참교육 도전
+                </button>
+                <button onclick="shareCampaign()" class="flex-1 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-teal-950 hover:scale-105 active:scale-95 transition-all text-xs">
+                    <i class="fa-solid fa-share-nodes"></i> 캠페인 널리알리기
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 알림 상자 (Alert 대용) -->
+    <div id="custom-toast" class="fixed top-5 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transform -translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-indigo-500">
+        <i class="fa-solid fa-circle-exclamation text-indigo-400 animate-spin"></i>
+        <span id="toast-message">알림 메시지</span>
+    </div>
+
+    <!-- 스크립트 로직 -->
+    <script>
+        // Retro audio instruments using Tone.js
+        let synth, noiseSynth, metalSynth;
+
+        function initSynth() {
+            try {
+                // Main synth for laser and spawn effects
+                synth = new Tone.MonoSynth({
+                    oscillator: { type: "square" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+                }).toDestination();
+
+                // Noise synth for explosions
+                noiseSynth = new Tone.NoiseSynth({
+                    noise: { type: "white" },
+                    envelope: { attack: 0.005, decay: 0.25, sustain: 0 }
+                }).toDestination();
+
+                // Metal synth for hitting cars
+                metalSynth = new Tone.MetalSynth({
+                    frequency: 200,
+                    envelope: { attack: 0.001, decay: 0.08, release: 0.08 },
+                    harmonicity: 5.1,
+                    resonance: 8000,
+                    modulationIndex: 32
+                }).toDestination();
+            } catch (e) {
+                console.log("Audio Context issue, fallback is enabled:", e);
+            }
+        }
+
+        // Play Sound triggers
+        function playSound(type) {
+            if (!synth) return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                
+                if (type === 'spawn') {
+                    // Quick sci-fi rise sound
+                    synth.triggerAttackRelease("C4", "16n");
+                    synth.frequency.rampTo("C5", 0.05);
+                } else if (type === 'hit') {
+                    // Metallic click
+                    metalSynth.triggerAttack();
+                } else if (type === 'destroy') {
+                    // Noise burst explosion
+                    noiseSynth.triggerAttack();
+                    // Pitch sweep down
+                    synth.triggerAttackRelease("G2", "8n");
+                } else if (type === 'danger') {
+                    synth.triggerAttackRelease("A3", "16n");
+                }
+            } catch (e) {
+                // Fail silently if audio block
+            }
+        }
+
+        // 차량 유형 및 입체 스타일 매칭
+        const CAR_TYPES = {
+            normal: {
+                emojis: ['🚗', '🚕', '🚙', '🚘'],
+                hp: 1,
+                cssClass: 'normal-3d'
+            },
+            camper: {
+                emojis: ['🚐', '🚚'],
+                hp: 2,
+                cssClass: 'camper-3d'
+            },
+            luxury: {
+                emojis: ['🏎️'],
+                hp: 3,
+                cssClass: 'luxury-3d'
+            }
+        };
+
+        // 상태 변수
+        let score = 0;
+        let gameActive = false;
+        let spawnTimer = null;
+        let baseSpeed = 1100; // 차량 리스폰 초기 주기 (ms)
+        
+        // 9개의 주차칸 상태 관리 (null 또는 차량 객체 { type, hp, maxHp, emoji, cssClass })
+        let spots = Array(9).fill(null);
+        const maxSpots = spots.length;
+        const gameOverLimit = 7; // 9칸 중 7칸 차면 마비 오버!
+
+        function activateAudioAndStart() {
+            // Initialize Audio Context on user interaction to obey browser guidelines
+            initSynth();
+            startGame();
+        }
+
+        // 알림 토스트 띄우기
+        function showToast(message) {
+            const toast = document.getElementById('custom-toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('-translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // 게임 시작
+        function startGame() {
+            score = 0;
+            spots = Array(9).fill(null);
+            baseSpeed = 1100;
+            gameActive = true;
+
+            // UI 및 지표 초기화
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('occupancy-val').innerText = `0 / ${gameOverLimit}`;
+            document.getElementById('level-val').innerText = "평화로움";
+            document.getElementById('level-val').className = "text-lg font-black text-green-400 title-font";
+            document.getElementById('parking-grid').className = "grid-3d grid grid-cols-3 gap-x-6 gap-y-7 p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 border-4 border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.6)]";
+
+            // 주차장 칸 초기화 (3D 클래스 리셋)
+            for (let i = 0; i < maxSpots; i++) {
+                const box = document.querySelector(`#spot-${i} .car-3d-box`);
+                box.classList.remove('active', 'hit-impact-active', 'normal-3d', 'camper-3d', 'luxury-3d');
+                
+                const gauge = document.querySelector(`#spot-${i} .hp-gauge`);
+                gauge.innerHTML = "";
+            }
+
+            // 오버레이 제거
+            document.getElementById('start-overlay').classList.add('hidden');
+            document.getElementById('gameover-overlay').classList.add('hidden');
+
+            // 리스폰 주기 작동 시작
+            if (spawnTimer) clearInterval(spawnTimer);
+            spawnTimer = setInterval(gameTick, baseSpeed);
+        }
+
+        // 차량 생성 엔진
+        function gameTick() {
+            if (!gameActive) return;
+
+            // 비어있는 주차 칸 목록화
+            let emptySpots = [];
+            spots.forEach((car, index) => {
+                if (car === null) emptySpots.push(index);
+            });
+
+            if (emptySpots.length === 0) return;
+
+            // 점수 증가에 따라 동시 리스폰 개수 배정
+            let spawnCount = 1;
+            const rand = Math.random();
+            if (score >= 40 && rand > 0.4) {
+                spawnCount = 3; // 동시 3대 출몰
+            } else if (score >= 12 && rand > 0.6) {
+                spawnCount = 2; // 동시 2대 출몰
+            }
+
+            spawnCount = Math.min(spawnCount, emptySpots.length);
+
+            for (let s = 0; s < spawnCount; s++) {
+                // 남은 빈칸 중 랜덤 추출
+                let currentEmpty = [];
+                spots.forEach((car, index) => {
+                    if (car === null) currentEmpty.push(index);
+                });
+                if (currentEmpty.length === 0) break;
+
+                const targetIndex = currentEmpty[Math.floor(Math.random() * currentEmpty.length)];
+                
+                // 난이도별 차량 맷집 설정
+                let chosenType = 'normal';
+                const typeRand = Math.random();
+                if (score >= 25) {
+                    if (typeRand > 0.75) chosenType = 'luxury'; // 슈퍼카
+                    else if (typeRand > 0.45) chosenType = 'camper'; // 캠핑카
+                } else if (score >= 6) {
+                    if (typeRand > 0.65) chosenType = 'camper'; // 캠핑카 등장 시작
+                }
+
+                const config = CAR_TYPES[chosenType];
+                const selectedEmoji = config.emojis[Math.floor(Math.random() * config.emojis.length)];
+
+                // 차량 상태 주입
+                spots[targetIndex] = {
+                    type: chosenType,
+                    emoji: selectedEmoji,
+                    hp: config.hp,
+                    maxHp: config.hp,
+                    cssClass: config.cssClass
+                };
+
+                // 실재 3D 그리기
+                renderCar3D(targetIndex);
+                playSound('spawn');
+            }
+
+            updateUIState();
+        }
+
+        // 3D 차량 랜더링과 HP 게이지 표기
+        function renderCar3D(index) {
+            const car = spots[index];
+            if (!car) return;
+
+            const box = document.querySelector(`#spot-${index} .car-3d-box`);
+            const topFace = document.querySelector(`#spot-${index} .face-top`);
+            
+            // 기존 3D 클래스 지우고 새 클래스 부착
+            box.classList.remove('normal-3d', 'camper-3d', 'luxury-3d');
+            box.classList.add(car.cssClass, 'active');
+            
+            // 지붕에 이모지 각인
+            topFace.innerHTML = car.emoji;
+
+            // 미니멀한 3D 체력 도트 표기
+            const gauge = document.querySelector(`#spot-${index} .hp-gauge`);
+            gauge.innerHTML = "";
+            for (let h = 0; h < car.hp; h++) {
+                const dot = document.createElement('div');
+                dot.className = `w-2 h-2 rounded-full border border-slate-950/80 ${car.type === 'luxury' ? 'bg-purple-300 shadow-[0_0_5px_#a855f7]' : car.type === 'camper' ? 'bg-amber-300 shadow-[0_0_5px_#f59e0b]' : 'bg-red-400 shadow-[0_0_5px_#ef4444]'}`;
+                gauge.appendChild(dot);
+            }
+        }
+
+        // 입체 차량 터치 (클릭 데미지 전달)
+        function clearSpot(index) {
+            if (!gameActive) return;
+
+            const car = spots[index];
+            if (car) {
+                car.hp--;
+
+                const box = document.querySelector(`#spot-${index} .car-3d-box`);
+                
+                // Squash impact animation trigger
+                box.classList.remove('hit-impact-active');
+                void box.offsetWidth; // Force Reflow
+                box.classList.add('hit-impact-active');
+
+                if (car.hp <= 0) {
+                    // 완파 성공 및 출차
+                    spots[index] = null;
+                    playSound('destroy');
+
+                    const topFace = document.querySelector(`#spot-${index} .face-top`);
+                    topFace.innerHTML = "💨"; // Smoke Effect
+
+                    // 3D 박스 가라앉히기
+                    box.classList.remove('active');
+                    
+                    const gauge = document.querySelector(`#spot-${index} .hp-gauge`);
+                    gauge.innerHTML = "";
+
+                    score++;
+                    document.getElementById('score-val').innerText = score;
+
+                    // 난이도 변경 수치화
+                    adjustDifficulty();
+                } else {
+                    // 타격 성공 (여전히 맷집 남음)
+                    playSound('hit');
+                    renderCar3D(index);
+                }
+                
+                updateUIState();
+            }
+        }
+
+        // 난이도별 가속 단계
+        function adjustDifficulty() {
+            let newSpeed = baseSpeed;
+            let levelText = "평화로움";
+            let levelClass = "text-lg font-black text-green-400 title-font";
+
+            if (score >= 45) {
+                newSpeed = 350;
+                levelText = "🚨 헬태안 (시즌 절정)";
+                levelClass = "text-lg font-black text-red-500 title-font animate-pulse";
+            } else if (score >= 25) {
+                newSpeed = 480;
+                levelText = "🔥 대혼란 (불금 저녁)";
+                levelClass = "text-lg font-black text-orange-500 title-font";
+            } else if (score >= 12) {
+                newSpeed = 650;
+                levelText = "⚡ 복잡함 (토요일 오전)";
+                levelClass = "text-lg font-black text-indigo-400 title-font";
+            } else if (score >= 4) {
+                newSpeed = 850;
+                levelText = "주의 (평일 오후)";
+                levelClass = "text-lg font-black text-amber-500 title-font";
+            }
+
+            if (newSpeed !== baseSpeed) {
+                baseSpeed = newSpeed;
+                clearInterval(spawnTimer);
+                spawnTimer = setInterval(gameTick, baseSpeed);
+                
+                const lvlEl = document.getElementById('level-val');
+                lvlEl.innerText = levelText;
+                lvlEl.className = levelClass;
+            }
+        }
+
+        // 전체 주차 판 위험 모니터링
+        function updateUIState() {
+            const occupiedCount = spots.filter(car => car !== null).length;
+            document.getElementById('occupancy-val').innerText = `${occupiedCount} / ${gameOverLimit}`;
+
+            const grid = document.getElementById('parking-grid');
+            
+            // 5대 이상 찰 경우 주차장 전체 3D 궤도 흔들림 위기 연출
+            if (occupiedCount >= 5) {
+                grid.classList.add('shake-active-3d', 'border-red-600', 'shadow-[0_0_30px_rgba(239,68,68,0.4)]');
+                playSound('danger');
+            } else {
+                grid.classList.remove('shake-active-3d', 'border-red-600', 'shadow-[0_0_30px_rgba(239,68,68,0.4)]');
+            }
+
+            // 7대 이상 적재 시 게임 종료
+            if (occupiedCount >= gameOverLimit) {
+                endGame();
+            }
+        }
+
+        // 게임 종료 트리거
+        function endGame() {
+            gameActive = false;
+            clearInterval(spawnTimer);
+            
+            let comment = "아직 손가락 속도가 무개념 주차 속도를 따라잡지 못하는군요!";
+            if (score >= 50) {
+                comment = "3D 헬모드를 제패한 압도적 기동력! 대단하십니다! 🏆";
+            } else if (score >= 25) {
+                comment = "매우 수준 높은 순발력입니다! 하지만 계속 들어차는 3D 빌런은 당해내기 어렵죠.";
+            } else if (score >= 10) {
+                comment = "좋은 분투였습니다! 하지만 대형 캠핑카들이 공간을 다 메웠습니다.";
+            }
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-comment').innerText = comment;
+            document.getElementById('gameover-overlay').classList.remove('hidden');
+        }
+
+        // 캠페인 클립보드 공유
+        function shareCampaign() {
+            const campaignUrl = window.location.href;
+            const dummyInput = document.createElement('input');
+            document.body.appendChild(dummyInput);
+            dummyInput.value = `[태안 셔틀버스 확대 캠페인] 💥주차 전쟁3D : 헬모드💥 솟아오르는 3D 입체 빌런들을 타격해 물리치고 태안 교통 체증을 해결하세요! 👉 ${campaignUrl}`;
+            dummyInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummyInput);
+
+            showToast("📢 캠페인 홍보 문구가 클립보드에 복사되었습니다!");
+        }
+    </script>
+</body>
+</html>

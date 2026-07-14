@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>함께 채워가는 우리 동네 이야기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Jua (둥글고 귀여운 서체), Nanum Gothic (기본 서체) -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (아이콘 라이브러리) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* 둥근 글씨체 컨셉 적용 */
+        .font-jua {
+            font-family: 'Jua', sans-serif;
+        }
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background-color: #FAF8F5; /* 따뜻한 크림 아이보리 배경 */
+        }
+        /* 부드러운 스크롤 */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="text-stone-800 antialiased">
+
+    <!-- 1. 헤더 / 네비게이션 -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-stone-200">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </div>
+                <span class="font-jua text-xl text-emerald-600 tracking-wide">우리동네 온(溫)</span>
+            </div>
+            <nav class="hidden sm:flex space-x-6 text-sm font-bold text-stone-600">
+                <a href="#about" class="hover:text-emerald-500 transition">무슨 일일까요?</a>
+                <a href="#why" class="hover:text-emerald-500 transition">왜 중요할까요?</a>
+                <a href="#action" class="hover:text-emerald-500 transition">함께하는 실천</a>
+                <a href="#support" class="hover:text-emerald-500 transition">응원 한마디</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 2. 히어로 섹션 (캠페인 메인 비주얼) -->
+    <section class="relative bg-gradient-to-b from-emerald-50 to-amber-50/50 py-16 px-4 text-center">
+        <div class="max-w-2xl mx-auto">
+            <span class="inline-block bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1.5 rounded-full mb-4">
+                🌱 로컬 상생 캠페인
+            </span>
+            <h1 class="font-jua text-4xl sm:text-5xl text-stone-800 leading-tight mb-4">
+                우리 동네가 사라진다면 <br class="sm:hidden">어떨까요?
+            </h1>
+            <p class="text-stone-600 text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto">
+                아이들의 웃음소리가 줄어들고, 오래된 가게들이 문을 닫는 곳. <br class="hidden sm:inline">
+                지금 전국의 많은 지역이 조용히 작아지고 있습니다.
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="#action" class="font-jua bg-emerald-500 hover:bg-emerald-600 text-white text-lg px-6 py-3 rounded-2xl shadow-md transition transform hover:-translate-y-1">
+                    지금 실천하러 가기
+                </a>
+                <a href="#about" class="font-jua bg-white hover:bg-stone-50 text-stone-700 text-lg px-6 py-3 rounded-2xl border border-stone-200 shadow-sm transition transform hover:-translate-y-1">
+                    더 알아보기
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. 지역 소멸이란? (쉬운 설명) -->
+    <section id="about" class="py-16 px-4 max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="font-jua text-3xl text-stone-800 mb-2">쉽게 알아보는 '지역 소멸'</h2>
+            <p class="text-stone-500 text-sm">어렵게 느껴지는 사회 문제, 한눈에 쉽게 정리해 드려요.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- 카드 1 -->
+            <div class="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm flex flex-col items-center text-center">
+                <div class="w-14 h-14 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <h3 class="font-jua text-xl text-stone-800 mb-2">떠나는 사람들</h3>
+                <p class="text-stone-600 text-sm leading-relaxed">
+                    일자리와 교육을 찾아 대도시로 많은 청년들이 이동하고 있어요.
+                </p>
+            </div>
+            <!-- 카드 2 -->
+            <div class="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm flex flex-col items-center text-center">
+                <div class="w-14 h-14 bg-amber-100 text-amber-500 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="baby" class="w-8 h-8"></i>
+                </div>
+                <h3 class="font-jua text-xl text-stone-800 mb-2">줄어드는 아기 울음소리</h3>
+                <p class="text-stone-600 text-sm leading-relaxed">
+                    결혼과 출산이 줄어들면서, 지역에 살 수 있는 다음 세대가 사라져 가요.
+                </p>
+            </div>
+            <!-- 카드 3 -->
+            <div class="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm flex flex-col items-center text-center">
+                <div class="w-14 h-14 bg-blue-100 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="store" class="w-8 h-8"></i>
+                </div>
+                <h3 class="font-jua text-xl text-stone-800 mb-2">사라지는 인프라</h3>
+                <p class="text-stone-600 text-sm leading-relaxed">
+                    병의원, 학교, 대중교통 등이 점차 줄어들어 남은 주민들도 큰 불편을 겪게 돼요.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. 왜 우리의 관심이 필요할까요? -->
+    <section id="why" class="bg-amber-50/50 py-16 px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="font-jua text-3xl text-stone-800 mb-2">왜 우리가 관심을 가져야 할까요?</h2>
+                <p class="text-stone-500 text-sm">로컬이 사라진다면, 우리의 일상도 건강할 수 없습니다.</p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 sm:p-10 border border-stone-200/60 shadow-sm space-y-6">
+                <div class="flex items-start space-x-4">
+                    <div class="bg-emerald-100 text-emerald-600 p-2.5 rounded-full mt-1 shrink-0">
+                        <i data-lucide="heart" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-jua text-lg text-stone-800 mb-1">우리 모두의 고향이자 기억의 보관소</h4>
+                        <p class="text-stone-600 text-sm leading-relaxed">
+                            우리가 태어나고 자란 곳, 혹은 여행에서 만난 따뜻한 시골 풍경이 사라집니다. 지역만의 독특한 문화와 역사도 함께 잃어버리게 돼요.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4 border-t border-stone-100 pt-6">
+                    <div class="bg-emerald-100 text-emerald-600 p-2.5 rounded-full mt-1 shrink-0">
+                        <i data-lucide="apple" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-jua text-lg text-stone-800 mb-1">식탁 위의 위기, 식량과 자원의 탯줄</h4>
+                        <p class="text-stone-600 text-sm leading-relaxed">
+                            우리가 먹는 건강한 농수산물의 대부분은 로컬에서 옵니다. 지역이 사라지면 먹거리 생산 체계도 무너지게 됩니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4 border-t border-stone-100 pt-6">
+                    <div class="bg-emerald-100 text-emerald-600 p-2.5 rounded-full mt-1 shrink-0">
+                        <i data-lucide="smile" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-jua text-lg text-stone-800 mb-1">숨 막히는 도시의 여유 공간</h4>
+                        <p class="text-stone-600 text-sm leading-relaxed">
+                            밀집된 도심을 벗어나 맑은 공기와 자연 속에서 쉴 수 있는 쉼터가 되어주는 곳이 바로 로컬입니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. 참여형 인터랙션: 오늘부터 할 수 있는 실천 다짐 -->
+    <section id="action" class="py-16 px-4 max-w-3xl mx-auto">
+        <div class="text-center mb-10">
+            <span class="text-emerald-600 font-bold text-sm tracking-widest uppercase">My Action List</span>
+            <h2 class="font-jua text-3xl text-stone-800 mt-2 mb-2">내가 할 수 있는 작은 실천들</h2>
+            <p class="text-stone-500 text-sm">오늘 내가 동참할 수 있는 일은 무엇이 있을까요? 체크해보세요!</p>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-sm">
+            <div class="space-y-4">
+                <!-- 체크리스트 아이템 1 -->
+                <label class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-stone-50 cursor-pointer transition">
+                    <input type="checkbox" onchange="updateProgress()" class="w-5 h-5 accent-emerald-500 rounded border-stone-300 focus:ring-emerald-500">
+                    <span class="text-stone-700 text-sm sm:text-base">🎒 <strong>로컬 여행 떠나기:</strong> 주말에 유명 도시가 아닌 소도시 투어 가보기</span>
+                </label>
+                <!-- 체크리스트 아이템 2 -->
+                <label class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-stone-50 cursor-pointer transition">
+                    <input type="checkbox" onchange="updateProgress()" class="w-5 h-5 accent-emerald-500 rounded border-stone-300 focus:ring-emerald-500">
+                    <span class="text-stone-700 text-sm sm:text-base">🥕 <strong>지역 특산물 구매하기:</strong> 우리 농산물 브랜드 이용하기</span>
+                </label>
+                <!-- 체크리스트 아이템 3 -->
+                <label class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-stone-50 cursor-pointer transition">
+                    <input type="checkbox" onchange="updateProgress()" class="w-5 h-5 accent-emerald-500 rounded border-stone-300 focus:ring-emerald-500">
+                    <span class="text-stone-700 text-sm sm:text-base">🎁 <strong>고향사랑기부제 관심 갖기:</strong> 기부하고 세액 공제와 답례품 받기</span>
+                </label>
+                <!-- 체크리스트 아이템 4 -->
+                <label class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-stone-50 cursor-pointer transition">
+                    <input type="checkbox" onchange="updateProgress()" class="w-5 h-5 accent-emerald-500 rounded border-stone-300 focus:ring-emerald-500">
+                    <span class="text-stone-700 text-sm sm:text-base">📢 <strong>관심 갖고 널리 알리기:</strong> 로컬의 예쁜 숙소나 맛집을 SNS에 공유하기</span>
+                </label>
+            </div>
+
+            <!-- 실천율 게이지 바 -->
+            <div class="mt-8 border-t border-stone-100 pt-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-bold text-stone-600">나의 다짐 지수</span>
+                    <span id="progress-text" class="font-jua text-lg text-emerald-600">0%</span>
+                </div>
+                <div class="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+                <p id="cheer-msg" class="text-xs text-center text-stone-500 mt-3 h-5"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. 참여형 인터랙션: 한마디 응원 보드 -->
+    <section id="support" class="bg-emerald-50/50 py-16 px-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="font-jua text-3xl text-stone-800 mb-2">우리 동네에 응원을 보태주세요!</h2>
+                <p class="text-stone-500 text-sm">지역을 응원하는 따뜻한 메시지를 자유롭게 남겨보세요.</p>
+            </div>
+
+            <!-- 방명록 등록 폼 -->
+            <div class="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm mb-8">
+                <form id="comment-form" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-stone-500 mb-1">닉네임</label>
+                            <input type="text" id="nickname" required placeholder="예: 무화과 좋아용" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-stone-500 mb-1">응원할 지역</label>
+                            <input type="text" id="region" required placeholder="예: 전남 목포시" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">응원의 말</label>
+                        <textarea id="comment" required rows="2" placeholder="따뜻한 응원 한마디를 나누어주세요!" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"></textarea>
+                    </div>
+                    <button type="submit" class="font-jua w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl shadow transition text-lg">
+                        방명록 붙이기 📌
+                    </button>
+                </form>
+            </div>
+
+            <!-- 포스트잇 벽면 -->
+            <div id="board" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 샘플 포스트잇 1 -->
+                <div class="bg-amber-100/80 p-5 rounded-2xl shadow-sm border-l-4 border-amber-400 flex flex-col justify-between">
+                    <p class="text-stone-700 text-sm mb-4 leading-relaxed">"가족들과 작년에 다녀왔던 구례 산수유마을이 생각나요. 매년 갈 수 있게 꼭 잘 보존되길 바랍니다!"</p>
+                    <div class="flex justify-between items-center text-xs text-stone-500">
+                        <span class="font-bold">작성자: 몽글이 (전남 구례)</span>
+                        <span>방금 전</span>
+                    </div>
+                </div>
+                <!-- 샘플 포스트잇 2 -->
+                <div class="bg-emerald-50 p-5 rounded-2xl shadow-sm border-l-4 border-emerald-400 flex flex-col justify-between">
+                    <p class="text-stone-700 text-sm mb-4 leading-relaxed">"이번 여름휴가 때는 유명 관광지 대신 예쁜 한옥이 있는 충청도 조용한 마을로 떠나볼 계획이에요!"</p>
+                    <div class="flex justify-between items-center text-xs text-stone-500">
+                        <span class="font-bold">작성자: 여행조아 (충남 공주)</span>
+                        <span>방금 전</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. 푸터 -->
+    <footer class="bg-stone-900 text-stone-400 py-10 px-4 text-center text-sm">
+        <div class="max-w-4xl mx-auto space-y-4">
+            <p class="font-jua text-xl text-stone-200">우리가 살고 있는 모든 지역이 소중한 고향입니다.</p>
+            <p class="text-stone-500">본 페이지는 누구나 즐겁게 참여할 수 있는 지역 활성화 및 소멸 문제 해결 인식 제고를 위해 제작되었습니다.</p>
+            <div class="border-t border-stone-800 pt-6 flex justify-between items-center flex-col sm:flex-row text-xs text-stone-600">
+                <p>© 2026 우리동네 온(溫). All rights reserved.</p>
+                <div class="flex space-x-4 mt-2 sm:mt-0">
+                    <a href="#" class="hover:underline">이용약관</a>
+                    <a href="#" class="hover:underline">개인정보처리방침</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 로직 스크립트 -->
+    <script>
+        // Lucide 아이콘 렌더링
+        lucide.createIcons();
+
+        // 1. 다짐 리스트 프로그레스바 관리
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const progressPercent = Math.round((checkedCount / checkboxes.length) * 100);
+
+            // 게이지 바 업데이트
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = progressPercent + '%';
+
+            // 숫자 텍스트 업데이트
+            const progressText = document.getElementById('progress-text');
+            progressText.innerText = progressPercent + '%';
+
+            // 응원 멘트 출력
+            const cheerMsg = document.getElementById('cheer-msg');
+            if (progressPercent === 0) {
+                cheerMsg.innerText = "";
+            } else if (progressPercent <= 25) {
+                cheerMsg.innerText = "좋은 출발이에요! 작은 관심이 큰 힘이 됩니다. 🌱";
+            } else if (progressPercent <= 50) {
+                cheerMsg.innerText = "벌써 두 개나 다짐하셨네요! 멋져요. ✨";
+            } else if (progressPercent <= 75) {
+                cheerMsg.innerText = "우리가 살릴 수 있는 행복한 동네들이 늘어납니다! 🙌";
+            } else {
+                cheerMsg.innerText = "백 점 만점! 당신은 진정한 로컬 지키미입니다! 👑💖";
+            }
+        }
+
+        // 2. 방명록 등록
+        const commentForm = document.getElementById('comment-form');
+        const board = document.getElementById('board');
+        const colors = [
+            'bg-amber-100/80 border-amber-400',
+            'bg-emerald-50 border-emerald-400',
+            'bg-rose-50 border-rose-400',
+            'bg-sky-50 border-sky-400'
+        ];
+
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 입력값 취득
+            const nickname = document.getElementById('nickname').value.trim();
+            const region = document.getElementById('region').value.trim();
+            const comment = document.getElementById('comment').value.trim();
+
+            if (!nickname || !region || !comment) return;
+
+            // 랜덤 포스트잇 디자인 색상 선택
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            // 새 포스트잇 노드 생성
+            const postit = document.createElement('div');
+            postit.className = `${randomColor} p-5 rounded-2xl shadow-sm border-l-4 flex flex-col justify-between transform transition duration-500 scale-95 opacity-0`;
+            
+            postit.innerHTML = `
+                <p class="text-stone-700 text-sm mb-4 leading-relaxed">"${comment}"</p>
+                <div class="flex justify-between items-center text-xs text-stone-500">
+                    <span class="font-bold">작성자: ${nickname} (${region})</span>
+                    <span>방금 전</span>
+                </div>
+            `;
+
+            // 보드 앞에 추가
+            board.insertBefore(postit, board.firstChild);
+
+            // 애니메이션 연출을 위해 지연 삽입
+            setTimeout(() => {
+                postit.classList.remove('scale-95', 'opacity-0');
+                postit.classList.add('scale-100', 'opacity-100');
+            }, 50);
+
+            // 입력 필드 초기화
+            commentForm.reset();
+        });
+    </script>
+</body>
+</html>

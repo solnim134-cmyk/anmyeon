@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도란도란 숲 - 세대를 잇는 힐링 마을</title>
+    <!-- Tailwind CSS 및 FontAwesome 아이콘 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F3F8F2;
+        }
+        .font-game {
+            font-family: 'Gaegu', sans-serif;
+        }
+        /* 동물의 숲 감성의 부드러운 애니메이션 효과 */
+        .bounce-hover:hover {
+            transform: translateY(-5px) scale(1.02);
+            transition: all 0.3s ease;
+        }
+        .wind-sway {
+            animation: sway 4s ease-in-out infinite alternate;
+        }
+        @keyframes sway {
+            0% { transform: rotate(-3deg); }
+            100% { transform: rotate(3deg); }
+        }
+        /* 대화창 전용 스타일 */
+        .bubble-tail::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 30px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: white transparent;
+            display: block;
+            width: 0;
+        }
+        /* 흙밭 입체감 연출 */
+        .soil-gradient {
+            background: radial-gradient(circle, #8D5B4C 0%, #613B30 100%);
+        }
+        .soil-wet {
+            background: radial-gradient(circle, #52342B 0%, #351F19 100%) !important;
+        }
+        /* 파티클/플로팅 글자 효과 */
+        @keyframes float-up {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+        }
+        .floating-text {
+            animation: float-up 1.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- 상단 헤더 (네비게이션) -->
+    <header class="bg-[#FDFBF7] border-b-4 border-[#E2D8C9] px-6 py-4 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-4xl">🏡</span>
+                <div>
+                    <h1 class="font-game text-3xl font-bold text-[#5D7E68] tracking-wide">도란도란 숲</h1>
+                    <p class="text-xs text-gray-500 font-medium">손주와 할머니가 함께 걷는 숲</p>
+                </div>
+            </div>
+            <!-- 유저 상태창 -->
+            <div class="flex items-center gap-4 bg-[#F5EFEB] px-4 py-2 rounded-full border-2 border-[#D1C4B1]">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">👵</span>
+                    <span class="font-bold text-gray-700 text-sm md:text-base">김순임 촌장님</span>
+                </div>
+                <div class="h-4 w-px bg-gray-300"></div>
+                <div class="flex items-center gap-1 text-[#D4A373]">
+                    <i class="fa-solid fa-coins animate-bounce" style="animation-duration: 2s;"></i>
+                    <span id="game-points" class="font-bold">150</span><span class="text-xs">P</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 게임 영역 -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 왼쪽: 마을 진짜 밭 가꾸기 (미니게임 화면) -->
+        <section class="lg:col-span-2 bg-[#96C396] rounded-3xl p-6 shadow-lg border-b-8 border-[#5E8C5C] relative overflow-hidden flex flex-col justify-between min-h-[500px] lg:min-h-[600px] transition-all">
+            <!-- 울타리와 잔디 배경 데코레이션 -->
+            <div class="absolute inset-x-0 bottom-0 h-24 bg-[#76A876] z-0 rounded-b-2xl"></div>
+            <!-- 구름 및 하늘 배경 요소 -->
+            <div class="absolute top-4 left-6 text-white/40 text-4xl wind-sway"><i class="fa-solid fa-cloud"></i></div>
+            <div class="absolute top-12 right-12 text-white/30 text-5xl wind-sway" style="animation-delay: 1.5s;"><i class="fa-solid fa-cloud"></i></div>
+            
+            <!-- 상단 정보 및 씨앗 선택창 -->
+            <div class="z-10 flex flex-col md:flex-row justify-between items-start gap-4">
+                <div class="bg-white/90 backdrop-blur-sm p-3 rounded-2xl border-2 border-[#5E8C5C] shadow-sm max-w-xs">
+                    <h3 class="font-game text-xl font-bold text-[#476A45] flex items-center gap-1">
+                        <span>🚜</span> <span id="field-title">순임이네 진짜 흙밭</span>
+                    </h3>
+                    <p class="text-xs text-gray-600 mt-1">흙밭을 일궈 씨앗을 선택하고, 잡초와 해충을 관리하며 수확의 기쁨을 누리세요!</p>
+                </div>
+                
+                <!-- 씨앗 도감 선택 바 -->
+                <div class="bg-white/90 backdrop-blur-sm p-2 rounded-2xl border-2 border-[#D1C4B1] flex items-center gap-2">
+                    <span class="text-xs font-bold text-gray-500 px-2">씨앗 선택:</span>
+                    <button onclick="changeCrop('sunflower')" id="seed-sunflower" class="bg-[#F2CC8F] hover:bg-[#E07A5F] text-xs font-bold px-3 py-1.5 rounded-xl border border-amber-600 transition-all text-gray-800">🌻 해바라기</button>
+                    <button onclick="changeCrop('tomato')" id="seed-tomato" class="bg-gray-100 hover:bg-[#E07A5F] text-xs font-bold px-3 py-1.5 rounded-xl border border-gray-300 transition-all text-gray-800">🍅 토마토</button>
+                    <button onclick="changeCrop('potato')" id="seed-potato" class="bg-gray-100 hover:bg-[#E07A5F] text-xs font-bold px-3 py-1.5 rounded-xl border border-gray-300 transition-all text-gray-800">🍠 고구마</button>
+                </div>
+            </div>
+
+            <!-- 중앙: 입체적 흙밭 및 식물/이벤트 배치 영역 -->
+            <div class="z-10 flex flex-col items-center justify-center my-6 relative flex-grow">
+                
+                <!-- 파티클 이펙트 스폰 레이어 -->
+                <div id="particle-container" class="absolute inset-0 pointer-events-none z-30"></div>
+
+                <!-- 영양 황토 흙밭 (진짜 흙 질감과 고랑 묘사) -->
+                <div id="soil-bed" class="soil-gradient w-72 h-44 md:w-96 md:h-56 rounded-[50%] border-8 border-[#4A2D24] shadow-[0_15px_30px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center relative transition-colors duration-500">
+                    <!-- 흙고랑 라인 묘사 (디자인용) -->
+                    <div class="absolute inset-4 border border-[#4A2D24]/30 rounded-[50%] pointer-events-none"></div>
+                    <div class="absolute inset-10 border border-[#4A2D24]/20 rounded-[50%] pointer-events-none"></div>
+                    
+                    <!-- 흙 상태 표시판 -->
+                    <span id="soil-status-badge" class="absolute -top-4 bg-[#704214] text-amber-100 px-3 py-0.5 rounded-full text-[10px] font-bold border border-amber-800">건조한 흙 🍂</span>
+
+                    <!-- 식물 그래픽 (클릭 시 쓰다듬기 성장 가능) -->
+                    <div id="plant-stage" class="text-7xl md:text-8xl cursor-pointer transition-all duration-300 transform active:scale-90 select-none bounce-hover z-10 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)]" onclick="growPlantDirectly()">
+                        🌱
+                    </div>
+
+                    <!-- 잡초 이벤트 레이어 (랜덤 생성) -->
+                    <div id="weed-patch" class="hidden absolute left-12 bottom-12 z-20 cursor-pointer animate-bounce" onclick="removeWeeds()">
+                        <div class="bg-white/90 p-1.5 rounded-lg border border-green-600 shadow-md flex items-center gap-1 text-xs">
+                            <span class="text-xl">🌿</span>
+                            <span class="font-bold text-red-600 text-[10px]">잡초가 자랐어요! (클릭)</span>
+                        </div>
+                    </div>
+
+                    <!-- 벌레 이벤트 레이어 (랜덤 생성) -->
+                    <div id="bug-patch" class="hidden absolute right-10 top-10 z-20 cursor-pointer animate-bounce" onclick="removeBugs()" style="animation-delay: 0.5s;">
+                        <div class="bg-white/90 p-1.5 rounded-lg border border-orange-500 shadow-md flex items-center gap-1 text-xs">
+                            <span class="text-xl">🐛</span>
+                            <span class="font-bold text-orange-600 text-[10px]">해충 발견! (클릭)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 터치 말풍선 및 가이드 -->
+                <div class="mt-6 flex flex-col items-center gap-1">
+                    <div id="tap-bubble" class="bg-white text-gray-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-md border border-gray-200 animate-bounce">
+                        흙밭의 새싹을 쓰다듬어(클릭) 성장도를 채우세요!
+                    </div>
+                    <!-- 식물 성장 단계 게이지 -->
+                    <div class="bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full border border-gray-200 flex items-center gap-2 mt-2 shadow-sm">
+                        <span class="text-xs font-bold text-gray-600">성장 완료도</span>
+                        <div class="w-32 bg-gray-200 h-3 rounded-full overflow-hidden">
+                            <div id="growth-bar" class="bg-amber-400 h-full transition-all duration-300" style="width: 20%;"></div>
+                        </div>
+                        <span id="growth-text" class="text-xs font-bold text-amber-600">1단계 (새싹)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 도구 선택 바 -->
+            <div class="z-10 flex flex-wrap justify-center gap-3">
+                <button onclick="waterPlant()" class="bg-[#4895EF] hover:bg-[#3f85d7] active:scale-95 text-white font-bold px-5 py-3 rounded-2xl border-b-4 border-[#3a7bc7] flex items-center gap-2 shadow-md transition-all">
+                    <span class="text-2xl">💧</span>
+                    <span class="font-game text-lg">물 주기</span>
+                </button>
+                <button onclick="fertilizePlant()" class="bg-[#9B5DE5] hover:bg-[#884ed1] active:scale-95 text-white font-bold px-5 py-3 rounded-2xl border-b-4 border-[#7b44bd] flex items-center gap-2 shadow-md transition-all">
+                    <span class="text-2xl">✨</span>
+                    <span class="font-game text-lg">영양 비료 (+20P)</span>
+                </button>
+                <button onclick="triggerWeedAndBug()" class="bg-[#83C5BE] hover:bg-[#68a09b] active:scale-95 text-gray-800 font-bold px-5 py-3 rounded-2xl border-b-4 border-[#56817c] flex items-center gap-2 shadow-md transition-all">
+                    <span class="text-2xl">🔍</span>
+                    <span class="font-game text-lg">밭 돋보기 (검사)</span>
+                </button>
+                <button onclick="resetPlant()" id="harvest-btn" class="hidden bg-[#FF9F1C] hover:bg-[#e58f19] active:scale-95 text-white font-bold px-6 py-4 rounded-2xl border-b-4 border-[#cc7f16] flex items-center gap-2 shadow-md transition-all">
+                    <span class="text-2xl" id="harvest-emoji">🌻</span>
+                    <span class="font-game text-lg" id="harvest-text-btn">꽃 수확하기</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 오른쪽: 안부 알림 & 정서 공유 사이드바 -->
+        <section class="flex flex-col gap-6">
+            
+            <!-- AI 주민의 따뜻한 말동무 카드 -->
+            <div class="bg-white rounded-3xl p-6 border-4 border-[#E2D8C9] shadow-md flex flex-col justify-between">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 bg-[#FDF0D5] rounded-2xl border-2 border-[#DDA15E] flex items-center justify-center text-4xl shadow-inner shrink-0">
+                        🐻
+                    </div>
+                    <div class="relative bg-gray-50 p-4 rounded-2xl border border-gray-100 flex-grow bubble-tail">
+                        <span class="font-bold text-xs text-[#DDA15E]">마을 이웃 '도리'</span>
+                        <p id="ai-speech" class="text-sm text-gray-700 mt-1 leading-relaxed">
+                            순임 촌장님, 밭에 흙이 참 좋아 보여요! 흙 만지다 허리 아프지 않게 스트레칭 가볍게 하시고 가꾸어 봐요. 🌱
+                        </p>
+                    </div>
+                </div>
+                <!-- 말동무 응답하기 -->
+                <div class="mt-4 pt-4 border-t border-gray-100 flex gap-2">
+                    <input id="user-speech-input" type="text" placeholder="도리에게 다정하게 답해보세요..." class="flex-grow bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#5D7E68]">
+                    <button onclick="speakToDori()" class="bg-[#5D7E68] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#4d6a56] transition-all">전송</button>
+                </div>
+            </div>
+
+            <!-- 도란도란 우체통 (가족과의 메시지) -->
+            <div class="bg-[#FCF6E8] rounded-3xl p-6 border-4 border-[#D9CEB2] shadow-md flex-grow flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-game text-2xl font-bold text-[#8C6D58] flex items-center gap-2">
+                            <span>📮</span> 도란도란 우체통
+                        </h2>
+                        <span class="bg-[#E76F51] text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">새 소식 1건</span>
+                    </div>
+                    
+                    <!-- 가족이 보낸 엽서 카드 -->
+                    <div class="bg-white p-4 rounded-2xl border-2 border-[#E9E4D4] shadow-sm relative overflow-hidden">
+                        <!-- 손주 사진 가상 액자 -->
+                        <div class="w-full h-32 bg-gray-100 rounded-xl mb-3 overflow-hidden border border-gray-200 flex items-center justify-center relative">
+                            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">📸 손주 민우 보냄</span>
+                            <div class="text-center">
+                                <span class="text-4xl">🍦</span>
+                                <p class="text-xs text-gray-500 mt-1">"오늘 먹은 아이스크림이에요!"</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-700 leading-relaxed">
+                            <p class="font-bold text-[#E76F51] mb-1">할머니 사랑해요!</p>
+                            <p id="letter-content" class="text-xs text-gray-600">할머니, 오늘 날씨가 많이 더운데 시원한 물 많이 드세요! 이번 주말에 할머니 보러 놀러 갈게요. 사랑해요! 👵💖</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 낭독 및 답변 기능 -->
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                    <button onclick="readLetterAloud()" class="bg-[#E76F51] hover:bg-[#d65d40] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm active:scale-95 transition-all">
+                        <i class="fa-solid fa-volume-high"></i> 편지 읽어주기
+                    </button>
+                    <button onclick="openReplyModal()" class="bg-[#2A9D8F] hover:bg-[#228074] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm active:scale-95 transition-all">
+                        <i class="fa-solid fa-microphone"></i> 음성 답장하기
+                    </button>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- 중앙 하단: 가족 공동 미션 & 실제 리워드 (현실 농산물 수확 코너) -->
+    <section class="max-w-6xl w-full mx-auto px-4 pb-12">
+        <div class="bg-white rounded-3xl p-6 border-4 border-[#E2D8C9] shadow-md">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <span class="bg-[#E9C46A] text-gray-800 text-xs font-bold px-3 py-1 rounded-full">가족 협동 미션</span>
+                    <h2 class="font-game text-3xl font-bold text-[#5C4D3C] mt-2 flex items-center gap-2">
+                        <span>🥔</span> 대왕 고구마 함께 키우기 프로젝트
+                    </h2>
+                    <p class="text-sm text-gray-500 mt-1">온 가족이 힘을 모아 고구마를 100% 성장시키면 진짜 고구마 한 박스가 댁으로 옵니다!</p>
+                </div>
+                <!-- 고구마 미션 참여 인원 현황 -->
+                <div class="flex -space-x-3 items-center">
+                    <div class="w-10 h-10 rounded-full border-2 border-white bg-amber-200 flex items-center justify-center text-xl shadow-sm" title="할머니">👵</div>
+                    <div class="w-10 h-10 rounded-full border-2 border-white bg-blue-200 flex items-center justify-center text-xl shadow-sm" title="아들">👨</div>
+                    <div class="w-10 h-10 rounded-full border-2 border-white bg-pink-200 flex items-center justify-center text-xl shadow-sm" title="손녀">👧</div>
+                    <span class="text-xs font-bold text-gray-500 ml-4">+ 온가족 참여 중</span>
+                </div>
+            </div>
+
+            <!-- 미션 진행 상황 바 -->
+            <div class="bg-[#FBF8F3] p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center gap-6">
+                <div class="text-6xl select-none animate-bounce" style="animation-duration: 2.5s;">🍠</div>
+                <div class="flex-grow w-full">
+                    <div class="flex justify-between items-center text-sm font-bold text-gray-600 mb-2">
+                        <span>현재 성장률</span>
+                        <span id="coop-percentage" class="text-[#E76F51]">75%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-5 rounded-full overflow-hidden">
+                        <div id="coop-progress-bar" class="bg-gradient-to-r from-[#E9C46A] to-[#E76F51] h-full transition-all duration-500" style="width: 75%;"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">* 손녀 '민아'님이 방금 고구마에 물을 주어 성장도가 5% 올랐습니다!</p>
+                </div>
+                <button onclick="helpCoopCrop()" class="bg-[#E9C46A] hover:bg-[#ddb656] text-gray-800 font-bold px-6 py-4 rounded-xl shadow-md border-b-4 border-[#ceaa4f] flex items-center gap-2 shrink-0 active:scale-95 transition-all w-full md:w-auto justify-center">
+                    <i class="fa-solid fa-hand-holding-heart text-xl"></i> 나도 돕기 (에너지 10 사용)
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 하단 푸터 -->
+    <footer class="bg-[#5D7E68] text-[#E3EDE6] py-6 text-center border-t-4 border-[#4E6C56]">
+        <p class="font-game text-xl">도란도란 숲속 마을 🏡</p>
+        <p class="text-xs mt-1 opacity-75">© 2026 DoranDoran Forest. 어르신들의 건강하고 따뜻한 일상을 지원합니다.</p>
+    </footer>
+
+    <!-- 음성 답장 모달 팝업 -->
+    <div id="reply-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 border-4 border-[#2A9D8F] shadow-2xl relative">
+            <button onclick="closeReplyModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            
+            <div class="text-center">
+                <span class="text-5xl">🎤</span>
+                <h3 class="font-game text-2xl font-bold text-[#2A9D8F] mt-3">음성으로 답장 보내기</h3>
+                <p class="text-xs text-gray-500 mt-1">할머니의 따뜻한 한마디를 녹음해 자녀와 손주에게 보냅니다.</p>
+                
+                <!-- 마이크 및 애니메이션 -->
+                <div class="my-8 flex justify-center items-center">
+                    <button id="mic-btn" onclick="toggleRecording()" class="w-24 h-24 bg-red-100 hover:bg-red-200 text-red-500 rounded-full flex items-center justify-center text-4xl shadow-inner active:scale-90 transition-all border-4 border-red-200">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                </div>
+                
+                <div id="recording-status" class="text-sm font-bold text-gray-600 mb-6">
+                    마이크를 눌러 녹음을 시작하세요.
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="closeReplyModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-sm font-bold">취소</button>
+                    <button onclick="sendReplyVoice()" id="send-reply-btn" disabled class="w-1/2 bg-[#2A9D8F] hover:bg-[#228074] text-white py-3 rounded-xl text-sm font-bold disabled:opacity-50">답장 보내기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 팝업 토스트 (자체 모달 대용) -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 text-white font-bold px-6 py-3 rounded-full shadow-lg z-50 transition-all transform translate-y-20 opacity-0 duration-300 pointer-events-none text-center">
+        성공 메세지
+    </div>
+
+    <!-- 자바스크립트 게임 로직 -->
+    <script>
+        // 게임 상태값
+        let points = 150;
+        let growthProgress = 20;
+        let growthStage = 1;
+        let coopProgress = 75;
+        let isRecording = false;
+
+        // 신규 추가: 작물 모드 및 상태 변수
+        let currentCrop = 'sunflower'; // sunflower, tomato, potato
+        let soilMoisture = 20; // 흙 습도 (0-100), 물을 주면 올라감
+        let hasWeed = false; // 잡초 존재 여부
+        let hasBug = false; // 벌레 존재 여부
+
+        // 작물 데이터셋
+        const cropsData = {
+            sunflower: {
+                name: "해바라기",
+                emoji: "🌻",
+                soilName: "해바라기 밭",
+                stages: { 1: "🌱", 2: "🌿", 3: "🌷", 4: "🌻" }
+            },
+            tomato: {
+                name: "방울토마토",
+                emoji: "🍅",
+                soilName: "영양 토마토 밭",
+                stages: { 1: "🌱", 2: "🌿", 3: "🟢", 4: "🍅" }
+            },
+            potato: {
+                name: "대왕 고구마",
+                emoji: "🍠",
+                soilName: "황토 고구마 밭",
+                stages: { 1: "🌱", 2: "🌿", 3: "🍠🌱", 4: "🍠" }
+            }
+        };
+
+        // 효과음 및 TTS 대체용 Web Speech API 지원 여부 확인
+        const synth = window.speechSynthesis;
+
+        window.onload = function() {
+            // 초기 밭 상태 로드
+            changeCrop('sunflower');
+            // 주기적인 토양 건조화 & 이벤트 발생 루프 (게임성 강화)
+            setInterval(drySoil, 8000); 
+            setInterval(randomPestEvent, 12000);
+        }
+
+        // 밭 작물 변경 기능
+        function changeCrop(cropType) {
+            currentCrop = cropType;
+            growthProgress = 15;
+            hasWeed = false;
+            hasBug = false;
+            document.getElementById('weed-patch').classList.add('hidden');
+            document.getElementById('bug-patch').classList.add('hidden');
+
+            // 씨앗 선택 버튼들 스타일 토글
+            ['sunflower', 'tomato', 'potato'].forEach(type => {
+                const btn = document.getElementById(`seed-${type}`);
+                if (type === cropType) {
+                    btn.className = "bg-[#E07A5F] text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-[#C55A3E] transition-all";
+                } else {
+                    btn.className = "bg-white hover:bg-gray-100 text-xs text-gray-700 font-bold px-3 py-1.5 rounded-xl border border-gray-300 transition-all";
+                }
+            });
+
+            document.getElementById('field-title').innerText = `순임이네 ${cropsData[cropType].soilName}`;
+            showToast(`✨ ${cropsData[cropType].name} 씨앗을 흙밭에 튼튼하게 심었습니다!`);
+            checkPlantGrowth();
+        }
+
+        // 점수 획득 시 화면 표시 업데이트 및 플로팅 텍스트 효과
+        function updatePoints(amount) {
+            points += amount;
+            document.getElementById('game-points').innerText = points;
+        }
+
+        // 플로팅 파티클 이펙트 생성 함수
+        function spawnFloatingEffect(text, colorClass) {
+            const container = document.getElementById('particle-container');
+            const element = document.createElement('div');
+            element.className = `absolute text-2xl font-black ${colorClass} floating-text select-none z-40`;
+            // 랜덤 좌우 위치값
+            const randomX = 40 + Math.random() * 20; // 40% ~ 60%
+            const randomY = 40 + Math.random() * 20; 
+            element.style.left = `${randomX}%`;
+            element.style.top = `${randomY}%`;
+            element.innerText = text;
+
+            container.appendChild(element);
+            setTimeout(() => {
+                element.remove();
+            }, 1200);
+        }
+
+        // 알림 전송용 토스트 노출 함수
+        function showToast(message) {
+            const toast = document.getElementById('toast-message');
+            toast.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // 흙 건조화 메커니즘 (가상 시간 경과)
+        function drySoil() {
+            if (soilMoisture > 0) {
+                soilMoisture -= 10;
+                updateSoilVisual();
+            }
+        }
+
+        // 흙 습도 및 상태 변화 비주얼 업데이트
+        function updateSoilVisual() {
+            const soilBed = document.getElementById('soil-bed');
+            const statusBadge = document.getElementById('soil-status-badge');
+            
+            if (soilMoisture >= 60) {
+                soilBed.className = "soil-gradient soil-wet w-72 h-44 md:w-96 md:h-56 rounded-[50%] border-8 border-[#2E1B15] shadow-[0_15px_30px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center relative transition-colors duration-500";
+                statusBadge.className = "absolute -top-4 bg-[#2A6F97] text-cyan-100 px-3 py-0.5 rounded-full text-[10px] font-bold border border-cyan-800";
+                statusBadge.innerText = "촉촉하고 기름진 흙 🌊";
+            } else if (soilMoisture >= 20) {
+                soilBed.className = "soil-gradient w-72 h-44 md:w-96 md:h-56 rounded-[50%] border-8 border-[#4A2D24] shadow-[0_15px_30px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center relative transition-colors duration-500";
+                statusBadge.className = "absolute -top-4 bg-[#704214] text-amber-100 px-3 py-0.5 rounded-full text-[10px] font-bold border border-amber-800";
+                statusBadge.innerText = "보통 상태의 흙 🪵";
+            } else {
+                soilBed.className = "soil-gradient w-72 h-44 md:w-96 md:h-56 rounded-[50%] border-8 border-[#6E554F] shadow-[0_15px_30px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center relative transition-colors duration-500 opacity-90";
+                statusBadge.className = "absolute -top-4 bg-[#A68A64] text-amber-900 px-3 py-0.5 rounded-full text-[10px] font-bold border border-amber-900";
+                statusBadge.innerText = "메마르고 굳은 흙 🍂";
+            }
+        }
+
+        // 무작위 유해 이벤트 발생 (잡초 & 애벌레)
+        function randomPestEvent() {
+            if (growthProgress >= 100) return; // 완전 성장이면 방해 요소 안 나옴
+
+            const rand = Math.random();
+            if (rand < 0.4 && !hasWeed) {
+                hasWeed = true;
+                document.getElementById('weed-patch').classList.remove('hidden');
+                showToast("⚠️ 흙밭에 잡초가 생겨 영양분을 빼앗아 가고 있습니다!");
+            } else if (rand >= 0.4 && rand < 0.7 && !hasBug) {
+                hasBug = true;
+                document.getElementById('bug-patch').classList.remove('hidden');
+                showToast("⚠️ 잎사귀 뒤에 배고픈 애벌레 곤충이 기어 올랐어요!");
+            }
+        }
+
+        // 수동 밭 검사 버튼
+        function triggerWeedAndBug() {
+            showToast("🔍 돋보기로 영양 흙밭과 잎사귀 구석구석을 꼼꼼하게 살핍니다...");
+            setTimeout(() => {
+                if (!hasWeed && !hasBug) {
+                    showToast("☀️ 아주 건강합니다! 잡초나 벌레 없이 맑고 청정하네요.");
+                } else {
+                    randomPestEvent();
+                }
+            }, 800);
+        }
+
+        // 잡초 뽑기 제거
+        function removeWeeds() {
+            hasWeed = false;
+            document.getElementById('weed-patch').classList.add('hidden');
+            updatePoints(30);
+            spawnFloatingEffect("+30P", "text-green-600");
+            showToast("🌿 잡초를 힘차게 쏙 뽑았습니다! 밭이 한결 맑아졌네요 (+30P)");
+        }
+
+        // 벌레 잡기 제거
+        function removeBugs() {
+            hasBug = false;
+            document.getElementById('bug-patch').classList.add('hidden');
+            updatePoints(40);
+            spawnFloatingEffect("+40P", "text-orange-500");
+            showToast("🐛 귀여운 아기 벌레를 다정하게 잡아 숲으로 돌려보냈습니다 (+40P)");
+        }
+
+        // 식물 클릭해서 직접 쓰다듬어 기르기
+        function growPlantDirectly() {
+            if (hasWeed || hasBug) {
+                showToast("방해 요소(잡초/해충)를 먼저 터치해 제거해야 무럭무럭 자랄 수 있어요!");
+                return;
+            }
+            if (growthProgress >= 100) {
+                showToast(`이미 수확할 준비가 끝났어요! 아래 황색 수확 버튼을 눌러주세요.`);
+                return;
+            }
+            growthProgress += 5;
+            checkPlantGrowth();
+            updatePoints(2);
+            spawnFloatingEffect("+2P", "text-amber-500");
+            showToast("식물을 다정하게 쓰다듬어 주며 응원의 말을 건넸습니다! (+2P)");
+        }
+
+        // 물 주기 기능
+        function waterPlant() {
+            if (hasWeed || hasBug) {
+                showToast("방해 요소(잡초/해충)를 먼저 처리해야 물을 잘 머금을 수 있어요!");
+                return;
+            }
+            if (growthProgress >= 100) {
+                showToast("이미 수확할 준비가 끝났어요! 작물을 수확해 보세요.");
+                return;
+            }
+            
+            soilMoisture = 100; // 수분 최대 충전
+            updateSoilVisual();
+
+            growthProgress += 15;
+            checkPlantGrowth();
+            updatePoints(5);
+            spawnFloatingEffect("💧 +5P", "text-blue-500");
+            showToast(`시원한 생명수를 촉촉하게 뿌려 흙을 윤기 있게 만들었습니다! 🌱💧 (+5P)`);
+        }
+
+        // 비료 주기 기능
+        function fertilizePlant() {
+            if (hasWeed || hasBug) {
+                showToast("해충이나 잡초가 영양제를 다 뺏어 먹을 수 있으니 먼저 없애주세요!");
+                return;
+            }
+            if (growthProgress >= 100) {
+                showToast("이미 수확할 준비가 끝났어요! 얼른 수확해 보세요.");
+                return;
+            }
+            growthProgress += 25;
+            checkPlantGrowth();
+            updatePoints(20);
+            spawnFloatingEffect("✨ +20P", "text-purple-500");
+            showToast("흙밭 깊숙이 프리미엄 친환경 영양 가득 비료를 뿌려주었습니다! ✨ (+20P)");
+        }
+
+        // 식물 성장도 계산 및 이미지 변환
+        function checkPlantGrowth() {
+            if (growthProgress > 100) growthProgress = 100;
+            
+            const pBar = document.getElementById('growth-bar');
+            const pText = document.getElementById('growth-text');
+            const pStage = document.getElementById('plant-stage');
+            const pBubble = document.getElementById('tap-bubble');
+            const harvestBtn = document.getElementById('harvest-btn');
+            const harvestEmoji = document.getElementById('harvest-emoji');
+            const harvestTextBtn = document.getElementById('harvest-text-btn');
+
+            pBar.style.width = growthProgress + '%';
+            const crop = cropsData[currentCrop];
+
+            if (growthProgress < 30) {
+                growthStage = 1;
+                pText.innerText = "1단계 (새싹)";
+                pStage.className = "text-7xl md:text-8xl cursor-pointer transition-all duration-300 transform active:scale-90 select-none bounce-hover z-10";
+                pStage.innerText = crop.stages[1];
+                pBubble.innerText = "포슬포슬한 황토 흙을 뚫고 돋아난 아기새싹이에요!";
+                harvestBtn.classList.add('hidden');
+            } else if (growthProgress < 65) {
+                growthStage = 2;
+                pText.innerText = "2단계 (줄기 성장)";
+                pStage.className = "text-7xl md:text-8xl cursor-pointer transition-all duration-300 transform active:scale-90 select-none bounce-hover wind-sway z-10";
+                pStage.innerText = crop.stages[2];
+                pBubble.innerText = "줄기가 튼튼하게 뻗어나가고 건강해요!";
+                harvestBtn.classList.add('hidden');
+            } else if (growthProgress < 100) {
+                growthStage = 3;
+                pText.innerText = "3단계 (꽃망울/열매 맺음)";
+                pStage.className = "text-7xl md:text-8xl cursor-pointer transition-all duration-300 transform active:scale-90 select-none bounce-hover wind-sway z-10";
+                pStage.innerText = crop.stages[3];
+                pBubble.innerText = `이제 곧 영양 가득한 ${crop.name}(이)가 열릴 예정입니다!`;
+                harvestBtn.classList.add('hidden');
+            } else {
+                growthStage = 4;
+                pText.innerText = `4단계 (완전 결실)`;
+                pStage.className = "text-7xl md:text-8xl cursor-pointer transition-all duration-300 transform active:scale-105 select-none bounce-hover wind-sway z-10";
+                pStage.innerText = crop.stages[4];
+                pBubble.innerText = `대성공! 아주 맛스럽고 영양이 탐스러운 작물이 완성되었습니다!`;
+                
+                // 수확버튼 세부 설정 업데이트
+                harvestEmoji.innerText = crop.emoji;
+                harvestTextBtn.innerText = `${crop.name} 수확하기`;
+                harvestBtn.classList.remove('hidden'); 
+            }
+        }
+
+        // 꽃 수확하기 (성장 리셋 및 점수 리워드)
+        function resetPlant() {
+            const crop = cropsData[currentCrop];
+            spawnFloatingEffect("🎉 +150P", "text-amber-500");
+            updatePoints(150);
+            showToast(`🎉 축하합니다! 정성껏 기른 [${crop.name}] 수확 완료! (+150P 보너스 획득)`);
+            
+            // 수확 후 초기화
+            growthProgress = 15;
+            checkPlantGrowth();
+        }
+
+        // 가족 공동 밭 돕기 (협동 미션)
+        function helpCoopCrop() {
+            if (coopProgress >= 100) {
+                showToast("이미 100% 성장하여 맛있는 고구마가 우리 집으로 출발했습니다! 🍠🚚");
+                return;
+            }
+            coopProgress += 5;
+            if (coopProgress > 100) coopProgress = 100;
+
+            document.getElementById('coop-percentage').innerText = coopProgress + '%';
+            document.getElementById('coop-progress-bar').style.width = coopProgress + '%';
+            
+            if (coopProgress === 100) {
+                showToast("축하합니다! 가족 협동 100% 완료! 실제 고구마 선물 세트가 댁으로 배송될 예정입니다!");
+            } else {
+                showToast("가족 공동 고구마 밭을 정성스럽게 돌보았습니다! 고구마가 무럭무럭 자랍니다! 🍠");
+            }
+        }
+
+        // 이웃 주민 대화 입력
+        function speakToDori() {
+            const input = document.getElementById('user-speech-input');
+            const userSpeech = input.value.trim();
+            if (!userSpeech) {
+                showToast("도리에게 보낼 인사말을 입력해주세요!");
+                return;
+            }
+
+            // 가상 AI 주민 응답 로직
+            const aiSpeech = document.getElementById('ai-speech');
+            aiSpeech.innerText = "어머나! 그렇게 말씀해주시니 제 마음이 정말 몽글몽글해져요. 순임 촌장님 최고! 🧡";
+            input.value = "";
+            showToast("도리에게 마음이 담긴 한마디를 건넸습니다.");
+
+            // 가족에게 안부 자동 도달 알림 연출
+            setTimeout(() => {
+                showToast("💬 알림: '할머니의 긍정적인 말동무 활동' 기록이 실시간으로 가족 단톡방에 전달되었습니다.");
+            }, 2500);
+        }
+
+        // 편지 낭독 기능 (TTS)
+        function readLetterAloud() {
+            const letterText = document.getElementById('letter-content').innerText;
+            if (!synth) {
+                showToast("사용 중인 브라우저가 음성 출력을 지원하지 않아요.");
+                return;
+            }
+            
+            // 읽고 있는 목소리 중복 방지 정지
+            synth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(letterText);
+            utterance.lang = 'ko-KR';
+            utterance.rate = 0.85; // 어르신이 듣기 편하도록 속도를 살짝 느리게 조절
+            synth.speak(utterance);
+            
+            showToast("🔈 손주가 보낸 손편지를 다정하게 읽기 시작합니다.");
+        }
+
+        // 음성 답장 모달 열기/닫기
+        function openReplyModal() {
+            document.getElementById('reply-modal').classList.remove('hidden');
+        }
+
+        function closeReplyModal() {
+            document.getElementById('reply-modal').classList.add('hidden');
+            // 리셋
+            if (isRecording) {
+                toggleRecording();
+            }
+        }
+
+        // 가상 음성 녹음 토글
+        function toggleRecording() {
+            const micBtn = document.getElementById('mic-btn');
+            const status = document.getElementById('recording-status');
+            const sendBtn = document.getElementById('send-reply-btn');
+
+            if (!isRecording) {
+                isRecording = true;
+                micBtn.classList.remove('bg-red-100', 'text-red-500', 'border-red-200');
+                micBtn.classList.add('bg-red-500', 'text-white', 'border-red-600', 'animate-pulse');
+                status.innerHTML = "녹음 중입니다... <br><span class='text-xs text-red-500 font-bold'>이야기를 모두 마친 후 다시 마이크를 클릭해 주세요!</span>";
+                sendBtn.disabled = true;
+            } else {
+                isRecording = false;
+                micBtn.classList.remove('bg-red-500', 'text-white', 'border-red-600', 'animate-pulse');
+                micBtn.classList.add('bg-red-100', 'text-red-500', 'border-red-200');
+                status.innerText = "녹음이 안전하게 완료되었습니다! 전송할 준비가 끝났어요.";
+                sendBtn.disabled = false;
+            }
+        }
+
+        // 답장 전송
+        function sendReplyVoice() {
+            showToast("✉️ 할머니의 다정한 목소리 답장이 손주 민우의 카카오톡으로 전송되었습니다!");
+            closeReplyModal();
+        }
+    </script>
+</body>
+</html>

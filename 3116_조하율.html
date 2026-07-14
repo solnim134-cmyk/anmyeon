@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기다리다 지쳐 - 대중교통 배차간격 체감 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            user-select: none;
+            overflow: hidden;
+        }
+        .font-title {
+            font-family: 'Do Hyeon', sans-serif;
+        }
+        .font-bold-title {
+            font-family: 'Black Han Sans', sans-serif;
+        }
+        /* Rain effect styling */
+        .rain {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            display: none;
+        }
+        .drop {
+            position: absolute;
+            background: linear-gradient(transparent, #a5f3fc);
+            width: 1px;
+            height: 35px;
+            opacity: 0.7;
+            animation: fall 0.8s linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50px); }
+            100% { transform: translateY(600px); }
+        }
+        /* Shake animation for stress alert */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake-effect {
+            animation: shake 0.5s ease-in-out;
+        }
+        /* Custom Scrollbar for Chat */
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col justify-between relative p-4 md:p-6 select-none">
+
+    <div id="rain-layer" class="rain"></div>
+
+    <div class="w-full max-w-4xl mx-auto bg-slate-900/80 backdrop-blur border border-slate-700/50 rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 z-10 shadow-xl">
+        <div class="flex items-center gap-3">
+            <span class="bg-red-500 text-white font-title text-sm px-3 py-1 rounded-full animate-pulse">LIVE CAMPAIGN</span>
+            <h1 class="text-xl font-bold-title tracking-wide text-amber-400">기다리다 지쳐!</h1>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Fast speed cheat mode for testing -->
+            <button onclick="toggleSpeed()" id="btn-speed" class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 transition text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt text-yellow-400"></i>
+                <span id="speed-text">10배속 테스트 모드</span>
+            </button>
+
+            <!-- Wallet -->
+            <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                <i class="fa-solid fa-wallet text-emerald-400 text-lg"></i>
+                <div>
+                    <p class="text-xs text-slate-400 font-semibold leading-none">지갑</p>
+                    <p class="text-sm font-bold text-slate-100" id="stat-wallet">10,000원</p>
+                </div>
+            </div>
+
+            <!-- Stress Level -->
+            <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 w-36" id="stress-box">
+                <i class="fa-solid fa-face-frown text-rose-400 text-lg" id="stress-icon"></i>
+                <div class="w-full">
+                    <div class="flex justify-between text-xs font-semibold leading-none mb-1">
+                        <span class="text-slate-400">스트레스</span>
+                        <span class="text-rose-400" id="stat-stress-num">50/100</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="stat-stress-bar" class="bg-rose-500 h-full transition-all duration-300" style="width: 50%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-4xl mx-auto flex-1 my-4 bg-slate-950/70 border border-slate-800 rounded-2xl relative flex flex-col justify-between overflow-hidden shadow-2xl">
+        
+        <!-- Timer & Bus Stop LED -->
+        <div class="p-4 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/50 border-b border-slate-800 z-10">
+            <div class="flex items-center gap-3 bg-slate-950 px-4 py-2 rounded-xl border border-amber-500/20 w-full md:w-auto justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-amber-400 animate-spin" style="animation-duration: 10s;"></i>
+                    <span class="text-xs text-slate-400 font-semibold">대기 시간:</span>
+                    <span class="text-lg font-mono font-bold text-amber-400" id="game-time">0분 / 40분</span>
+                </div>
+                <div class="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded-md ml-2 font-mono" id="playtime-desc">
+                    실제 플레이타임 10분 압축 (15초당 1초 흐름)
+                </div>
+            </div>
+
+            <!-- BUS LED Board -->
+            <div class="bg-black border-2 border-amber-600 rounded-lg px-4 py-1.5 flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.2)] w-full md:w-72 justify-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                <span class="font-mono text-amber-500 font-bold text-sm tracking-widest text-center" id="led-board">
+                    [143번] 잠시 후 도착
+                </span>
+            </div>
+        </div>
+
+        <!-- 40-Min Gauge Progress Bar -->
+        <div class="px-4 py-2 bg-slate-900/30">
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                <span>첫 정류장 대기 개시 (0분)</span>
+                <span class="text-amber-400 font-bold" id="progress-percent">0% 대기 완료</span>
+                <span>버스가 마침내 오는 시간 (40분)</span>
+            </div>
+            <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-700/50">
+                <div id="bus-progress-bar" class="bg-gradient-to-r from-amber-500 to-amber-300 h-full transition-all duration-300" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div class="relative flex-1 min-h-[220px] md:min-h-[280px] bg-gradient-to-b from-slate-900 to-slate-950 flex items-end px-4 md:px-12 pb-8 overflow-hidden">
+            <!-- Background Elements -->
+            <div class="absolute inset-0 bg-cover bg-center opacity-10" style="background-image: url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1000&q=80');"></div>
+            
+            <!-- Ground Line -->
+            <div class="absolute bottom-0 left-0 w-full h-8 bg-slate-800 border-t border-slate-700"></div>
+
+            <!-- LEFT: Bus Stop Section with Multiple NPCs -->
+            <div class="relative z-10 flex items-end gap-3 select-none">
+                
+                <!-- NPC 1: 지각 회사원 -->
+                <div onclick="gossipNPC('salaryman')" class="relative flex flex-col items-center cursor-pointer group transition duration-250 hover:scale-105">
+                    <div id="bubble-salaryman" class="absolute -top-12 bg-slate-900 border border-violet-500/40 text-violet-200 text-[10px] px-2 py-1 rounded-lg shadow-xl opacity-0 transform scale-90 transition-all duration-300 whitespace-nowrap pointer-events-none z-20">
+                        회사 짤리겠네...
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-700 border border-slate-500 flex items-center justify-center shadow-lg">
+                        <span class="text-base">💼</span>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-400 mt-0.5 bg-slate-900/60 px-1 rounded">김대리</span>
+                </div>
+
+                <!-- PLAYER (Chibi Style) -->
+                <div id="character-sprite" class="relative group cursor-pointer flex flex-col items-center transition-all duration-300">
+                    <div id="stress-bubble" class="absolute -top-12 bg-white text-slate-900 text-xs px-2 py-1.5 rounded-lg shadow-lg font-semibold border border-slate-200 opacity-0 transform scale-90 transition-all duration-300 whitespace-nowrap pointer-events-none z-20">
+                        윽.. 버스가 왜 이렇게 안 오지? 😭
+                    </div>
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-indigo-500 border-2 border-indigo-300 flex items-center justify-center shadow-lg transition-transform" id="character-body">
+                            <span class="text-xl" id="character-emoji">🧍</span>
+                        </div>
+                        <div class="absolute -left-1 top-2 w-3 h-6 bg-slate-700 rounded-md border border-slate-500"></div>
+                    </div>
+                    <span class="text-xs font-bold text-slate-300 mt-1 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-700">나 (통학생)</span>
+                </div>
+
+                <!-- NPC 2: 동네 아주머니 -->
+                <div onclick="gossipNPC('ajumma')" class="relative flex flex-col items-center cursor-pointer group transition duration-250 hover:scale-105">
+                    <div id="bubble-ajumma" class="absolute -top-12 bg-slate-900 border border-amber-500/40 text-amber-200 text-[10px] px-2 py-1 rounded-lg shadow-xl opacity-0 transform scale-90 transition-all duration-300 whitespace-nowrap pointer-events-none z-20">
+                        오늘 장 보긴 그른겨..
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-700 border border-slate-500 flex items-center justify-center shadow-lg">
+                        <span class="text-base">👩‍🦱</span>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-400 mt-0.5 bg-slate-900/60 px-1 rounded">영희 어머니</span>
+                </div>
+
+                <div class="w-2"></div>
+
+                <!-- Bus Sign -->
+                <div class="flex flex-col items-center mb-1">
+                    <div class="bg-amber-400 text-slate-950 p-2 rounded-lg font-bold-title text-center text-xs shadow-lg border border-white/20 w-24">
+                        <i class="fa-solid fa-bus-simple mr-1 text-sm"></i> 버스정류장
+                        <p class="text-[9px] font-sans font-normal border-t border-slate-950/20 mt-1">배차간격: 40분</p>
+                    </div>
+                    <div class="w-2.5 h-16 bg-slate-600 border-r border-slate-500"></div>
+                </div>
+            </div>
+
+            <!-- MIDDLE: Road Animation Area -->
+            <div class="absolute left-1/3 right-1/4 bottom-8 h-20 overflow-visible flex items-center justify-center">
+                <!-- Taxi Graphic -->
+                <div id="taxi-sprite" class="absolute -left-48 bottom-0 transition-all duration-1000 transform scale-x-[-1] opacity-0 pointer-events-none">
+                    <div class="relative flex flex-col items-center">
+                        <div class="bg-amber-400 text-slate-950 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-600 mb-1">TAXI</div>
+                        <span class="text-4xl">🚕</span>
+                    </div>
+                </div>
+
+                <!-- Bus Graphic -->
+                <div id="bus-sprite" class="absolute -left-64 bottom-0 transition-all duration-[2000ms] ease-out opacity-0 pointer-events-none">
+                    <span class="text-5xl">🚌</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: School/Destination Section -->
+            <div class="absolute right-4 md:right-12 bottom-8 z-10 flex flex-col items-center">
+                <div class="bg-emerald-600 text-white p-3 rounded-2xl flex flex-col items-center shadow-lg border border-emerald-400 w-28 md:w-32 text-center">
+                    <i class="fa-solid fa-school text-3xl mb-1 text-emerald-200"></i>
+                    <span class="font-title text-xs md:text-sm">희망 고등학교</span>
+                    <span class="text-[9px] text-emerald-200 font-sans mt-0.5">정시 등교 8시 40분</span>
+                </div>
+                <div class="w-3 h-2 bg-slate-600"></div>
+            </div>
+        </div>
+
+        <!-- ALWAYS AVAILABLE: Action Center (Food Truck & AI Route Planner) -->
+        <div class="p-4 bg-slate-900/95 border-t border-slate-800 z-10">
+            <div class="flex border-b border-slate-800 mb-3 text-xs">
+                <button onclick="toggleActionTab('food')" id="tab-btn-food" class="px-4 py-2 border-b-2 border-amber-500 text-amber-400 font-bold">🍢 정류장 푸드트럭</button>
+                <button onclick="toggleActionTab('router')" id="tab-btn-router" class="px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-route text-violet-400"></i>
+                    <span>🗺️ 통곡시 최악의 노선 진단기</span>
+                    <span class="bg-violet-950/80 text-violet-400 text-[9px] px-1 rounded border border-violet-800">AI</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: FOOD TRUCK -->
+            <div id="tab-content-food" class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🍢</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-200">정류장 옆 상설 푸드트럭</h3>
+                        <p class="text-xs text-slate-400">춥고 지치는 대기 시간, 언제든 닭꼬치로 멘탈을 회복하세요.</p>
+                    </div>
+                </div>
+                <button id="btn-food-truck" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span>닭꼬치 먹기 (-3,000원 / 스트레스 -20)</span>
+                </button>
+            </div>
+
+            <!-- TAB 2: AI ROUTE PLANNER -->
+            <div id="tab-content-router" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    <div class="md:col-span-4 text-xs space-y-1">
+                        <p class="font-bold text-violet-400 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> 대중교통 인프라 막장도 진단
+                        </p>
+                        <p class="text-slate-400">가고 싶은 가상의 목적지를 적으시면, 통곡시 대중교통의 기막힌 환승 지옥 노선을 AI가 진단해 드립니다.</p>
+                    </div>
+                    <form id="route-planner-form" onsubmit="handleRouteDiagnostics(event)" class="md:col-span-8 flex gap-2 w-full">
+                        <input id="route-destination-input" type="text" autocomplete="off" placeholder="예: '시청 도서관', '영희네 집', '소아과 병원'" class="flex-1 bg-slate-950 border border-slate-800 focus:border-violet-500 focus:outline-none rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600">
+                        <button type="submit" class="bg-violet-600 hover:bg-violet-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition active:scale-95 flex items-center gap-1.5 flex-shrink-0">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>노선 탐색</span>
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Diagnosis Loading -->
+                <div id="route-loading" class="hidden text-center py-4 space-y-1.5">
+                    <i class="fa-solid fa-circle-notch animate-spin text-xl text-violet-400"></i>
+                    <p class="text-[11px] text-slate-500 font-mono">가장 불합리하고 어처구니없는 버스 환승 조합 계산 중...</p>
+                </div>
+
+                <!-- Diagnosis Result Panel -->
+                <div id="route-result-box" class="hidden mt-3 bg-slate-950/60 border border-violet-950 p-3 rounded-xl">
+                    <div class="flex justify-between items-center border-b border-violet-950/60 pb-1.5 mb-2">
+                        <span class="text-[11px] font-bold text-violet-400 flex items-center gap-1"><i class="fa-solid fa-circle-nodes"></i> 교통망 진단 보고서</span>
+                        <span class="text-[9px] text-rose-400 font-mono bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-900/30">경고: 분통 유발</span>
+                    </div>
+                    <p id="route-result-content" class="text-xs text-slate-300 leading-relaxed whitespace-pre-line font-mono select-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Bureaucracy Chatbot Toggle & Panel -->
+    <div class="fixed bottom-24 right-6 z-40">
+        <!-- Chatbot Open Button -->
+        <button id="chatbot-toggle-btn" class="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white p-4 rounded-full shadow-2xl transition duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 border border-violet-400/30">
+            <i class="fa-solid fa-comments text-xl animate-bounce"></i>
+            <span class="font-bold text-sm pr-1">시청 AI 민원실</span>
+            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+            </span>
+        </button>
+    </div>
+
+    <!-- AI Chatbot Panel Drawer -->
+    <div id="chatbot-panel" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-slate-900/95 backdrop-blur-md border-l border-slate-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between">
+        <!-- Panel Header -->
+        <div class="p-4 bg-slate-950 border-b border-slate-850 flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-full bg-violet-950 flex items-center justify-center text-xl border border-violet-500/30">
+                    🤖
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                        교통과 AI 상담봇 '핑퐁이'
+                        <span class="bg-violet-900/50 text-violet-400 text-[10px] px-1.5 py-0.5 rounded-full border border-violet-500/20">Satirical</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">민원인 맞춤형(?) 책임 회피 전문가</p>
+                </div>
+            </div>
+            <button id="chatbot-close-btn" class="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-slate-850 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 chat-scroll bg-slate-950/40">
+            <!-- Bot default message -->
+            <div class="flex gap-2.5 items-start">
+                <div class="w-8 h-8 rounded-full bg-slate-850 flex items-center justify-center text-sm border border-slate-700/50 flex-shrink-0">
+                    🤖
+                </div>
+                <div class="bg-slate-800 text-slate-200 text-xs p-3 rounded-2xl rounded-tl-none max-w-[80%] shadow-md leading-relaxed">
+                    안녕하세요! 시민 중심의 행정을 지향하는 통곡시 교통행정과 AI 상담봇 <strong>'핑퐁이'</strong>입니다. 😊<br><br>
+                    대중교통에 관한 어떤 불편 사항이라도 접수해 주세요! (물론 처리가 된다는 뜻은 아닙니다!)
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-form" class="p-3 bg-slate-950 border-t border-slate-850 flex gap-2">
+            <input id="chat-input" type="text" autocomplete="off" placeholder="예: 143번 버스 언제 와요? 너무 추워요" class="flex-1 bg-slate-900 border border-slate-800 focus:border-violet-500/50 focus:outline-none rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500">
+            <button type="submit" class="bg-violet-600 hover:bg-violet-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1">
+                <span>민원</span>
+                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Active Dilemma Event Modals -->
+    <!-- 1. WEATHER (RAIN) EVENT MODAL -->
+    <div id="modal-weather" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border-2 border-sky-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-sky-400"></div>
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full bg-sky-950 flex items-center justify-center text-3xl animate-bounce">
+                    🌧️
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold-title text-sky-400">갑작스러운 비 소식!</h2>
+                    <p class="text-xs text-slate-400 font-medium">기다림은 갈수록 더 괴로워집니다.</p>
+                </div>
+            </div>
+            <p class="text-slate-300 text-sm mb-6 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800">
+                정류장에 가림막도 없는데 갑자기 장대비가 내립니다!<br>
+                비바람이 몰아치며 옷이 전부 젖고 스트레스가 급증합니다.
+            </p>
+            <div class="flex flex-col gap-3">
+                <div class="bg-rose-950/40 text-rose-300 text-xs px-3 py-2 rounded-lg border border-rose-900/50 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><strong>스트레스 증가 수치:</strong> +50</span>
+                </div>
+                
+                <button id="btn-rain-accept" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 px-4 rounded-xl border border-slate-700 transition">
+                    그냥 비를 맞으며 버티기 (스트레스 +50)
+                </button>
+                <button id="btn-rain-food" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition flex justify-between items-center">
+                    <span>🍢 옆 닭꼬치 텐트로 대피하기</span>
+                    <span class="text-xs font-mono">-3,000원 | 스트레스 완화(-20)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. TAXI DILEMMA EVENT MODAL -->
+    <div id="modal-taxi" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border-2 border-amber-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400"></div>
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full bg-amber-950 flex items-center justify-center text-3xl animate-pulse">
+                    🚕
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold-title text-amber-400">빈 택시의 달콤한 유혹!</h2>
+                    <p class="text-xs text-slate-400 font-medium">눈 딱 감고 타면 5분 만에 갈 수 있는데..</p>
+                </div>
+            </div>
+            <p class="text-slate-300 text-sm mb-6 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800">
+                저 멀리서 빈 택시 한 대가 서서히 정류장 앞에 멈춥니다.<br>
+                택시 기사님이 창문을 내리며 슬며시 웃어 보입니다.<br><br>
+                <strong>"학생, 어디 가? 버스 오늘 세월아 네월아야~"</strong>
+            </p>
+            <div class="flex flex-col gap-3">
+                <button id="btn-taxi-take" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex justify-between items-center">
+                    <span>🚕 택시 타고 즉시 등교하기</span>
+                    <span class="text-xs font-mono">-7,000원 | 스트레스 -40</span>
+                </button>
+                <button id="btn-taxi-ignore" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 px-4 rounded-xl border border-slate-700 transition">
+                    아니야.. 용돈 아껴야지.. 계속 버스 기다리기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. GAME OVER (STRESS 100) MODAL -->
+    <div id="modal-gameover" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border-2 border-rose-500 rounded-2xl max-w-lg w-full p-8 shadow-2xl text-center relative overflow-hidden">
+            <div class="text-6xl mb-4 animate-bounce">🥵</div>
+            <h2 class="text-3xl font-bold-title text-rose-500 mb-2">스트레스 한계 도달!</h2>
+            <p class="text-lg text-slate-200 font-medium mb-4">"에잇, 안 가! 오늘 하루 포기!"</p>
+            
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800">
+                하염없이 긴 배차시간을 견디지 못하고 플레이어의 정신력이 붕괴되었습니다.<br>
+                대중교통 시스템의 부재는 지역 주민들에게 엄청난 피로와 우울감을 유발합니다.
+            </p>
+
+            <div class="bg-slate-850 p-4 rounded-xl border border-slate-800 mb-6 text-left">
+                <h4 class="text-xs font-semibold text-slate-400 mb-2">최종 생존 통계:</h4>
+                <div class="grid grid-cols-2 gap-2 text-sm font-mono">
+                    <span class="text-slate-400">남은 용돈:</span> <span class="text-emerald-400 text-right" id="go-wallet">10,000원</span>
+                    <span class="text-slate-400">대기 시간:</span> <span class="text-amber-400 text-right" id="go-time">25분</span>
+                </div>
+            </div>
+
+            <button onclick="resetGame()" class="w-full bg-rose-500 hover:bg-rose-400 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-lg active:scale-95">
+                다시 생존 시도해보기
+            </button>
+        </div>
+    </div>
+
+    <!-- 4. FINAL REPORT (ENDING) MODAL -->
+    <div id="modal-ending" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
+        <div class="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-2xl w-full p-6 md:p-8 my-8 shadow-2xl relative overflow-hidden">
+            
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+
+            <div class="text-center mb-6">
+                <span class="text-5xl" id="end-emoji">🎓</span>
+                <h2 class="text-2xl md:text-3xl font-bold-title text-emerald-400 mt-2" id="end-status-title">정상 등교 완료!</h2>
+                <p class="text-xs text-slate-400 mt-1">오늘 하루의 눈물겨운 여정표</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Dashboard Style Statistics Card -->
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase mb-3 border-b border-slate-900 pb-2">나의 등교 성적표</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slate-400">남은 지갑 예산</span>
+                                <span class="text-base font-mono font-bold text-emerald-400" id="end-wallet">0원</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slate-400">누적 스트레스 지수</span>
+                                <span class="text-base font-mono font-bold text-rose-400" id="end-stress">0 / 100</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slate-400">최종 대기 시간</span>
+                                <span class="text-base font-mono font-bold text-amber-400" id="end-time">0분</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-900">
+                                <span class="text-sm font-semibold text-slate-300">등교 등급</span>
+                                <span class="text-base font-bold px-3 py-1 rounded-full text-xs" id="end-grade-badge">정상등교</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-slate-850 p-3 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-300">
+                        <p class="font-bold text-amber-400 mb-1">📢 한줄 서평</p>
+                        <p id="end-custom-msg">가장 기본적인 권리가 무시된 상황을 체험했습니다.</p>
+                    </div>
+                </div>
+
+                <!-- AI Custom Protest Letter Section -->
+                <div class="bg-slate-950 border border-violet-500/30 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-violet-400 tracking-wider uppercase mb-2 border-b border-violet-950 pb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+                            Gemini AI 맞춤형 뇌절 탄원서
+                        </h3>
+                        <p class="text-[10px] text-slate-500 mb-2">실제 나의 플레이 통계를 바탕으로 지자체에 따질 AI 탄원서입니다.</p>
+                        <div id="ai-letter-loading" class="hidden text-center py-8 space-y-2">
+                            <i class="fa-solid fa-spinner animate-spin text-2xl text-violet-500"></i>
+                            <p class="text-xs text-slate-400 font-mono">시민의 분노를 가득 담아 영혼 끌어모으는 중...</p>
+                        </div>
+                        <div id="ai-letter-content" class="text-xs text-slate-300 h-44 overflow-y-auto chat-scroll p-2.5 bg-slate-900 rounded-xl border border-slate-800 leading-relaxed whitespace-pre-line select-text">
+                            탄원서를 생성하려면 잠시만 기다려 주세요...
+                        </div>
+                    </div>
+                    <button id="btn-copy-petition" class="mt-3 w-full bg-violet-950/60 hover:bg-violet-900 border border-violet-500/40 text-violet-200 hover:text-white font-semibold py-2 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>AI 탄원서 전체 복사하기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Campaign Action Call-To-Action buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-800/60">
+                <button onclick="resetGame()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 font-bold py-3.5 px-4 rounded-xl border border-slate-700 transition active:scale-95 text-sm">
+                    처음부터 다시 버텨보기
+                </button>
+                <button onclick="triggerSignCampaign()" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl transition active:scale-95 shadow-lg text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-pen-nib animate-bounce"></i>
+                    <span>교통 확충 실제 서명 동참</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Toast System -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold shadow-lg transition-opacity duration-300 pointer-events-none opacity-0 z-50">
+        메시지 표시 영역
+    </div>
+
+    <!-- Sign Success Overlay -->
+    <div id="modal-campaign" class="fixed inset-0 bg-slate-950/90 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border-2 border-emerald-500 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+            <span class="text-5xl">✍️</span>
+            <h2 class="text-2xl font-bold-title text-emerald-400 mt-2 mb-4">서명해 주셔서 감사합니다!</h2>
+            <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                당신의 참여가 우리 동네 대중교통 확충을 이끌어내는 불씨가 됩니다.<br>
+                이 목소리를 도의회 및 대중교통 공단 측에 강력히 건의하겠습니다.
+            </p>
+            <button onclick="closeCampaignModal()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Campaign Footer Info -->
+    <div class="w-full max-w-4xl mx-auto text-center py-2 text-slate-500 text-[11px] font-medium z-10 flex flex-col sm:flex-row justify-between items-center gap-1 border-t border-slate-800">
+        <span>© 2026 대중교통 배차간격 단축 및 인프라 개선 캠페인 연합</span>
+        <span class="text-slate-600">지자체 교통행정 및 배차간격 실태 고발 공익성 시뮬레이션</span>
+    </div>
+
+    <!-- ==============================================
+         GAME ENGINE JAVASCRIPT
+         ============================================== -->
+    <script>
+        // Game State Variables
+        let wallet = 10000;
+        let stress = 50;
+        const maxStress = 100;
+        
+        let elapsedGameMinutes = 0;
+        const totalGameMinutes = 40;
+        
+        // Speed parameters: Default is normal speed
+        // Normal: 15s real = 1m game (Total 10 mins)
+        // 10x Speed Cheat: 1.5s real = 1m game (Total 1 min)
+        let isSpeedUp = false;
+        let gameTimerInterval = null;
+        let isPaused = false;
+        let isTaxiSuccess = false;
+        
+        // Dilemma trigger flags
+        let weatherEventTriggered = false;
+        let taxiEventTriggered = false;
+        
+        // DOM Elements
+        const statWallet = document.getElementById('stat-wallet');
+        const statStressNum = document.getElementById('stat-stress-num');
+        const statStressBar = document.getElementById('stat-stress-bar');
+        const stressBox = document.getElementById('stress-box');
+        const stressIcon = document.getElementById('stress-icon');
+        const gameTimeText = document.getElementById('game-time');
+        const busProgressBar = document.getElementById('bus-progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const ledBoard = document.getElementById('led-board');
+        const characterBody = document.getElementById('character-body');
+        const characterEmoji = document.getElementById('character-emoji');
+        const stressBubble = document.getElementById('stress-bubble');
+        
+        // Modals
+        const modalWeather = document.getElementById('modal-weather');
+        const modalTaxi = document.getElementById('modal-taxi');
+        const modalGameOver = document.getElementById('modal-gameover');
+        const modalEnding = document.getElementById('modal-ending');
+        const modalCampaign = document.getElementById('modal-campaign');
+        const rainLayer = document.getElementById('rain-layer');
+        const toastEl = document.getElementById('toast');
+        
+        // Buttons
+        const btnFoodTruck = document.getElementById('btn-food-truck');
+        const btnRainAccept = document.getElementById('btn-rain-accept');
+        const btnRainFood = document.getElementById('btn-rain-food');
+        const btnTaxiTake = document.getElementById('btn-taxi-take');
+        const btnTaxiIgnore = document.getElementById('btn-taxi-ignore');
+
+        // AI Feature DOM elements
+        const btnChatbotToggle = document.getElementById('chatbot-toggle-btn');
+        const btnChatbotClose = document.getElementById('chatbot-close-btn');
+        const panelChatbot = document.getElementById('chatbot-panel');
+        const formChat = document.getElementById('chat-form');
+        const inputChat = document.getElementById('chat-input');
+        const areaChatMessages = document.getElementById('chat-messages');
+        const contentAILetter = document.getElementById('ai-letter-content');
+        const loaderAILetter = document.getElementById('ai-letter-loading');
+        const btnCopyPetition = document.getElementById('btn-copy-petition');
+
+        // Character Action Bubble Dialogues
+        const characterThoughts = [
+            "버스가 올 기미조차 없어... 😭",
+            "발가락 끝이 시려온다.. 얼른 와라.. 🥶",
+            "지하철 탈 걸 그랬나? 후회막심이다..",
+            "학교 종 울릴 시간이 다 되어가는데... ⏰",
+            "아.. 또 '잠시 후 도착' 구라에 속았다.. 😡",
+            "정류장에 의자라도 편하게 해놓지 진짜..",
+            "주민세는 꼬박꼬박 내는데 버스는 안 오네.."
+        ];
+
+        window.onload = function() {
+            startGame();
+            setupChatbotEvents();
+        };
+
+        // Speed management cheat button
+        function toggleSpeed() {
+            isSpeedUp = !isSpeedUp;
+            const btnSpeed = document.getElementById('btn-speed');
+            const speedText = document.getElementById('speed-text');
+            const playtimeDesc = document.getElementById('playtime-desc');
+            
+            if (isSpeedUp) {
+                btnSpeed.className = "bg-amber-500 text-slate-950 px-2.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 animate-pulse shadow-lg";
+                speedText.textContent = "10배속 작동 중! (초스피드)";
+                playtimeDesc.textContent = "실제 플레이타임 1분 압축 (1.5초당 1초 흐름)";
+            } else {
+                btnSpeed.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 transition text-xs font-bold flex items-center gap-1.5";
+                speedText.textContent = "10배속 테스트 모드";
+                playtimeDesc.textContent = "실제 플레이타임 10분 압축 (15초당 1초 흐름)";
+            }
+            
+            // Re-setup timer with new speeds
+            if (gameTimerInterval) {
+                clearInterval(gameTimerInterval);
+                setupGameLoop();
+            }
+            showToast(isSpeedUp ? "⚡ 10배속 테스트 모드가 켜졌습니다." : "⏱️ 정상 속도로 돌아왔습니다.");
+        }
+
+        function toggleActionTab(tabName) {
+            const tabFoodBtn = document.getElementById('tab-btn-food');
+            const tabRouterBtn = document.getElementById('tab-btn-router');
+            const contentFood = document.getElementById('tab-content-food');
+            const contentRouter = document.getElementById('tab-content-router');
+
+            if (tabName === 'food') {
+                tabFoodBtn.className = "px-4 py-2 border-b-2 border-amber-500 text-amber-400 font-bold";
+                tabRouterBtn.className = "px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-semibold flex items-center gap-1.5";
+                contentFood.classList.remove('hidden');
+                contentRouter.classList.add('hidden');
+            } else {
+                tabFoodBtn.className = "px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-semibold";
+                tabRouterBtn.className = "px-4 py-2 border-b-2 border-violet-500 text-violet-400 font-bold flex items-center gap-1.5";
+                contentFood.classList.add('hidden');
+                contentRouter.classList.remove('hidden');
+            }
+        }
+
+        // --- LOCAL FALLBACK GENERATORS (Ensures playability without API keys) ---
+        function getLocalGossip(npcId, isRainYn) {
+            const salarymanQuotes = [
+                "아니 143번 버스는 유령선입니까? 전광판엔 계속 5분전이라는데 30분째 안 오네!",
+                "시청 교통과 공무원들 전부 출퇴근 버스로 시켜봐야 합니다. 등교고 출근이고 다 날렸네요.",
+                "오늘 지각 사유서는 이 정류장 셀카로 갈음하겠습니다. 부장님도 통곡시 살면 이해하시겠지..",
+                "닭꼬치 냄새 때문에 배고픈데 지갑 전사 직전이라 참습니다. 눈물이 앞을 가립니다."
+            ];
+            const ajummaQuotes = [
+                "아유 읍내 장 서는 게 벌써 끝났겠네! 버스가 가뭄에 콩 나듯 다니니 아주 복장 터져!",
+                "이 동네는 차 없으면 서러워서 살겠나. 버스 시간표는 그냥 종이 장식물이야 장식물!",
+                "눈 딱 감고 저 택시 탈까 싶은데 오천원 아끼겠다고 감기 걸려 몸살 나게 생겼네, 아유..",
+                "비까지 오니 허리도 쑤시고, 군수님 정류장에 가림막이나 뜨끈한 벤치라도 하나 놔줘봐요!"
+            ];
+
+            if (isRainYn) {
+                return npcId === 'salaryman' ? "비를 쫄딱 맞으니 부장님 사직서가 품 속에서 물을 머금고 흩어집니다.." : "비바람이 사방으로 들이치는데 우산도 없고 정류장은 뼈대만 덜렁 있네!";
+            }
+            
+            const list = npcId === 'salaryman' ? salarymanQuotes : ajummaQuotes;
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        function getLocalRouteDiagnostics(destination) {
+            const routes = [
+                `[지옥 노선] "통곡 삼거리" 정류장까지 도보로 15분 전력 질주 후 배차간격 55분 버스 승차 -> 뇌절 터널 앞에서 하차하여 비포장도로 1.2km를 걸어간 후 요일제로 운영되는 99인승 수송 차량 대기.\n\n총 예상 시간: 2시간 45분 (환승 대기 70분)`,
+                `[환승 고문] "망연자실 앞" 정류장에서 1시간에 1대 오는 마을버스 탑승 -> 기사님 교대 시간(40분 정차) 감내 후 도외곽 사거리에서 보행자 신호등이 없는 교차로를 3번 건너 7번 버스로 환승.\n\n총 예상 시간: 3시간 10분 (도보 비중 50%)`,
+                `[배차 대참사] 해당 목적지는 평일 오전 7시 딱 1회만 정류장에 정차하므로, 현재 상황에서는 등반 장비를 착용하고 산길 지름길을 횡단하시는 편이 교통 수단보다 약 4배 빠릅니다.\n\n총 예상 시간: 1시간 50분 (순수 등반 소요)`
+            ];
+            return `"${destination}" 진단 완료!\n` + routes[Math.floor(Math.random() * routes.length)];
+        }
+
+        function getLocalPetition(isTaxi) {
+            if (isTaxi) {
+                return `[탄원서]\n수신: 통곡시장 및 교통행정 관계자\n제목: 기괴한 대중교통 마비로 인한 학생 자금 유출 고발\n\n존경하는 시장님, 저는 오늘 배차간격 40분이라는 초현실적인 정류장에서 등교를 감행했습니다. 도무지 오지 않는 버스 때문에 결국 7,000원의 비싼 택시비를 눈물을 머금고 결제했습니다. 한 달 용돈 만 원 중에서 택시비 한 번에 등교 예산 70%가 증발하는 참혹한 경제적 파탄을 호소합니다. 배차 간격을 조속히 줄여주십시오.`;
+            } else {
+                return `[탄원서]\n수신: 통곡시장 및 교통행정 관계자\n제목: 40분 대기 지각 사태에 대한 연대 항의 서한\n\n존경하는 지자체장님, 오늘 아침 등교길은 참담함 그 자체였습니다. 버스는 40분이 지나도록 모습을 드러내지 않았고, 매서운 비바람을 맞으며 정류장에서 스트레스 수치가 100% 한계치에 임박하도록 버틴 결과는 결국 '지각 출결 벌점'이었습니다. 지자체의 부족한 버스 확충 예산 탓에 왜 시민들이 매일 아침 길바닥에서 징벌을 받아야 합니까? 즉각 해결해 주십시오!`;
+            }
+        }
+
+        function getLocalChatbotReply(prompt) {
+            const replies = [
+                "민원인님, 소중한 의견 진심으로 감동하여 접수했습니다. 다만 저희 부서 소관이 아니오니 인근 닭꼬치 가게 텐트에서 차분히 대기해 주시면 감사하겠습니다. 😊",
+                "배차간격을 늘리려면 17개의 공청회와 군의회 예산 정밀 심사가 필요하여, 약 48개월의 시간이 걸립니다. 대중교통 이용 또한 하나의 훌륭한 '참을성 수행 과정'이라 여겨주시면 어떨까요?",
+                "버스 증차는 곤란하오니, 정류장에 머무시는 동안 무료 명상 가이드 앱을 다운받아 깊은 심호흡으로 스트레스를 낮추시는 방법을 적극 권장해 올립니다. 🙏",
+                "현재 민원 처리 담당 공무원이 출장 중이며, 해당 버스 143번 노선 기사님 역시 정류장 인근 푸드트럭에서 오뎅 국물을 수혈하고 계시므로 양해 부탁드립니다."
+            ];
+            return replies[Math.floor(Math.random() * replies.length)];
+        }
+
+        // --- FETCH WITH BACKOFF & INTEGRATION ---
+        async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) {
+                    if (res.status === 429 && retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                    }
+                    throw new Error(`HTTP Error Status: ${res.status}`);
+                }
+                return res;
+            } catch (err) {
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                }
+                throw err;
+            }
+        }
+
+        // --- DYNAMIC ACTIONS & API CALLS ---
+        async function gossipNPC(npcId) {
+            const bubbleId = npcId === 'salaryman' ? 'bubble-salaryman' : 'bubble-ajumma';
+            const bubbleEl = document.getElementById(bubbleId);
+            
+            bubbleEl.textContent = "중얼중얼...";
+            bubbleEl.style.opacity = '1';
+            bubbleEl.style.transform = 'scale(1)';
+
+            const isRainActive = (rainLayer.style.display === 'block');
+            let weatherState = isRainActive ? "비바람이 장난 아니게 몰아치는 날씨" : "흐릿하고 추운 날씨";
+            let personaPrompt = npcId === 'salaryman' ? "30대 남성 김대리(지각 위험에 처한 회사원)" : "50대 영희어머니(시장보러 나온 충청도 사투리의 아주머니)";
+            
+            const prompt = `현재 배차간격이 40분이나 되는 가상의 막장 교통 정류장에서 주인공과 같이 버스를 오매망찬 기다리는 상황입니다.
+- NPC 역할: ${personaPrompt}
+- 상황 요소: 현재 대기 개시 후 ${elapsedGameMinutes}분이 흐른 상황이며, 현재 정류장 날씨는 "${weatherState}"입니다.
+- 지침: 이 암울하고 화가 나는 지자체의 상황을 비장하면서도 한탄스럽고 코믹하게 대변하는 촌철살인 한마디(한국어로 20자~40자 내외)로 내뱉어 주세요. 말머리에 따옴표는 달지 말아주세요.`;
+
+            const systemPrompt = "당신은 열악한 지방 대중교통 문제를 겪는 서민의 깊은 빡침을 풍자적으로 표현하는 뛰어난 카피라이터입니다.";
+            const apiKey = ""; // System empty resolution
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            // Fast local response check if API Key is empty string to avoid useless network fetch
+            if (!apiKey) {
+                setTimeout(() => {
+                    bubbleEl.textContent = getLocalGossip(npcId, isRainActive);
+                }, 400);
+            } else {
+                try {
+                    const response = await fetchWithBackoff(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    const reply = result.candidates?.[0]?.content?.parts?.[0]?.text || getLocalGossip(npcId, isRainActive);
+                    bubbleEl.textContent = reply.replace(/"/g, '').trim();
+                } catch (err) {
+                    bubbleEl.textContent = getLocalGossip(npcId, isRainActive);
+                }
+            }
+
+            setTimeout(() => {
+                bubbleEl.style.opacity = '0';
+                bubbleEl.style.transform = 'scale(0.9)';
+            }, 4500);
+        }
+
+        async function handleRouteDiagnostics(event) {
+            event.preventDefault();
+            const destinationVal = document.getElementById('route-destination-input').value.trim();
+            if (!destinationVal) return;
+
+            const routeLoading = document.getElementById('route-loading');
+            const routeResultBox = document.getElementById('route-result-box');
+            const routeResultContent = document.getElementById('route-result-content');
+
+            routeResultBox.classList.add('hidden');
+            routeLoading.classList.remove('hidden');
+
+            const systemPrompt = `당신은 대중교통 인프라가 완전히 붕괴된 가상의 막장 도시 '통곡시'의 독설적이고 재치 넘치는 교통 지도 설계 전문가입니다. 
+시민이 제시하는 임의의 목적지에 가기 위해 거쳐야 하는 상상을 초월하는 번거롭고 기막힌 인프라 부재 중심의 버스 우회/환승 경로 및 대기 시간을 매우 설득력 있고 유쾌하게 지적해 줍니다.`;
+
+            const userPrompt = `목적지: "${destinationVal}"
+현재 정류장(첫 정류장)에서 출발해 이 목적지까지 대중교통만으로 가야 하는 가상의 통곡시 최악의 지옥 노선을 만들어 줘.
+작성 요건:
+1. 배차간격 45분짜리 버스 탑승 ➡️ 어중간한 정류장에서 하차 ➡️ 20분 도보 ➡️ 배차 대기 1시간짜리 마을버스로 환승 같은 개판 노선을 구체적인 명칭(예: 통곡 삼거리, 뇌절로 등)을 붙여 유머러스하게 제시할 것.
+2. 마지막엔 "총 예상 소요 시간: 3시간 20분 (도보 비중 40%)"와 같이 기가 막히는 한 줄 정리를 포함해줘.
+3. 한국어 200자~300자 내외로 개성 넘치는 말투로 보여줘.`;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            if (!apiKey) {
+                setTimeout(() => {
+                    routeResultContent.innerHTML = getLocalRouteDiagnostics(destinationVal);
+                    routeLoading.classList.add('hidden');
+                    routeResultBox.classList.remove('hidden');
+                }, 800);
+            } else {
+                try {
+                    const response = await fetchWithBackoff(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    const diagnosticsText = result.candidates?.[0]?.content?.parts?.[0]?.text || getLocalRouteDiagnostics(destinationVal);
+                    routeResultContent.innerHTML = diagnosticsText;
+                } catch (err) {
+                    routeResultContent.innerHTML = getLocalRouteDiagnostics(destinationVal);
+                } finally {
+                    routeLoading.classList.add('hidden');
+                    routeResultBox.classList.remove('hidden');
+                }
+            }
+        }
+
+        // --- CORE GAME ENGINE INITIALIZERS ---
+        function startGame() {
+            wallet = 10000;
+            stress = 50;
+            elapsedGameMinutes = 0;
+            weatherEventTriggered = false;
+            taxiEventTriggered = false;
+            isPaused = false;
+            isTaxiSuccess = false;
+
+            updateUI();
+            setupGameLoop();
+            showToast("🎮 버스 정류장 생존 캠페인이 시작되었습니다! 무사히 등교하세요.");
+        }
+
+        function setupGameLoop() {
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            
+            // Standard: 15 seconds real = 1m game
+            // Speed up: 1.5 seconds real = 1m game
+            const gameMinIntervalMs = isSpeedUp ? 1500 : 15000; 
+
+            gameTimerInterval = setInterval(() => {
+                if (!isPaused) {
+                    elapsedGameMinutes++;
+                    changeStress(2); // Passive stress waiting increment
+
+                    if (Math.random() < 0.3) {
+                        showThoughtBubble();
+                    }
+
+                    checkEvents();
+                    updateUI();
+                    
+                    if (elapsedGameMinutes >= totalGameMinutes) {
+                        endGameWithBus();
+                    }
+                }
+            }, gameMinIntervalMs);
+        }
+
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.style.opacity = '1';
+            setTimeout(() => {
+                toastEl.style.opacity = '0';
+            }, 3000);
+        }
+
+        function showThoughtBubble() {
+            const randomMsg = characterThoughts[Math.floor(Math.random() * characterThoughts.length)];
+            stressBubble.textContent = randomMsg;
+            stressBubble.style.opacity = '1';
+            stressBubble.style.transform = 'scale(1)';
+            setTimeout(() => {
+                stressBubble.style.opacity = '0';
+                stressBubble.style.transform = 'scale(0.9)';
+            }, 4000);
+        }
+
+        function changeStress(amount) {
+            stress += amount;
+            if (stress < 0) stress = 0;
+            
+            if (stress >= maxStress) {
+                stress = maxStress;
+                triggerGameOver();
+            }
+
+            if (amount > 0 && stress > 75) {
+                stressBox.classList.add('shake-effect');
+                characterBody.classList.add('shake-effect');
+                characterEmoji.textContent = '😫';
+                setTimeout(() => {
+                    stressBox.classList.remove('shake-effect');
+                    characterBody.classList.remove('shake-effect');
+                }, 500);
+            } else if (stress > 50) {
+                characterEmoji.textContent = '😐';
+            } else {
+                characterEmoji.textContent = '🧍';
+            }
+        }
+
+        function checkEvents() {
+            // Weather Event (4 to 5 game-minutes)
+            if (elapsedGameMinutes >= 4 && elapsedGameMinutes <= 5 && !weatherEventTriggered) {
+                if (Math.random() < 0.6) {
+                    triggerWeatherDilemma();
+                } else {
+                    weatherEventTriggered = true;
+                    showToast("☀️ 구름이 해를 가렸지만, 다행히 비는 오지 않습니다.");
+                }
+            }
+
+            // Taxi Event (7 to 8 game-minutes)
+            if (elapsedGameMinutes >= 7 && elapsedGameMinutes <= 8 && !taxiEventTriggered) {
+                triggerTaxiDilemma();
+            }
+        }
+
+        function triggerWeatherDilemma() {
+            isPaused = true;
+            weatherEventTriggered = true;
+            generateRain();
+            rainLayer.style.display = 'block';
+            modalWeather.classList.remove('hidden');
+        }
+
+        function triggerTaxiDilemma() {
+            isPaused = true;
+            taxiEventTriggered = true;
+
+            const taxi = document.getElementById('taxi-sprite');
+            taxi.style.opacity = '1';
+            taxi.style.left = '45%';
+
+            setTimeout(() => {
+                modalTaxi.classList.remove('hidden');
+            }, 1000);
+        }
+
+        function updateUI() {
+            statWallet.textContent = wallet.toLocaleString() + '원';
+            statStressNum.textContent = `${stress}/${maxStress}`;
+            statStressBar.style.width = `${stress}%`;
+
+            if (stress >= 80) {
+                statStressBar.className = "bg-rose-600 h-full transition-all duration-300";
+                stressIcon.className = "fa-solid fa-face-angry text-rose-500 text-lg animate-bounce";
+            } else if (stress >= 50) {
+                statStressBar.className = "bg-amber-500 h-full transition-all duration-300";
+                stressIcon.className = "fa-solid fa-face-frown text-amber-400 text-lg";
+            } else {
+                statStressBar.className = "bg-emerald-500 h-full transition-all duration-300";
+                stressIcon.className = "fa-solid fa-face-smile text-emerald-400 text-lg";
+            }
+
+            gameTimeText.textContent = `${elapsedGameMinutes}분 / 40분`;
+            
+            const progressRatio = (elapsedGameMinutes / totalGameMinutes) * 100;
+            busProgressBar.style.width = `${progressRatio}%`;
+            progressPercent.textContent = `${Math.floor(progressRatio)}% 대기 완료`;
+
+            if (elapsedGameMinutes < 10) {
+                ledBoard.textContent = `[143번] 잠시 후 도착`;
+                ledBoard.className = "font-mono text-amber-500 font-bold text-sm tracking-widest text-center animate-pulse";
+            } else if (elapsedGameMinutes < 25) {
+                ledBoard.textContent = `[143번] 곧 도착 (신호대기)`;
+                ledBoard.className = "font-mono text-amber-500 font-bold text-xs tracking-widest text-center";
+            } else if (elapsedGameMinutes < 38) {
+                ledBoard.textContent = `[143번] 우회 우려 정체`;
+                ledBoard.className = "font-mono text-red-500 font-bold text-xs tracking-widest text-center";
+            } else {
+                ledBoard.textContent = `[143번] 전 정류장 출발!`;
+                ledBoard.className = "font-mono text-emerald-400 font-bold text-sm tracking-widest text-center animate-bounce";
+            }
+        }
+
+        function generateRain() {
+            rainLayer.innerHTML = '';
+            const dropCount = 80;
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'drop';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.top = `${Math.random() * -100}px`;
+                drop.style.animationDelay = `${Math.random() * 0.8}s`;
+                drop.style.animationDuration = `${0.5 + Math.random() * 0.5}s`;
+                rainLayer.appendChild(drop);
+            }
+        }
+
+        function triggerGameOver() {
+            isPaused = true;
+            clearInterval(gameTimerInterval);
+            
+            document.getElementById('go-wallet').textContent = wallet.toLocaleString() + '원';
+            document.getElementById('go-time').textContent = elapsedGameMinutes + '분';
+            
+            modalGameOver.classList.remove('hidden');
+        }
+
+        // --- USER INTERACTIONS & BUTTON EVENT ACTION CONTROLS ---
+        btnFoodTruck.onclick = function() {
+            if (wallet < 3000) {
+                showToast("❌ 지갑에 잔액이 부족해 닭꼬치를 사먹을 수 없습니다.");
+                return;
+            }
+            wallet -= 3000;
+            changeStress(-20);
+            updateUI();
+            showToast("🍢 닭꼬치를 먹었습니다! 스트레스 -20, 예산 -3,000원");
+        };
+
+        btnRainAccept.onclick = function() {
+            changeStress(50);
+            modalWeather.classList.add('hidden');
+            isPaused = false;
+            updateUI();
+            showToast("☔ 옷은 쫄딱 젖었지만, 일단 계속 기다립니다. (스트레스 +50)");
+        };
+
+        btnRainFood.onclick = function() {
+            if (wallet < 3000) {
+                showToast("❌ 돈이 부족하여 대피할 수 없습니다! 강제로 비를 맞습니다.");
+                changeStress(50);
+                modalWeather.classList.add('hidden');
+                isPaused = false;
+                updateUI();
+                return;
+            }
+            wallet -= 3000;
+            changeStress(-20);
+            modalWeather.classList.add('hidden');
+            isPaused = false;
+            updateUI();
+            showToast("⛺ 푸드트럭 텐트 아래로 비를 피하고 닭꼬치를 사 먹었습니다!");
+        };
+
+        btnTaxiTake.onclick = function() {
+            if (wallet < 7000) {
+                showToast("❌ 택시 기본요금을 낼 예산이 부족합니다!");
+                return;
+            }
+            wallet -= 7000;
+            changeStress(-40);
+            isTaxiSuccess = true;
+            modalTaxi.classList.add('hidden');
+            
+            const taxi = document.getElementById('taxi-sprite');
+            taxi.style.transition = "left 2s ease-in, opacity 1s";
+            taxi.style.left = "90%";
+            characterBody.style.opacity = '0';
+
+            setTimeout(() => {
+                showEnding(true);
+            }, 1500);
+        };
+
+        btnTaxiIgnore.onclick = function() {
+            modalTaxi.classList.add('hidden');
+            isPaused = false;
+            
+            const taxi = document.getElementById('taxi-sprite');
+            taxi.style.transition = "left 1.5s ease-in, opacity 0.5s";
+            taxi.style.left = "110%";
+            taxi.style.opacity = "0";
+
+            showToast("💸 눈물을 머금고 택시를 보냈습니다. 버스를 계속 기다립니다.");
+        };
+
+        function endGameWithBus() {
+            isPaused = true;
+            clearInterval(gameTimerInterval);
+
+            const bus = document.getElementById('bus-sprite');
+            bus.style.opacity = '1';
+            bus.style.left = '45%';
+
+            setTimeout(() => {
+                if (wallet < 2000) {
+                    showToast("⚠️ 지갑 잔액이 2,000원 미만입니다! 무임승차 처리를 감수하고 탑승합니다.");
+                    wallet = 0;
+                } else {
+                    wallet -= 2000;
+                }
+                changeStress(-15);
+                updateUI();
+
+                bus.style.transition = "left 2s ease-in";
+                bus.style.left = "80%";
+                characterBody.style.opacity = "0";
+
+                setTimeout(() => {
+                    showEnding(false);
+                }, 1800);
+            }, 1000);
+        }
+
+        // --- CHATBOT & GOSSIP EVENTS REGISTRATION ---
+        function setupChatbotEvents() {
+            btnChatbotToggle.onclick = () => {
+                panelChatbot.classList.toggle('translate-x-full');
+            };
+
+            btnChatbotClose.onclick = () => {
+                panelChatbot.classList.add('translate-x-full');
+            };
+
+            formChat.onsubmit = async (e) => {
+                e.preventDefault();
+                const text = inputChat.value.trim();
+                if (!text) return;
+
+                addChatMessage('user', text);
+                inputChat.value = '';
+
+                const botTypingEl = addChatMessage('bot', '<i class="fa-solid fa-ellipsis animate-pulse"></i> 생각 중...');
+
+                const apiKey = "";
+                if (!apiKey) {
+                    setTimeout(() => {
+                        botTypingEl.innerHTML = getLocalChatbotReply(text);
+                    }, 600);
+                } else {
+                    try {
+                        const aiReply = await getGeminiChatbotReply(text);
+                        botTypingEl.innerHTML = aiReply;
+                    } catch (error) {
+                        botTypingEl.innerHTML = getLocalChatbotReply(text);
+                    }
+                }
+            };
+
+            btnCopyPetition.onclick = () => {
+                const petitionText = contentAILetter.innerText;
+                if (!petitionText || petitionText.includes("생성하려면")) {
+                    showToast("❌ 복사할 탄원서 내용이 아직 없습니다!");
+                    return;
+                }
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = petitionText;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("📋 AI 탄원서가 클립보드에 복사되었습니다! 민원을 접수하러 가볼까요?");
+                } catch (err) {
+                    showToast("❌ 복사에 실패했습니다. 직접 드래그하여 복사해 주세요.");
+                }
+                document.body.removeChild(tempTextArea);
+            };
+        }
+
+        function addChatMessage(sender, text) {
+            const messageRow = document.createElement('div');
+            messageRow.className = `flex gap-2.5 items-start ${sender === 'user' ? 'justify-end' : ''}`;
+            
+            const isUser = sender === 'user';
+            
+            messageRow.innerHTML = `
+                ${!isUser ? `<div class="w-8 h-8 rounded-full bg-slate-850 flex items-center justify-center text-sm border border-slate-700/50 flex-shrink-0">🤖</div>` : ''}
+                <div class="${isUser ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'} text-xs p-3 rounded-2xl max-w-[80%] shadow-md leading-relaxed">
+                    ${text}
+                </div>
+            `;
+            
+            areaChatMessages.appendChild(messageRow);
+            areaChatMessages.scrollTop = areaChatMessages.scrollHeight;
+            return messageRow.querySelector('div:last-child');
+        }
+
+        async function getGeminiChatbotReply(userPrompt) {
+            const systemPrompt = `너는 대중교통 배차간격이 40분인 심각한 교통난을 겪고 있는 가상의 지자체 '통곡시' 시청 교통행정과의 AI 민원 대화 챗봇(이름: 핑퐁이)이다. 
+- 성격: 극도로 공손하고 친절한 어투를 쓰지만, 핵심은 예산 부족, 타 부서 이관, 터무니없는 대체 수단 권장(예: 걸어가면 혈액순환에 좋다, 기다리는 동안 닭꼬치를 먹거나 명상을 하라) 등으로 책임을 완벽히 회피하는 '관료주의형 킹받는 로봇'이다.
+- 제약사항: 절대로 버스를 지금 즉시 늘려주겠다는 약속을 하지 않는다. 대신 공손하게 상처를 주는 식의 유머러스한 한국어 답변을 생성하라.
+- 분량: 2~3줄 내외로 짧고 위트있게 답할 것.`;
+
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            const response = await fetchWithBackoff(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            return result.candidates?.[0]?.content?.parts?.[0]?.text || getLocalChatbotReply(userPrompt);
+        }
+
+        async function generateAIPetition(isTaxi) {
+            contentAILetter.classList.add('hidden');
+            loaderAILetter.classList.remove('hidden');
+
+            const stateSummary = `[대중교통 피해 학생 보고서]
+- 최종 대기 시간: ${elapsedGameMinutes}분 (배차간격 실태: 40분)
+- 생존 지갑 예산: ${wallet.toLocaleString()}원 (시작 금액: 10,000원)
+- 누적 스트레스 지수: ${stress} / 100
+- 등교 결과: ${isTaxi ? "택시에 가진 전재산에 준하는 거금을 털어 겨우 지각을 모면함" : "버스를 목 빠지게 기다리다가 결국 파국적인 지각 처리를 당함"}`;
+
+            const userPrompt = `위의 실제 플레이 스탯을 바탕으로, 우리 지역 지자체장(도지사, 시장)에게 제출할 매우 현실적이고, 눈물겨우며, 뼈를 때리는 '풍자 가득한 대중교통망 확충 탄원서'를 한국어로 작성해 줘.
+- 작성 가이드라인: 격식 있는 공식 탄원서 양식(수신인, 발신인, 제목, 탄원 요지, 탄원 내용 등)을 차용하되, 내용에는 닭꼬치로 멘탈을 회복해야 했던 사정, 텅 빈 택시의 유혹에 돈을 뜯긴 과정, 정류장에서 젖은 비바람 등을 포함하여 한국인의 유머 코드와 극적인 감정선을 잔뜩 살려줘.
+- 분량: 공백 포함 400자 내외로 정돈되게 생성해 줘.`;
+
+            const systemPrompt = `당신은 대중교통 배차간격 단축 캠페인을 이끄는 천재적인 카피라이터이자 사회 고발 작가입니다. 주민들이 처한 고통스러운 현실을 공무원들에게 찌릿하게 전달하는 탄원서를 재치 있고 매섭게 작성합니다.`;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            if (!apiKey) {
+                setTimeout(() => {
+                    contentAILetter.innerHTML = getLocalPetition(isTaxi);
+                    loaderAILetter.classList.add('hidden');
+                    contentAILetter.classList.remove('hidden');
+                }, 1200);
+            } else {
+                try {
+                    const response = await fetchWithBackoff(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    const aiLetter = result.candidates?.[0]?.content?.parts?.[0]?.text || getLocalPetition(isTaxi);
+                    contentAILetter.innerHTML = aiLetter;
+                } catch (error) {
+                    contentAILetter.innerHTML = getLocalPetition(isTaxi);
+                } finally {
+                    loaderAILetter.classList.add('hidden');
+                    contentAILetter.classList.remove('hidden');
+                }
+            }
+        }
+
+        function showEnding(isTaxiSuccess) {
+            document.getElementById('end-wallet').textContent = wallet.toLocaleString() + '원';
+            document.getElementById('end-stress').textContent = `${stress} / 100`;
+            document.getElementById('end-time').textContent = elapsedGameMinutes + '분';
+
+            const gradeBadge = document.getElementById('end-grade-badge');
+            const endEmoji = document.getElementById('end-emoji');
+            const statusTitle = document.getElementById('end-status-title');
+            const customMsg = document.getElementById('end-custom-msg');
+
+            if (isTaxiSuccess) {
+                endEmoji.textContent = '🚕';
+                statusTitle.textContent = "택시 타고 정시 등교 성공!";
+                statusTitle.className = "text-2xl md:text-3xl font-bold-title text-amber-400 mt-2";
+                gradeBadge.textContent = "정상 등교 (지갑 탈탈)";
+                gradeBadge.className = "text-base font-bold px-3 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                
+                customMsg.innerHTML = `
+                    정시 등교는 완료했지만 <strong>무려 7,000원(예산의 70%)</strong>의 비싼 거금을 지출해야 했습니다.<br>
+                    배차간격이 촘촘했다면 단돈 2,000원에 탈 수 있었을 것입니다. 우리의 고달픈 등굣길은 지갑 사정을 망가뜨리고 있습니다.
+                `;
+            } else {
+                endEmoji.textContent = '🏃‍♂️';
+                statusTitle.textContent = "결국 지각! 버스의 느린 등교";
+                statusTitle.className = "text-2xl md:text-3xl font-bold-title text-red-500 mt-2";
+                gradeBadge.textContent = "등교 지각 처리";
+                gradeBadge.className = "text-base font-bold px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400 border border-red-500/30";
+                
+                customMsg.innerHTML = `
+                    버스를 <strong>40분 동안</strong> 기다려서 등교하니 이미 수업이 한창 진행 중인 <strong>지각 상태</strong>였습니다.<br>
+                    정류장의 전광판은 줄곧 '잠시 후 도착'이었지만 우리에게 돌아온 것은 차가운 출결 벌점뿐입니다. 지역 교통권 개선은 복지이자 약속입니다!
+                `;
+            }
+
+            modalEnding.classList.remove('hidden');
+            generateAIPetition(isTaxiSuccess);
+        }
+
+        function resetGame() {
+            modalWeather.classList.add('hidden');
+            modalTaxi.classList.add('hidden');
+            modalGameOver.classList.add('hidden');
+            modalEnding.classList.add('hidden');
+            modalCampaign.classList.add('hidden');
+            
+            rainLayer.style.display = 'none';
+
+            const taxi = document.getElementById('taxi-sprite');
+            taxi.style.transition = 'none';
+            taxi.style.left = '-12rem';
+            taxi.style.opacity = '0';
+
+            const bus = document.getElementById('bus-sprite');
+            bus.style.transition = 'none';
+            bus.style.left = '-16rem';
+            bus.style.opacity = '0';
+
+            characterBody.style.opacity = '1';
+
+            startGame();
+        }
+
+        function triggerSignCampaign() {
+            modalCampaign.classList.remove('hidden');
+        }
+
+        function closeCampaignModal() {
+            modalCampaign.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우리들의 숲 3D : 모두의 타운</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts for Cozy Illustration Style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Gowun+Dodum:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #F3F4F6;
+        }
+        .fancy-title {
+            font-family: 'Gaegu', cursive;
+        }
+        .handwritten {
+            font-family: 'Nanum Pen Script', cursive;
+        }
+        /* Glassmorphism for panels */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(251, 191, 36, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(139, 92, 26, 0.15);
+        }
+        /* Custom progress bar glows */
+        .vital-bar {
+            transition: width 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- 3D WebGL Canvas (실제 3D 그래픽이 그려지는 영역) -->
+    <canvas id="game-canvas" class="fixed inset-0 w-full h-full block z-0"></canvas>
+
+    <!-- Dookun Dookun Cozy Start Menu -->
+    <div id="start-menu" class="fixed inset-0 z-50 flex flex-col justify-between bg-gradient-to-tr from-[#E0F2FE] via-[#FEF3C7] to-[#DCFCE7] p-6 transition-all duration-700 overflow-hidden">
+        
+        <!-- Floating Fluffy Clouds -->
+        <div class="absolute top-12 left-10 w-36 h-16 bg-white/80 rounded-full filter blur-[1px] animate-[pulse_6s_infinite_ease-in-out]"></div>
+        <div class="absolute top-24 right-16 w-48 h-20 bg-white/75 rounded-full filter blur-[2px] animate-[pulse_9s_infinite_ease-in-out_1s]"></div>
+        
+        <!-- Top Title Bar -->
+        <div class="w-full flex justify-between items-center z-10">
+            <span class="text-xs font-bold text-amber-800/60 tracking-widest uppercase">3D Cozy Town Simulation</span>
+            <div class="flex gap-2">
+                <button id="btn-menu-music" class="bg-white/95 hover:bg-white text-xs px-3.5 py-2 rounded-full shadow-sm border border-amber-200 flex items-center gap-1.5 font-bold">
+                    <span>🎵</span> 음악: <span id="music-status-txt" class="text-red-500">꺼짐</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Central Title -->
+        <div class="text-center z-10 flex flex-col items-center mt-8">
+            <div class="relative inline-block mb-2">
+                <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-36 bg-amber-200/50 rounded-full filter blur-xl scale-125 animate-pulse"></div>
+                <span class="absolute -top-12 -left-8 text-5xl animate-bounce">🏡</span>
+                <span class="absolute -top-6 -right-10 text-5xl">🐠</span>
+                <span class="absolute bottom-2 -left-12 text-4xl">🧺</span>
+                <h1 class="fancy-title text-6xl md:text-8xl font-bold tracking-tight text-[#5D4037] drop-shadow-md">우리들의 숲 3D</h1>
+            </div>
+            <p class="text-amber-800/90 tracking-widest text-lg md:text-2xl fancy-title font-bold mt-2">
+                나만의 도시 주택과 꿈꾸던 숲속 힐링 라이프
+            </p>
+            <p class="handwritten text-2xl md:text-4xl text-emerald-800 mt-4 bg-white/60 px-5 py-1.5 rounded-full border border-emerald-100">
+                "낚시하고, 요리하며, 나만의 방을 꾸미는 행복한 하루"
+            </p>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="w-full max-w-md mx-auto z-10 flex flex-col gap-3.5 mb-8">
+            <button id="btn-enter" class="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-4 px-6 rounded-3xl text-lg md:text-xl tracking-wider flex items-center justify-center gap-2 transform active:scale-95 transition-all border-b-4 border-orange-600 shadow-lg">
+                <span class="text-2xl">🌱</span> 마을 입장하기
+            </button>
+            <button id="btn-tutorial" class="bg-white/90 hover:bg-white text-slate-700 font-semibold py-3 px-6 rounded-2xl text-sm md:text-base tracking-wide flex items-center justify-center gap-1.5 shadow-md border border-amber-100 transition-all">
+                <span>📖</span> 숲속 사용 가이드
+            </button>
+        </div>
+
+        <div class="w-full flex justify-between text-[11px] text-[#8C7A70] font-semibold border-t border-amber-900/10 pt-3 z-10">
+            <span>우리들의 숲 3D : 모두의 타운 v3.0</span>
+            <span>Copyright © 2026 우리들의 숲 제작단</span>
+        </div>
+    </div>
+
+    <!-- Gameplay Viewport HUD -->
+    <div id="game-ui" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4">
+        
+        <!-- Top Row: Vitals & Currencies -->
+        <div class="w-full flex justify-between items-start">
+            <!-- Left Side: Player Vitals Status -->
+            <div class="glass-panel p-3.5 rounded-2xl pointer-events-auto flex flex-col gap-2 w-52">
+                <div class="flex items-center gap-1">
+                    <span class="text-sm">👤</span>
+                    <span class="text-xs font-bold text-slate-600">나의 상태</span>
+                </div>
+                <!-- Hunger -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold text-amber-900 mb-0.5">
+                        <span>🍗 허기</span>
+                        <span id="vital-hunger-txt">100/100</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="vital-hunger" class="vital-bar h-full bg-amber-500 rounded-full" style="width: 100%"></div>
+                    </div>
+                </div>
+                <!-- Thirst -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold text-sky-900 mb-0.5">
+                        <span>💧 목마름</span>
+                        <span id="vital-thirst-txt">100/100</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="vital-thirst" class="vital-bar h-full bg-sky-400 rounded-full" style="width: 100%"></div>
+                    </div>
+                </div>
+                <!-- Fatigue -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold text-indigo-900 mb-0.5">
+                        <span>💤 피로도</span>
+                        <span id="vital-fatigue-txt">0/100</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="vital-fatigue" class="vital-bar h-full bg-indigo-500 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Money, Time and Quick buttons -->
+            <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                <!-- Coin Display -->
+                <div class="glass-panel px-4 py-2 rounded-2xl flex items-center gap-2 border-amber-300">
+                    <span class="text-2xl animate-spin">🪙</span>
+                    <div>
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">코인</div>
+                        <div class="text-lg font-bold text-amber-700 fancy-title" id="coin-balance">500 COIN</div>
+                    </div>
+                </div>
+
+                <!-- Time / Cycle Display -->
+                <div class="glass-panel px-4 py-1.5 rounded-2xl flex items-center gap-1.5 border-slate-300 text-xs font-semibold">
+                    <span id="time-emoji">☀️</span>
+                    <span id="time-text">낮 12:00</span>
+                </div>
+
+                <!-- Control toolbar -->
+                <div class="flex gap-1.5">
+                    <button id="btn-audio-toggle" class="bg-white/95 hover:bg-white p-2.5 rounded-xl shadow border border-amber-100 text-sm">🎵</button>
+                    <button id="btn-bag" class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-3.5 py-2 rounded-xl shadow border border-amber-200 flex items-center gap-1.5 font-bold text-xs"><span>🎒</span> 가방</button>
+                    <button id="btn-missions" class="bg-emerald-50/95 hover:bg-emerald-100 text-emerald-800 px-3.5 py-2 rounded-xl shadow border border-emerald-200 flex items-center gap-1.5 font-bold text-xs"><span>📜</span> 일일 미션</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center/Bottom Floating Area: Navigation Arrow Indicator & Prompts -->
+        <div class="w-full flex flex-col items-center gap-3">
+            <!-- Active Mission Tracker Panel -->
+            <div id="mission-tracker" class="hidden glass-panel px-4 py-2 rounded-2xl pointer-events-auto max-w-xs flex items-center gap-3 animate-bounce border-emerald-400">
+                <span class="text-xl">🎯</span>
+                <div class="flex-1">
+                    <div class="text-[9px] text-slate-400 font-bold uppercase">현재 추적중인 임무</div>
+                    <div id="mission-tracker-desc" class="text-xs text-emerald-800 font-semibold leading-tight">주민 Charlie와 대화하기</div>
+                </div>
+                <div class="text-emerald-500 font-extrabold text-lg flex flex-col items-center justify-center">
+                    <span class="text-xs">이동</span>
+                    <span>⬆️</span>
+                </div>
+            </div>
+
+            <!-- Interactivity Prompt banner -->
+            <div id="interact-prompt" class="hidden bg-slate-900/85 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-xs font-semibold tracking-wide border border-amber-400 animate-pulse">
+                <span id="prompt-emoji">💬</span>
+                <span id="prompt-txt">Charlie와 이야기 나누기 (F 키)</span>
+            </div>
+        </div>
+
+        <!-- Bottom Bar: Mobile Controls (if loaded) -->
+        <div class="w-full flex justify-between items-end">
+            <!-- Left Side: Social Chat Widget & Mobile Stick Placeholder -->
+            <div class="flex flex-col gap-3 pointer-events-auto z-10">
+                <!-- Social Chat Widget (정령들의 실시간 메시지) -->
+                <div class="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-amber-100 w-64">
+                    <div class="text-[10px] font-bold text-amber-900 mb-1 flex items-center gap-1">
+                        <span class="animate-pulse inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>숲속 정령 친구들 소식</span>
+                    </div>
+                    <div id="social-chat-feed" class="h-20 overflow-y-auto space-y-1 text-xs text-slate-600 pr-1"></div>
+                </div>
+                
+                <!-- Left Stick Placeholder -->
+                <div id="mobile-stick-placeholder" class="w-32 h-32"></div>
+            </div>
+
+            <!-- Right Action Trigger Buttons -->
+            <div class="flex flex-col gap-2 items-end">
+                <!-- Mobile Action Trigger Button -->
+                <button id="btn-action-mobile" class="hidden pointer-events-auto w-16 h-16 bg-gradient-to-tr from-amber-400 to-orange-400 border-4 border-white/95 text-white rounded-full flex flex-col items-center justify-center shadow-2xl active:scale-90 transform transition-transform">
+                    <span class="text-2xl" id="btn-action-mobile-emoji">🧺</span>
+                    <span class="text-[9px] font-bold" id="btn-action-mobile-text">행동(F)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rhythm Fishing Game Board -->
+    <div id="fishing-bar-container" class="hidden fixed bottom-32 left-1/2 -translate-x-1/2 w-80 bg-slate-900/95 border-4 border-amber-300 p-4 rounded-3xl shadow-2xl text-white pointer-events-auto z-50 text-center animate-pulse">
+        <h3 class="fancy-title text-base font-bold text-amber-200 flex items-center justify-center gap-1.5">
+            <span>🎣</span> 입질이 왔다! 타이밍 낚시 미니게임
+        </h3>
+        <p class="text-[10px] text-slate-300 mt-1">바늘이 가운데 초록 영역에 있을 때 스페이스바/REEL을 누르세요!</p>
+        
+        <!-- Score indicators (3 Stars needed) -->
+        <div class="flex justify-center gap-2 my-2.5">
+            <span class="text-xs font-bold text-amber-400">성공:</span>
+            <span id="fish-star-1" class="text-slate-500 text-sm">☆</span>
+            <span id="fish-star-2" class="text-slate-500 text-sm">☆</span>
+            <span id="fish-star-3" class="text-slate-500 text-sm">☆</span>
+            <span class="text-slate-400 mx-1">|</span>
+            <span class="text-xs font-bold text-red-400">실패:</span>
+            <span id="fish-fail-1" class="text-slate-500 text-sm">☆</span>
+            <span id="fish-fail-2" class="text-slate-500 text-sm">☆</span>
+            <span id="fish-fail-3" class="text-slate-500 text-sm">☆</span>
+        </div>
+
+        <!-- Slider Track -->
+        <div class="relative w-full h-8 bg-slate-800 rounded-xl overflow-hidden border border-slate-700 mt-3 flex items-center">
+            <!-- Safe Zone (40% to 60%) -->
+            <div class="absolute left-[40%] right-[40%] h-full bg-emerald-500/80 border-x-2 border-emerald-300 flex items-center justify-center">
+                <span class="text-[8px] font-extrabold text-white">REEL ZONE</span>
+            </div>
+            <!-- Sliding Indicator Needle -->
+            <div id="fishing-needle" class="absolute top-0 bottom-0 w-2.5 bg-yellow-400 border border-black shadow-lg" style="left: 0%"></div>
+        </div>
+
+        <button id="btn-fish-pull" class="mt-4 w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-extrabold py-2 rounded-xl text-xs tracking-wider transform active:scale-95 transition-all">
+            🎣 당기기 (Spacebar)
+        </button>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="hidden fixed inset-0 z-50 bg-slate-900/45 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md border-4 border-amber-100 shadow-2xl text-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="fancy-title text-2xl font-bold text-amber-900 flex items-center gap-1.5">
+                    <span>📖</span> 숲속 생활 지침서
+                </h3>
+                <button id="btn-close-tutorial" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs md:text-sm leading-relaxed overflow-y-auto max-h-[350px] pr-1">
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                    <p class="font-bold text-amber-900">🏃‍♂️ 3D 조작</p>
+                    <p>W A S D 또는 방향키로 도시와 숲을 탐험하세요. 카메라가 캐릭터 뒤를 부드럽게 추적합니다.</p>
+                </div>
+                <div class="bg-sky-50 p-3 rounded-xl border border-sky-100">
+                    <p class="font-bold text-sky-900">🐠 낚시, 요리 & 채집</p>
+                    <p>낚시터 연못 옆에서 물방울이 튈 때 낚싯대를 던지고 거두세요. 사과, 버섯, 들꽃을 주워 상인 아더(Arthur)에게 팔거나 가스레인지로 맛있는 음식을 요리하세요!</p>
+                </div>
+                <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <p class="font-bold text-indigo-900">🏡 나의 집 꾸미기</p>
+                    <p>우리 집으로 가구(침대, 책상 등)를 사다가 내 맘대로 가구 건축 모드로 인테리어를 변경할 수 있습니다. 잠을 자서 활력을 채우세요.</p>
+                </div>
+            </div>
+            <button id="btn-understand-tutorial" class="mt-4 w-full bg-amber-400 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-center shadow-sm">
+                시작해 볼래요! 🧡
+            </button>
+        </div>
+    </div>
+
+    <!-- Bag/Inventory Overlay Modal -->
+    <div id="bag-modal" class="hidden fixed inset-0 bg-slate-900/35 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+        <div class="bg-[#FFFDF6] rounded-3xl w-full max-w-md border-4 border-amber-200 shadow-2xl overflow-hidden pointer-events-auto">
+            <div class="bg-amber-100/50 p-4 border-b border-amber-200 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🎒</span>
+                    <h2 class="fancy-title text-xl font-bold text-[#5D4037]">나의 가방 인벤토리</h2>
+                </div>
+                <button id="btn-bag-close" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-4 gap-2 mb-4" id="bag-slots">
+                    <!-- Dynamic Bag Slots -->
+                </div>
+                <!-- Selection Details -->
+                <div id="bag-details" class="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex flex-col items-center text-center">
+                    <div class="text-4xl mb-1.5" id="bag-detail-emoji">🎒</div>
+                    <div class="font-bold text-sm text-[#5D4037]" id="bag-detail-name">아이템을 선택해 주세요</div>
+                    <div class="text-xs text-slate-500 mt-1 min-h-[32px]" id="bag-detail-desc">수집한 물건들을 가방에서 관리합니다.</div>
+                    <div class="flex gap-2 w-full mt-3">
+                        <button id="btn-bag-eat" class="hidden flex-1 bg-[#83BD75] hover:bg-[#6FA961] text-white font-bold py-2 rounded-xl text-xs">먹기/마시기</button>
+                        <button id="btn-bag-sell" class="hidden flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs">상점에 판매</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Missions Modal -->
+    <div id="missions-modal" class="hidden fixed inset-0 bg-slate-900/35 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+        <div class="bg-[#FFFDF6] rounded-3xl w-full max-w-sm border-4 border-emerald-200 shadow-2xl overflow-hidden pointer-events-auto">
+            <div class="bg-emerald-100/50 p-4 border-b border-emerald-200 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📜</span>
+                    <h2 class="fancy-title text-lg font-bold text-emerald-800">숲속 일일 미션 보드</h2>
+                </div>
+                <button id="btn-missions-close" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-4 space-y-3" id="missions-list">
+                <!-- Dynamic Mission Cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- NPC Dialogue Overlay Panel -->
+    <div id="dialogue-panel" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-40 pointer-events-auto">
+        <div class="bg-white/95 border-4 border-amber-200 rounded-3xl p-5 shadow-2xl flex flex-col gap-3">
+            <div class="flex justify-between items-center">
+                <span class="fancy-title font-bold text-lg text-amber-800" id="dialogue-name">주민 이름</span>
+                <span id="dialogue-role" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">주민</span>
+            </div>
+            <p id="dialogue-text" class="text-sm text-slate-700 leading-relaxed min-h-[50px] font-medium">대화 텍스트가 여기에 출력됩니다...</p>
+            
+            <!-- Dialogue Action Buttons -->
+            <div class="flex gap-2 justify-end" id="dialogue-options">
+                <button id="btn-gift-clothes" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs">👕 옷 선물하기</button>
+                <button id="btn-close-dialogue" class="bg-amber-400 hover:bg-amber-500 text-white font-bold px-4 py-1.5 rounded-xl text-xs">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merchant Store Modal -->
+    <div id="shop-modal" class="hidden fixed inset-0 bg-slate-900/35 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+        <div class="bg-[#FFFDF6] rounded-3xl w-full max-w-md border-4 border-amber-300 shadow-2xl overflow-hidden pointer-events-auto">
+            <div class="bg-amber-100/50 p-4 border-b border-amber-200 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🏬</span>
+                    <h2 class="fancy-title text-xl font-bold text-amber-950">아더의 만물 상점</h2>
+                </div>
+                <button id="btn-shop-close" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-5">
+                <div class="text-xs text-slate-500 mb-3 text-center bg-amber-50 py-1.5 rounded-lg border border-amber-100">"포근한 가구들과 귀여운 옷들을 저렴하게 가져왔어!"</div>
+                <div class="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto" id="shop-items-grid">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Cooking / Stove Panel -->
+    <div id="cooking-modal" class="hidden fixed inset-0 bg-slate-900/35 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+        <div class="bg-[#FFFDF6] rounded-3xl w-full max-w-sm border-4 border-orange-200 shadow-2xl overflow-hidden pointer-events-auto">
+            <div class="bg-orange-100/50 p-4 border-b border-orange-200 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🍳</span>
+                    <h2 class="fancy-title text-lg font-bold text-amber-900">숲속 오븐 주방</h2>
+                </div>
+                <button id="btn-cooking-close" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <p class="text-xs text-slate-500 leading-tight text-center">가지고 있는 재료로 맛있는 힐링 요리를 조리하세요!</p>
+                <div class="space-y-2.5">
+                    <button class="cook-recipe-btn w-full p-3 bg-white border-2 border-amber-100 hover:border-amber-300 rounded-2xl flex items-center justify-between text-left transition-all" data-recipe="soup">
+                        <div>
+                            <span class="text-lg">🍲</span> <span class="text-xs font-bold text-amber-950">버섯 스프 요리</span>
+                            <div class="text-[10px] text-slate-400">재료: 버섯 🍄 2개 필요</div>
+                        </div>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-full">조리하기</span>
+                    </button>
+                    <button class="cook-recipe-btn w-full p-3 bg-white border-2 border-amber-100 hover:border-amber-300 rounded-2xl flex items-center justify-between text-left transition-all" data-recipe="pie">
+                        <div>
+                            <span class="text-lg">🥧</span> <span class="text-xs font-bold text-amber-950">달콤 과일 파이</span>
+                            <div class="text-[10px] text-slate-400">재료: 사과 🍎 2개 + 들꽃 🌸 1개 필요</div>
+                        </div>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-full">조리하기</span>
+                    </button>
+                    <button class="cook-recipe-btn w-full p-3 bg-white border-2 border-amber-100 hover:border-amber-300 rounded-2xl flex items-center justify-between text-left transition-all" data-recipe="roasted">
+                        <div>
+                            <span class="text-lg">🐟</span> <span class="text-xs font-bold text-amber-950">버터 생선 구이</span>
+                            <div class="text-[10px] text-slate-400">재료: 물고기 🐠 1마리 + 버섯 🍄 1개 필요</div>
+                        </div>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-full">조리하기</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- House Customize / Interior Builder Overlay Panel -->
+    <div id="build-panel" class="hidden fixed bottom-6 left-6 right-6 z-10 pointer-events-auto bg-white/95 border-2 border-amber-200 p-4 rounded-2xl shadow-xl flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🔨</span>
+            <div>
+                <h4 class="font-bold text-sm text-[#5D4037]">내 방 가구 건축 배치 모드</h4>
+                <p class="text-[10px] text-slate-500">구매한 가구를 방바닥에 원하는 자리에 놓아보세요!</p>
+            </div>
+        </div>
+        <div class="flex gap-2" id="furniture-place-container">
+            <!-- Placeable Bought Furnitures will list here -->
+        </div>
+        <button id="btn-build-exit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow">
+            배치 종료
+        </button>
+    </div>
+
+    <!-- Dynamic Message Box -->
+    <div id="custom-modal-box" class="hidden fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-5 max-w-sm w-full border-4 border-amber-100 shadow-2xl text-center animate-bounce">
+            <span class="text-4xl block mb-2" id="modal-box-emoji">💡</span>
+            <h4 class="font-bold text-slate-800 mb-1" id="modal-box-title">알림</h4>
+            <p class="text-xs text-slate-500 mb-4 leading-relaxed whitespace-pre-line" id="modal-box-desc">상세 설명 메시지</p>
+            
+            <div id="modal-box-buttons" class="flex gap-2 w-full justify-center">
+                <button id="btn-modal-box-ok" class="w-full bg-amber-400 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs shadow-sm">확인</button>
+                <button id="btn-modal-box-cancel" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs shadow-sm">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Synth Module (Generative Audio Engine) -->
+    <script>
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+                this.isPlayingBgm = false;
+                this.bgmTimer = null;
+                this.chords = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C D E G A C
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playAnimalese(pitchMultiplier = 1.0) {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                
+                // Animalese is characterized by fast, cute, short tones with variable pitch
+                for (let i = 0; i < 4; i++) {
+                    const delay = i * 0.085;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.type = Math.random() > 0.5 ? 'triangle' : 'sine';
+                    const randomNote = 350 + Math.random() * 250;
+                    osc.frequency.setValueAtTime(randomNote * pitchMultiplier, now + delay);
+                    
+                    gain.gain.setValueAtTime(0, now + delay);
+                    gain.gain.linearRampToValueAtTime(0.08, now + delay + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.08);
+                    
+                    osc.start(now + delay);
+                    osc.stop(now + delay + 0.09);
+                }
+            }
+
+            playFishBite() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.26);
+            }
+
+            playCoin() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(987.77, now); // B5
+                osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+
+            playEat() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.setValueAtTime(250, now + 0.08);
+                osc.frequency.setValueAtTime(180, now + 0.16);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.26);
+            }
+
+            playUI() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.11);
+            }
+
+            toggleBgm(callback) {
+                this.init();
+                if (!this.ctx) return;
+                if (this.isPlayingBgm) {
+                    clearTimeout(this.bgmTimer);
+                    this.isPlayingBgm = false;
+                    if (callback) callback(false);
+                } else {
+                    if (this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                    this.isPlayingBgm = true;
+                    this.startCozyChimesLoop();
+                    if (callback) callback(true);
+                }
+            }
+
+            startCozyChimesLoop() {
+                const playChord = () => {
+                    if (!this.isPlayingBgm) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const delay = this.ctx.createDelay();
+                    const feedback = this.ctx.createGain();
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    delay.delayTime.value = 0.4;
+                    feedback.gain.value = 0.45;
+                    gain.connect(delay);
+                    delay.connect(feedback);
+                    feedback.connect(delay);
+                    delay.connect(this.ctx.destination);
+
+                    const selectedFreq = this.chords[Math.floor(Math.random() * this.chords.length)];
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(selectedFreq, now);
+                    
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.06, now + 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.4);
+
+                    osc.start(now);
+                    osc.stop(now + 2.5);
+                };
+
+                const loop = () => {
+                    if (!this.isPlayingBgm) return;
+                    playChord();
+                    this.bgmTimer = setTimeout(loop, 1200 + Math.random() * 2000);
+                };
+                loop();
+            }
+        }
+        const AudioSynth = new SoundSynth();
+    </script>
+
+    <!-- Global Variables & Unified Logic Database -->
+    <script>
+        // Item Definitions
+        const ITEM_DB = {
+            apple: { name: "사과", emoji: "🍎", value: 15, desc: "달콤하고 빨간 가을 사과입니다. 요리하거나 상점에 판매할 수 있습니다." },
+            flower: { name: "들꽃", emoji: "🌸", value: 10, desc: "봄바람에 피어난 사랑스러운 꽃송이입니다." },
+            mushroom: { name: "야생 버섯", emoji: "🍄", value: 25, desc: "그늘 밑 이슬을 맞고 자란 통통한 버섯입니다." },
+            carp: { name: "붕어", emoji: "🐠", value: 35, desc: "낚시 연못에서 갓 잡은 싱싱하고 힘센 붕어입니다." },
+            soup: { name: "버섯 스프", emoji: "🍲", type: "food", valHunger: 50, valThirst: 15, desc: "버섯을 듬뿍 넣고 끓여 따뜻하고 영양 가득한 힐링 스프." },
+            pie: { name: "달콤 과일 파이", emoji: "🥧", type: "food", valHunger: 65, valThirst: 10, desc: "사과를 올려 구운 달콤하고 바삭한 페스츄리 파이." },
+            roasted: { name: "생선 버터구이", emoji: "🐟", type: "food", valHunger: 80, valThirst: 5, desc: "신선한 붕어를 버터에 구워 고소한 냄새가 일품인 구이." }
+        };
+
+        const SHOP_ITEMS = [
+            { id: "clothing_red", name: "정령의 빨간 옷", emoji: "👕", price: 120, type: "clothes", color: 0xE53935 },
+            { id: "clothing_blue", name: "정령의 파란 옷", emoji: "👕", price: 120, type: "clothes", color: 0x1E88E5 },
+            { id: "furn_bed", name: "분홍 푹신 침대", emoji: "🛏️", price: 250, type: "furniture", buildType: "bed" },
+            { id: "furn_bear", name: "아기 곰인형", emoji: "🧸", price: 150, type: "furniture", buildType: "bear" },
+            { id: "furn_table", name: "참나무 원형 테이블", emoji: "🪵", price: 180, type: "furniture", buildType: "table" }
+        ];
+
+        // Player Stats State
+        let playerCoins = 300;
+        let playerInventory = {
+            apple: 2,
+            flower: 1,
+            mushroom: 0,
+            carp: 0,
+            soup: 0,
+            pie: 0,
+            roasted: 0
+        };
+        // Furnitures the player bought and can place inside
+        let boughtFurnitures = [];
+        let placedFurnitures = []; // Saved coordinates in room
+        let activeItemKey = null; // Selected inventory item key
+
+        // Vitals
+        let vitalHunger = 80;
+        let vitalThirst = 75;
+        let vitalFatigue = 20;
+
+        // Active Mission
+        let activeMission = null;
+        const availableMissions = [
+            { id: "mission_charlie", desc: "주민 Charlie와 대화하기", target: "Charlie", type: "talk", completed: false, reward: { coins: 150, item: null } },
+            { id: "mission_gather_apples", desc: "사과 3개 모아오기", target: "apple", type: "gather", reqCount: 3, completed: false, reward: { coins: 100, item: "soup" } },
+            { id: "mission_fishing", desc: "낚시터에서 붕어 1마리 낚기", target: "fishing", type: "fish", completed: false, reward: { coins: 200, item: null } }
+        ];
+
+        // Three.js Core Variables (정상 접근을 위한 확실한 통합 선언)
+        let scene, camera, renderer;
+        let ground;
+        let player;
+        const keyMap = {};
+        const velocity = new THREE.Vector3();
+        let isGrounded = true;
+
+        // Interactive states
+        let targetTalkingNPC = null;
+        let insideHouseTriggerRange = false;
+        let insideNPCCharlieTrigger = false;
+        let insideNPCLunaTrigger = false;
+        let insideNPCOliverTrigger = false;
+        let nearPondFishingPier = false;
+
+        let isInsideHouse = false;
+        let isInsideCharlieHouse = false;
+        let isInsideLunaHouse = false;
+        let isInsideOliverHouse = false;
+
+        let timeOfDay = 12.0; // 0.0 to 24.0. Day-Night cycle progression speed.
+        let gameDay = 1; // Days tracker for Merchant schedule
+        let activeTargetLocation = null; // Instantiated safely in buildCozy3DWorld
+        let guideArrowMesh;
+
+        // Shower SOAP bubbles array
+        let isShowering = false;
+        const showerBubbles = [];
+
+        let cameraYaw = 0; // Horizontal orbit angle (radians)
+        const cameraDistance = 5.5; // Distance from character
+        const cameraHeight = 3.5; // Constant camera height
+        let isDraggingCamera = false;
+        let previousMouseX = 0;
+
+        // Rhythm Fishing Minigame States
+        let isFishingActive = false;
+        let fishingSuccesses = 0;
+        let fishingFailures = 0;
+        let markerPos = 0; // 0 to 100
+        let markerDirection = 1; // 1 = right, -1 = left
+        let markerSpeed = 3.2; // Speed multiplier for swing
+
+        // UI Modal controller helper
+        function triggerMessageBox(emoji, title, desc, onConfirmCallback = null) {
+            document.getElementById('modal-box-emoji').innerText = emoji;
+            document.getElementById('modal-box-title').innerText = title;
+            document.getElementById('modal-box-desc').innerText = desc;
+            
+            // Set buttons state
+            document.getElementById('btn-modal-box-cancel').classList.add('hidden');
+            const okBtn = document.getElementById('btn-modal-box-ok');
+            
+            okBtn.onclick = () => {
+                document.getElementById('custom-modal-box').classList.add('hidden');
+                AudioSynth.playUI();
+                if (onConfirmCallback) onConfirmCallback();
+            };
+            
+            document.getElementById('custom-modal-box').classList.remove('hidden');
+        }
+
+        function triggerConfirmBox(emoji, title, desc, onConfirm, onCancel = null) {
+            document.getElementById('modal-box-emoji').innerText = emoji;
+            document.getElementById('modal-box-title').innerText = title;
+            document.getElementById('modal-box-desc').innerText = desc;
+            
+            const okBtn = document.getElementById('btn-modal-box-ok');
+            const cancelBtn = document.getElementById('btn-modal-box-cancel');
+            
+            cancelBtn.classList.remove('hidden');
+            
+            okBtn.onclick = () => {
+                document.getElementById('custom-modal-box').classList.add('hidden');
+                AudioSynth.playUI();
+                if (onConfirm) onConfirm();
+            };
+            
+            cancelBtn.onclick = () => {
+                document.getElementById('custom-modal-box').classList.add('hidden');
+                AudioSynth.playUI();
+                if (onCancel) onCancel();
+            };
+            
+            document.getElementById('custom-modal-box').classList.remove('hidden');
+        }
+    </script>
+
+    <!-- 3D Environment Design Logic (Modern City & Forest merge) -->
+    <script>
+        const npcs = [];
+        // Unique NPC Visual Definitions (Cute animal ears and distinct traits like Animal Crossing)
+        const npcDetails = [
+            { name: "Charlie", color: 0xFFA726, pitch: 1.25, startPos: {x: -6, z: 2}, hatType: "rabbit_ears", currentClothesColor: 0xFFA726, role: "주민" },
+            { name: "Luna", color: 0xBA68C8, pitch: 1.5, startPos: {x: 8, z: -4}, hatType: "cat_ears", currentClothesColor: 0xBA68C8, role: "주민" },
+            { name: "Oliver", color: 0x4FC3F7, pitch: 0.9, startPos: {x: -5, z: -8}, hatType: "dog_ears", currentClothesColor: 0x4FC3F7, role: "주민" },
+            { name: "Bella", color: 0xFF8A65, pitch: 1.1, startPos: {x: 3, z: 7}, hatType: "bear_ears", currentClothesColor: 0xFF8A65, role: "주민" },
+            { name: "Arthur", color: 0x90A4AE, pitch: 0.8, startPos: {x: -2, z: 12}, hatType: "merchant_hat", currentClothesColor: 0x90A4AE, role: "상인 아더" }
+        ];
+
+        // Collectibles array
+        const collectibles = [];
+        const spawnableNatureCoordinates = [
+            { type: "apple", x: -14, z: 14 },
+            { type: "apple", x: -10, z: 12 },
+            { type: "mushroom", x: -12, z: 10 },
+            { type: "mushroom", x: -8, z: 15 },
+            { type: "flower", x: -15, z: 7 },
+            { type: "flower", x: -11, z: 5 }
+        ];
+
+        // Three.js Instances
+        let streetLights = [];
+        let sunLight;
+        let houseGroup, interiorGroup;
+        
+        // NPC House exterior/interior groups
+        let charlieHouseGroup, charlieInteriorGroup;
+        let lunaHouseGroup, lunaInteriorGroup;
+        let oliverHouseGroup, oliverInteriorGroup;
+        let arthurMerchantSpotSign;
+
+        const speedMultiplier = 0.085;
+        const collectibleColors = {
+            apple: 0xE06666,
+            flower: 0xF1948A,
+            mushroom: 0xD5A6BD,
+            star: 0xF1C40F
+        };
+
+        // Setup 3D Scene
+        function buildCozy3DWorld() {
+            const container = document.getElementById('game-canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xE0F2FE);
+            scene.fog = new THREE.FogExp2(0xE0F2FE, 0.03);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+
+            renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            activeTargetLocation = new THREE.Vector3(); // Safely instantiating target guide position
+
+            // Environmental Soft Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambient);
+
+            sunLight = new THREE.DirectionalLight(0xFFF9C4, 0.85);
+            sunLight.position.set(10, 25, 10);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            scene.add(sunLight);
+
+            // Construct Ground Level
+            // Gray asphalt texture simulation in center, beautiful green forest on corners
+            const groundGeo = new THREE.PlaneGeometry(50, 50);
+            const groundMat = new THREE.MeshLambertMaterial({ color: 0xA5D6A7 }); // default lime green
+            ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // City Central Asphalt streets
+            const roadGeo = new THREE.BoxGeometry(16, 0.05, 36);
+            const roadMat = new THREE.MeshLambertMaterial({ color: 0x90A4AE }); // urban asphalt
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.position.set(0, 0, 0);
+            scene.add(road);
+
+            // Pond (Fishing Zone) located on West side of city
+            const pondGeo = new THREE.CylinderGeometry(5, 5, 0.1, 16);
+            const pondMat = new THREE.MeshLambertMaterial({ color: 0x4FC3F7 });
+            const pond = new THREE.Mesh(pondGeo, pondMat);
+            pond.position.set(-13, 0.05, -10);
+            scene.add(pond);
+
+            // Fishing Platform pier
+            const pierGeo = new THREE.BoxGeometry(1.5, 0.2, 4);
+            const pierMat = new THREE.MeshLambertMaterial({ color: 0x8D6E63 });
+            const pier = new THREE.Mesh(pierGeo, pierMat);
+            pier.position.set(-10, 0.1, -10);
+            scene.add(pier);
+
+            // Dynamic Guide Compass Arrow above player
+            const arrowGeo = new THREE.ConeGeometry(0.2, 0.6, 4);
+            const arrowMat = new THREE.MeshBasicMaterial({ color: 0xFF3D00 });
+            guideArrowMesh = new THREE.Mesh(arrowGeo, arrowMat);
+            guideArrowMesh.rotation.x = Math.PI / 2; // Orient correctly
+            scene.add(guideArrowMesh);
+
+            // Draw Player's House (Exterior) located on East side of town
+            drawTownBuildings();
+
+            // Create Player Avatar
+            createPlayerAvatar();
+
+            // Build NPC Villagers
+            createNPCs();
+
+            // Spawn apples, mushrooms and wildflowers
+            spawnCollectibles();
+
+            // Day night street lights
+            buildStreetLights();
+
+            // Set up interior scene environment in absolute coordinates off-bounds
+            buildInteriorHouseSpace();
+        }
+
+        // Draw multiple beautiful skyscrapers, shops and Player's House (내 집)
+        function drawTownBuildings() {
+            // Player's Cozy House (East Side)
+            houseGroup = new THREE.Group();
+            
+            // House foundation base
+            const baseGeo = new THREE.BoxGeometry(4, 3, 4);
+            const baseMat = new THREE.MeshLambertMaterial({ color: 0xFFF9C4 }); // warm pastel yellow
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 1.5;
+            base.castShadow = true;
+            houseGroup.add(base);
+
+            // Roof (Red triangle)
+            const roofGeo = new THREE.ConeGeometry(3.2, 2, 4);
+            const roofMat = new THREE.MeshLambertMaterial({ color: 0xE57373 });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = 4;
+            roof.rotation.y = Math.PI / 4;
+            houseGroup.add(roof);
+
+            // Doorway (Entering trigger)
+            const doorGeo = new THREE.BoxGeometry(1, 1.8, 0.1);
+            const doorMat = new THREE.MeshLambertMaterial({ color: 0x8D6E63 });
+            const door = new THREE.Mesh(doorGeo, doorMat);
+            door.position.set(0, 0.9, 2);
+            houseGroup.add(door);
+
+            houseGroup.position.set(10, 0, 8);
+            scene.add(houseGroup);
+
+            // --- GLAMOROUS NPC HOUSES EXTERIORS ---
+            // 1. Charlie's Orange Sweet-Home
+            charlieHouseGroup = new THREE.Group();
+            const charlieBase = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.2, 4.5), new THREE.MeshLambertMaterial({ color: 0xFFB74D }));
+            charlieBase.position.y = 1.6;
+            charlieBase.castShadow = true;
+            charlieHouseGroup.add(charlieBase);
+
+            const charlieRoof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2.2, 4), new THREE.MeshLambertMaterial({ color: 0xFF7043 }));
+            charlieRoof.position.y = 4.2;
+            charlieRoof.rotation.y = Math.PI / 4;
+            charlieHouseGroup.add(charlieRoof);
+
+            const charlieDoor = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 0.1), new THREE.MeshLambertMaterial({ color: 0xA1887F }));
+            charlieDoor.position.set(0, 0.95, 2.25);
+            charlieHouseGroup.add(charlieDoor);
+
+            charlieHouseGroup.position.set(-6, 0, -5);
+            scene.add(charlieHouseGroup);
+
+            // 2. Luna's Royal Purple Mansion (Gothic Spires & Gold accents)
+            lunaHouseGroup = new THREE.Group();
+            const lunaBase = new THREE.Mesh(new THREE.BoxGeometry(5, 4.5, 5), new THREE.MeshLambertMaterial({ color: 0xAB47BC }));
+            lunaBase.position.y = 2.25;
+            lunaBase.castShadow = true;
+            lunaHouseGroup.add(lunaBase);
+
+            const lunaRoof = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 3.6, 2.8, 4), new THREE.MeshLambertMaterial({ color: 0x4A148C }));
+            lunaRoof.position.y = 5.65;
+            lunaRoof.rotation.y = Math.PI / 4;
+            lunaHouseGroup.add(lunaRoof);
+
+            // Gold spire trims
+            const spireGeo = new THREE.ConeGeometry(0.3, 1.5, 4);
+            const spireMat = new THREE.MeshLambertMaterial({ color: 0xFFD54F });
+            const spire1 = new THREE.Mesh(spireGeo, spireMat);
+            spire1.position.set(2, 5.0, 2);
+            lunaHouseGroup.add(spire1);
+            const spire2 = spire1.clone();
+            spire2.position.set(-2, 5.0, -2);
+            lunaHouseGroup.add(spire2);
+
+            const lunaDoor = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.15), new THREE.MeshLambertMaterial({ color: 0x3E2723 }));
+            lunaDoor.position.set(0, 1.1, 2.5);
+            lunaHouseGroup.add(lunaDoor);
+
+            lunaHouseGroup.position.set(6, 0, -5);
+            scene.add(lunaHouseGroup);
+
+            // 3. Oliver's Modern Aqua Villa (Sleek terraces)
+            oliverHouseGroup = new THREE.Group();
+            const oliverBase1 = new THREE.Mesh(new THREE.BoxGeometry(5.2, 2.4, 4.8), new THREE.MeshLambertMaterial({ color: 0x4DD0E1 }));
+            oliverBase1.position.y = 1.2;
+            oliverBase1.castShadow = true;
+            oliverHouseGroup.add(oliverBase1);
+
+            const oliverBase2 = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.0, 3.8), new THREE.MeshLambertMaterial({ color: 0x00ACC1 }));
+            oliverBase2.position.set(0, 3.4, 0);
+            oliverBase2.castShadow = true;
+            oliverHouseGroup.add(oliverBase2);
+
+            const oliverDoor = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.8, 0.1), new THREE.MeshLambertMaterial({ color: 0xEEEEEE }));
+            oliverDoor.position.set(0, 0.9, 2.4);
+            oliverHouseGroup.add(oliverDoor);
+
+            oliverHouseGroup.position.set(-6, 0, 5);
+            scene.add(oliverHouseGroup);
+
+            // Signpost for Arthur Merchant spot (when he is traveling)
+            const signGroup = new THREE.Group();
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.5, 5), new THREE.MeshLambertMaterial({ color: 0x5D4037 }));
+            post.position.y = 0.75;
+            signGroup.add(post);
+            const board = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.1), new THREE.MeshLambertMaterial({ color: 0xD7CCC8 }));
+            board.position.y = 1.3;
+            signGroup.add(board);
+            signGroup.position.set(-2, 0, 12);
+            scene.add(signGroup);
+            arthurMerchantSpotSign = signGroup;
+            arthurMerchantSpotSign.visible = false; // default hidden since Day 1 Arthur is present
+
+            // Decorative high-rise cityscape buildings along road
+            const cityHeights = [6, 12, 8, 10];
+            const cityColors = [0x95A5A6, 0x34495E, 0xBDC3C7, 0x7F8C8D];
+            
+            for (let i = 0; i < 4; i++) {
+                const bHeight = cityHeights[i];
+                const bGeo = new THREE.BoxGeometry(3, bHeight, 3);
+                const bMat = new THREE.MeshLambertMaterial({ color: cityColors[i] });
+                const b = new THREE.Mesh(bGeo, bMat);
+                b.position.set(i % 2 === 0 ? -4 : 4, bHeight / 2, -5 - (i * 4));
+                b.castShadow = true;
+                scene.add(b);
+            }
+
+            // Generate extra dense forest trees in the Northwest corner
+            const forestAreaCenter = { x: -14, z: 12 };
+            for (let j = 0; j < 12; j++) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * 6;
+                const tx = forestAreaCenter.x + Math.cos(angle) * r;
+                const tz = forestAreaCenter.z + Math.sin(angle) * r;
+
+                const treeGroup = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.22, 1.6, 5), new THREE.MeshLambertMaterial({ color: 0x5D4037 }));
+                trunk.position.y = 0.8;
+                treeGroup.add(trunk);
+
+                const foliage = new THREE.Mesh(new THREE.SphereGeometry(0.85, 8, 8), new THREE.MeshLambertMaterial({ color: 0x43A047 }));
+                foliage.position.y = 1.9;
+                treeGroup.add(foliage);
+
+                treeGroup.position.set(tx, 0, tz);
+                scene.add(treeGroup);
+            }
+        }
+
+        function buildStreetLights() {
+            const polePositions = [
+                {x: -4, z: 2}, {x: 4, z: 2},
+                {x: -4, z: -10}, {x: 4, z: -10}
+            ];
+
+            polePositions.forEach(pos => {
+                const group = new THREE.Group();
+                const poleGeo = new THREE.CylinderGeometry(0.1, 0.1, 4, 6);
+                const poleMat = new THREE.MeshLambertMaterial({ color: 0x37474F });
+                const pole = new THREE.Mesh(poleGeo, poleMat);
+                pole.position.y = 2;
+                group.add(pole);
+
+                const bulbGeo = new THREE.SphereGeometry(0.25, 8, 8);
+                const bulbMat = new THREE.MeshBasicMaterial({ color: 0xFFEE58 });
+                const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+                bulb.position.y = 4;
+                group.add(bulb);
+
+                // Pointlight
+                const pLight = new THREE.PointLight(0xFFEE58, 0.0, 8);
+                pLight.position.set(0, 4, 0);
+                group.add(pLight);
+                streetLights.push(pLight);
+
+                group.position.set(pos.x, 0, pos.z);
+                scene.add(group);
+            });
+        }
+
+        // Distinct, personalized NPC design (Ears & faces tailored for each animal type)
+        function createNPCs() {
+            npcDetails.forEach((data) => {
+                const group = new THREE.Group();
+
+                // Body (Represented with cylinder & customizable colored shirt)
+                const bodyGeo = new THREE.CylinderGeometry(0.32, 0.42, 0.8, 8);
+                const bodyMat = new THREE.MeshLambertMaterial({ color: data.currentClothesColor });
+                const body = new THREE.Mesh(bodyGeo, bodyMat);
+                body.position.y = 0.4;
+                body.castShadow = true;
+                group.add(body);
+                data.bodyMesh = body; // link to replace apparel color easily
+
+                // Cute animal head
+                const headGeo = new THREE.SphereGeometry(0.3, 12, 12);
+                const headMat = new THREE.MeshLambertMaterial({ color: 0xFFE0B2 });
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 0.9;
+                head.castShadow = true;
+                group.add(head);
+
+                // Faces features (eyes & snouts for more personalized faces)
+                const faceDetailsGroup = new THREE.Group();
+                
+                // Eyes
+                const eyeGeo = new THREE.SphereGeometry(0.04, 4, 4);
+                const eyeMat = new THREE.MeshBasicMaterial({ color: 0x3E2723 });
+                const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+                leftEye.position.set(-0.11, 0.95, 0.25);
+                faceDetailsGroup.add(leftEye);
+
+                const rightEye = leftEye.clone();
+                rightEye.position.x = 0.11;
+                faceDetailsGroup.add(rightEye);
+
+                // Snout / Nose
+                const snoutGeo = new THREE.BoxGeometry(0.12, 0.08, 0.1);
+                const snoutMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                const snout = new THREE.Mesh(snoutGeo, snoutMat);
+                snout.position.set(0, 0.88, 0.26);
+                faceDetailsGroup.add(snout);
+
+                const noseGeo = new THREE.SphereGeometry(0.04, 4, 4);
+                const noseMat = new THREE.MeshBasicMaterial({ color: data.hatType === "rabbit_ears" ? 0xF06292 : 0x000000 });
+                const nose = new THREE.Mesh(noseGeo, noseMat);
+                nose.position.set(0, 0.91, 0.31);
+                faceDetailsGroup.add(nose);
+
+                group.add(faceDetailsGroup);
+
+                // Distinct Ears based on Animal Crossing-like species
+                if (data.hatType === "rabbit_ears") {
+                    const earGeo = new THREE.ConeGeometry(0.08, 0.35, 4);
+                    const earMat = new THREE.MeshLambertMaterial({ color: 0xFFF9C4 });
+                    const left = new THREE.Mesh(earGeo, earMat);
+                    left.position.set(-0.15, 1.25, 0);
+                    group.add(left);
+                    const right = left.clone();
+                    right.position.x = 0.15;
+                    group.add(right);
+                } else if (data.hatType === "cat_ears") {
+                    const earGeo = new THREE.ConeGeometry(0.12, 0.15, 4);
+                    const earMat = new THREE.MeshLambertMaterial({ color: data.color });
+                    const left = new THREE.Mesh(earGeo, earMat);
+                    left.position.set(-0.18, 1.15, 0);
+                    group.add(left);
+                    const right = left.clone();
+                    right.position.x = 0.18;
+                    group.add(right);
+                    
+                    // Add tiny whiskers
+                    const whiskerGeo = new THREE.BoxGeometry(0.18, 0.015, 0.015);
+                    const whiskerMat = new THREE.MeshBasicMaterial({ color: 0x7E57C2 });
+                    const whiskerL = new THREE.Mesh(whiskerGeo, whiskerMat);
+                    whiskerL.position.set(-0.18, 0.86, 0.25);
+                    whiskerL.rotation.z = 0.15;
+                    group.add(whiskerL);
+                    
+                    const whiskerR = whiskerL.clone();
+                    whiskerR.position.x = 0.18;
+                    whiskerR.rotation.z = -0.15;
+                    group.add(whiskerR);
+                } else if (data.hatType === "dog_ears") {
+                    const earGeo = new THREE.BoxGeometry(0.1, 0.3, 0.1);
+                    const earMat = new THREE.MeshLambertMaterial({ color: 0xD7CCC8 });
+                    const left = new THREE.Mesh(earGeo, earMat);
+                    left.position.set(-0.25, 0.9, 0);
+                    group.add(left);
+                    const right = left.clone();
+                    right.position.x = 0.25;
+                    group.add(right);
+                } else if (data.hatType === "bear_ears") {
+                    const earGeo = new THREE.SphereGeometry(0.11, 8, 8);
+                    const earMat = new THREE.MeshLambertMaterial({ color: data.color });
+                    const left = new THREE.Mesh(earGeo, earMat);
+                    left.position.set(-0.2, 1.15, 0);
+                    group.add(left);
+                    const right = left.clone();
+                    right.position.x = 0.2;
+                    group.add(right);
+                } else if (data.hatType === "merchant_hat") {
+                    const hatGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.2, 8);
+                    const hatMat = new THREE.MeshLambertMaterial({ color: 0x37474F });
+                    const hat = new THREE.Mesh(hatGeo, hatMat);
+                    hat.position.y = 1.15;
+                    group.add(hat);
+                }
+
+                group.position.set(data.startPos.x, 0, data.startPos.y);
+                scene.add(group);
+
+                data.mesh = group;
+                npcs.push(data);
+            });
+        }
+
+        function spawnCollectibles() {
+            spawnableNatureCoordinates.forEach(pos => {
+                createCollectibleInScene(pos.type, pos.x, pos.z);
+            });
+        }
+
+        function createCollectibleInScene(type, x, z) {
+            const group = new THREE.Group();
+            let mesh;
+
+            if (type === 'apple') {
+                const fruitGeo = new THREE.SphereGeometry(0.2, 8, 8);
+                const fruitMat = new THREE.MeshLambertMaterial({ color: collectibleColors.apple });
+                mesh = new THREE.Mesh(fruitGeo, fruitMat);
+                mesh.position.y = 0.25;
+                group.add(mesh);
+            } else if (type === 'mushroom') {
+                const capGeo = new THREE.SphereGeometry(0.18, 8, 8);
+                const capMat = new THREE.MeshLambertMaterial({ color: collectibleColors.mushroom });
+                mesh = new THREE.Mesh(capGeo, capMat);
+                mesh.position.y = 0.18;
+                group.add(mesh);
+            } else if (type === 'flower') {
+                const flowerGeo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const flowerMat = new THREE.MeshLambertMaterial({ color: collectibleColors.flower });
+                mesh = new THREE.Mesh(flowerGeo, flowerMat);
+                mesh.position.y = 0.15;
+                group.add(mesh);
+            }
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+
+            collectibles.push({
+                type: type,
+                mesh: group,
+                x: x,
+                z: z,
+                radius: 0.95
+            });
+        }
+    </script>
+
+    <!-- Player's Cozy Interior Room Design (Coordinates shifted to x: 50) -->
+    <script>
+        function buildInteriorHouseSpace() {
+            // 1. Player House Interior Setup
+            interiorGroup = new THREE.Group();
+            const wallMat = new THREE.MeshLambertMaterial({ color: 0xD7CCC8 }); // soft timber
+            const floorMat = new THREE.MeshLambertMaterial({ color: 0xBCAAA4 }); // dark wood floor
+
+            // Room Floor
+            const floorGeo = new THREE.BoxGeometry(10, 0.1, 10);
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.position.set(0, -0.05, 0);
+            interiorGroup.add(floor);
+
+            // Back Wall
+            const wallBackGeo = new THREE.BoxGeometry(10, 4, 0.1);
+            const wallBack = new THREE.Mesh(wallBackGeo, wallMat);
+            wallBack.position.set(0, 2, -5);
+            interiorGroup.add(wallBack);
+
+            // Side Walls
+            const wallLeftGeo = new THREE.BoxGeometry(0.1, 4, 10);
+            const wallLeft = new THREE.Mesh(wallLeftGeo, wallMat);
+            wallLeft.position.set(-5, 2, 0);
+            interiorGroup.add(wallLeft);
+
+            const wallRight = wallLeft.clone();
+            wallRight.position.x = 5;
+            interiorGroup.add(wallRight);
+
+            const wallFrontGeo = new THREE.BoxGeometry(10, 4, 0.1);
+            const wallFront = new THREE.Mesh(wallFrontGeo, wallMat);
+            wallFront.position.set(0, 2, 5);
+            interiorGroup.add(wallFront);
+
+            // Bed (Sleep / fatigue recovery zone)
+            const bedGroup = new THREE.Group();
+            const frameGeo = new THREE.BoxGeometry(1.6, 0.3, 2.5);
+            const frameMat = new THREE.MeshLambertMaterial({ color: 0x8D6E63 });
+            const frame = new THREE.Mesh(frameGeo, frameMat);
+            frame.position.y = 0.15;
+            bedGroup.add(frame);
+
+            const pillowGeo = new THREE.BoxGeometry(1.3, 0.1, 0.6);
+            const pillow = new THREE.Mesh(pillowGeo, new THREE.MeshLambertMaterial({ color: 0xFFFFFF }));
+            pillow.position.set(0, 0.35, -0.8);
+            bedGroup.add(pillow);
+
+            const blanket = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 1.8), new THREE.MeshLambertMaterial({ color: 0xF48FB1 }));
+            blanket.position.set(0, 0.3, 0.3);
+            bedGroup.add(blanket);
+
+            bedGroup.position.set(3.5, 0, -3); // corner of room
+            interiorGroup.add(bedGroup);
+
+            // Gas Stove / Cooking Kitchen Zone
+            const kitchenGroup = new THREE.Group();
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.0, 1.2), new THREE.MeshLambertMaterial({ color: 0xCFD8DC }));
+            counter.position.y = 0.5;
+            kitchenGroup.add(counter);
+
+            const burner = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 8), new THREE.MeshLambertMaterial({ color: 0x37474F }));
+            burner.position.set(-0.5, 1.02, 0);
+            kitchenGroup.add(burner);
+
+            const sink = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.6), new THREE.MeshLambertMaterial({ color: 0x90A4AE }));
+            sink.position.set(0.5, 1.0, 0);
+            kitchenGroup.add(sink);
+
+            kitchenGroup.position.set(-3.5, 0, -3.5);
+            interiorGroup.add(kitchenGroup);
+
+            // Shower Stall zone (Energy wash recovery)
+            const showerGroup = new THREE.Group();
+            const showerFloor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.15, 1.5), new THREE.MeshLambertMaterial({ color: 0xE0F7FA }));
+            showerFloor.position.y = 0.075;
+            showerGroup.add(showerFloor);
+
+            const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.0, 6), new THREE.MeshLambertMaterial({ color: 0xB0BEC5 }));
+            nozzle.position.set(0.5, 1.0, -0.5);
+            showerGroup.add(nozzle);
+
+            showerGroup.position.set(-3.5, 0, 3.5);
+            interiorGroup.add(showerGroup);
+
+            interiorGroup.position.set(50, 0, 50);
+            scene.add(interiorGroup);
+
+            // --- GLAMOROUS NPC INTERIORS SETUP ---
+            // 2. Charlie's Cozy Orange Cabin (X: 100, Z: 100)
+            charlieInteriorGroup = new THREE.Group();
+            const charlieFloor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.1, 10), new THREE.MeshLambertMaterial({ color: 0xE67E22 }));
+            charlieFloor.position.set(0, -0.05, 0);
+            charlieInteriorGroup.add(charlieFloor);
+
+            const cWallBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.1), new THREE.MeshLambertMaterial({ color: 0xF39C12 }));
+            cWallBack.position.set(0, 2, -5);
+            charlieInteriorGroup.add(cWallBack);
+
+            // Glamorous Wooden Couch & Flower pots inside Charlie's room
+            const cCouch = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 1.2), new THREE.MeshLambertMaterial({ color: 0xD35400 }));
+            cCouch.position.set(0, 0.4, -3.5);
+            charlieInteriorGroup.add(cCouch);
+
+            charlieInteriorGroup.position.set(100, 0, 100);
+            scene.add(charlieInteriorGroup);
+
+            // 3. Luna's Majestic Royal Palace (X: 150, Z: 150)
+            lunaInteriorGroup = new THREE.Group();
+            const lunaFloor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.1, 10), new THREE.MeshLambertMaterial({ color: 0x8E44AD }));
+            lunaFloor.position.set(0, -0.05, 0);
+            lunaInteriorGroup.add(lunaFloor);
+
+            const lWallBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.1), new THREE.MeshLambertMaterial({ color: 0x9B59B6 }));
+            lWallBack.position.set(0, 2, -5);
+            lunaInteriorGroup.add(lWallBack);
+
+            // Gold throne inside Luna's room
+            const goldThrone = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 1.4), new THREE.MeshLambertMaterial({ color: 0xF1C40F }));
+            goldThrone.position.set(0, 1.1, -3.6);
+            lunaInteriorGroup.add(goldThrone);
+
+            lunaInteriorGroup.position.set(150, 0, 150);
+            scene.add(lunaInteriorGroup);
+
+            // 4. Oliver's Modern Aqua Villa Room (X: 200, Z: 200)
+            oliverInteriorGroup = new THREE.Group();
+            const oliverFloor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.1, 10), new THREE.MeshLambertMaterial({ color: 0x16A085 }));
+            oliverFloor.position.set(0, -0.05, 0);
+            oliverInteriorGroup.add(oliverFloor);
+
+            const oWallBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.1), new THREE.MeshLambertMaterial({ color: 0x1ABC9C }));
+            oWallBack.position.set(0, 2, -5);
+            oliverInteriorGroup.add(oWallBack);
+
+            // High-tech desk inside Oliver's room
+            const techDesk = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.1, 1.2), new THREE.MeshLambertMaterial({ color: 0x2C3E50 }));
+            techDesk.position.set(0, 0.55, -3.5);
+            oliverInteriorGroup.add(techDesk);
+
+            oliverInteriorGroup.position.set(200, 0, 200);
+            scene.add(oliverInteriorGroup);
+        }
+
+        // Place physical furniture inside player's house
+        function spawnFurnitureInRoom(buildType, x, z) {
+            const group = new THREE.Group();
+            let mesh;
+
+            if (buildType === "bear") {
+                const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshLambertMaterial({ color: 0xD7CCC8 }));
+                body.position.y = 0.3;
+                group.add(body);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshLambertMaterial({ color: 0xD7CCC8 }));
+                head.position.y = 0.65;
+                group.add(head);
+            } else if (buildType === "table") {
+                const top = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.1, 12), new THREE.MeshLambertMaterial({ color: 0xA1887F }));
+                top.position.y = 0.6;
+                group.add(top);
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 6), new THREE.MeshLambertMaterial({ color: 0x8D6E63 }));
+                leg.position.y = 0.3;
+                group.add(leg);
+            } else if (buildType === "bed") {
+                // extra bed
+                const bed = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 1.8), new THREE.MeshLambertMaterial({ color: 0xE8F5E9 }));
+                bed.position.y = 0.15;
+                group.add(bed);
+            }
+
+            group.position.set(50 + x, 0, 50 + z);
+            scene.add(group);
+            placedFurnitures.push({ buildType, x, z, mesh: group });
+        }
+    </script>
+
+    <!-- Game HUD and Interface Mechanics -->
+    <script>
+        function updateCoinsUI() {
+            document.getElementById('coin-balance').innerText = `${playerCoins} COIN`;
+        }
+
+        function updateVitalsUI() {
+            // Cap values
+            vitalHunger = Math.max(0, Math.min(100, vitalHunger));
+            vitalThirst = Math.max(0, Math.min(100, vitalThirst));
+            vitalFatigue = Math.max(0, Math.min(100, vitalFatigue));
+
+            // text values
+            document.getElementById('vital-hunger-txt').innerText = `${Math.round(vitalHunger)}/100`;
+            document.getElementById('vital-thirst-txt').innerText = `${Math.round(vitalThirst)}/100`;
+            document.getElementById('vital-fatigue-txt').innerText = `${Math.round(vitalFatigue)}/100`;
+
+            // visual bar widths
+            document.getElementById('vital-hunger').style.width = `${vitalHunger}%`;
+            document.getElementById('vital-thirst').style.width = `${vitalThirst}%`;
+            document.getElementById('vital-fatigue').style.width = `${vitalFatigue}%`;
+
+            // Fatigue warning alerts
+            if (vitalFatigue >= 90) {
+                document.getElementById('vital-fatigue').classList.add('bg-red-600');
+            } else {
+                document.getElementById('vital-fatigue').classList.remove('bg-red-600');
+            }
+        }
+
+        // Active Navigation Compass Target Arrow logic
+        function updateGuideArrow() {
+            if (!player || !guideArrowMesh) return;
+
+            let hasActiveObjective = false;
+            let targetPos = new THREE.Vector3();
+
+            if (activeMission && !activeMission.completed) {
+                if (activeMission.type === "talk") {
+                    // Navigate to NPC
+                    const targetNpc = npcs.find(n => n.name === activeMission.target);
+                    if (targetNpc) {
+                        targetPos.copy(targetNpc.mesh.position);
+                        hasActiveObjective = true;
+                    }
+                } else if (activeMission.type === "gather") {
+                    // Navigate to forest collectibles area (approximate center of nature zone)
+                    targetPos.set(-11, 0, 10);
+                    hasActiveObjective = true;
+                } else if (activeMission.type === "fish") {
+                    // Navigate to Fishing Platform pier
+                    targetPos.set(-10, 0, -10);
+                    hasActiveObjective = true;
+                }
+            }
+
+            if (hasActiveObjective && !isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse) {
+                guideArrowMesh.visible = true;
+                // Place arrow slightly above player avatar's head
+                guideArrowMesh.position.set(player.position.x, player.position.y + 1.8, player.position.z);
+                
+                // Angle pointing towards the target destination coordinate
+                const directionVec = new THREE.Vector3().subVectors(targetPos, player.position);
+                directionVec.y = 0; // lock vector horizontal plane
+                
+                const angle = Math.atan2(directionVec.x, directionVec.z);
+                guideArrowMesh.rotation.y = angle;
+                
+                // Show floating helper tracking compass on top of UI
+                document.getElementById('mission-tracker').classList.remove('hidden');
+            } else {
+                guideArrowMesh.visible = false;
+                document.getElementById('mission-tracker').classList.add('hidden');
+            }
+        }
+
+        // Daily Quest System Cards Builders
+        function renderMissionsBoard() {
+            const container = document.getElementById('missions-list');
+            container.innerHTML = '';
+
+            availableMissions.forEach(m => {
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border-2 flex flex-col justify-between items-start ${m.completed ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-emerald-100 shadow-sm'}`;
+
+                // Reward label
+                let rewardDesc = `${m.reward.coins} 🪙`;
+                if (m.reward.item) {
+                    const rItem = ITEM_DB[m.reward.item];
+                    rewardDesc += ` + ${rItem.emoji} ${rItem.name}`;
+                }
+
+                card.innerHTML = `
+                    <div class="w-full flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">일일 임무</span>
+                        <span class="text-xs font-bold text-amber-600">${rewardDesc}</span>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-700 leading-tight mb-2.5">${m.desc}</p>
+                    <div class="w-full flex justify-between items-center">
+                        <span class="text-[10px] font-bold ${m.completed ? 'text-slate-400' : 'text-emerald-500'}">
+                            상태: ${m.completed ? '완료' : '진행중'}
+                        </span>
+                        ${!m.completed 
+                            ? `<button onclick="trackMission('${m.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg">위치 안내 ⬆️</button>` 
+                            : `<span class="text-slate-400 text-[10px]">클리어! ✨</span>`
+                        }
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Track selected mission destination
+        window.trackMission = function(missionId) {
+            const m = availableMissions.find(item => item.id === missionId);
+            if (m) {
+                activeMission = m;
+                document.getElementById('mission-tracker-desc').innerText = m.desc;
+                document.getElementById('missions-modal').classList.add('hidden');
+                AudioSynth.playUI();
+                triggerMessageBox("🎯", "임무 추적 시작", `화살표가 가리키는 곳으로 이동해서 임무를 완수해 보세요!`);
+            }
+        };
+
+        // Complete current mission
+        function claimMissionCompletion(mId) {
+            const m = availableMissions.find(item => item.id === mId);
+            if (m && !m.completed) {
+                m.completed = true;
+                playerCoins += m.reward.coins;
+                
+                let bonusRewardMsg = "";
+                if (m.reward.item) {
+                    playerInventory[m.reward.item] = (playerInventory[m.reward.item] || 0) + 1;
+                    const rItem = ITEM_DB[m.reward.item];
+                    bonusRewardMsg = ` & ${rItem.emoji} ${rItem.name} 1개`;
+                }
+
+                updateCoinsUI();
+                AudioSynth.playCoin();
+                
+                addSocialChat("정령 알림", `축하해! 임무를 완수해서 ${m.reward.coins} 코인${bonusRewardMsg}을 획득했어! 🌟`);
+                triggerMessageBox("🎉", "임무 완료!", `임무를 완수하여 축하 보상을 받았습니다!\n(+${m.reward.coins} 코인${bonusRewardMsg})`);
+
+                if (activeMission && activeMission.id === mId) {
+                    activeMission = null;
+                }
+                renderMissionsBoard();
+            }
+        }
+    </script>
+
+    <!-- Inventory Slots rendering, item actions & Gifting mechanisms -->
+    <script>
+        function renderBagSlots() {
+            const container = document.getElementById('bag-slots');
+            container.innerHTML = '';
+
+            let firstOccupiedKey = null;
+
+            Object.keys(playerInventory).forEach(key => {
+                const count = playerInventory[key] || 0;
+                const item = ITEM_DB[key];
+
+                const slot = document.createElement('button');
+                slot.className = `aspect-square bg-white border-2 rounded-2xl flex flex-col items-center justify-center relative transition-all ${count > 0 ? 'border-amber-200 hover:border-amber-400' : 'border-slate-100 opacity-40'}`;
+                slot.innerHTML = `
+                    <span class="text-3xl">${item.emoji}</span>
+                    <span class="absolute bottom-1 right-2 bg-amber-500 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full leading-none">${count}</span>
+                `;
+
+                if (count > 0) {
+                    if (!firstOccupiedKey) firstOccupiedKey = key;
+                    slot.addEventListener('click', () => {
+                        selectBagItem(key);
+                        AudioSynth.playUI();
+                    });
+                }
+                container.appendChild(slot);
+            });
+
+            if (firstOccupiedKey) {
+                selectBagItem(firstOccupiedKey);
+            } else {
+                activeItemKey = null;
+                document.getElementById('bag-detail-emoji').innerText = "🎒";
+                document.getElementById('bag-detail-name').innerText = "가방이 비어 있습니다";
+                document.getElementById('bag-detail-desc').innerText = "낚시를 하거나 과일을 따다 가방을 채워 보세요.";
+                document.getElementById('btn-bag-eat').classList.add('hidden');
+                document.getElementById('btn-bag-sell').classList.add('hidden');
+            }
+        }
+
+        function selectBagItem(key) {
+            activeItemKey = key;
+            const item = ITEM_DB[key];
+            const count = playerInventory[key] || 0;
+
+            if (count > 0) {
+                document.getElementById('bag-detail-emoji').innerText = item.emoji;
+                document.getElementById('bag-detail-name').innerText = `${item.name} (${count}개 보유)`;
+                document.getElementById('bag-detail-desc').innerText = item.desc;
+
+                // Toggle dynamic eat/sell button triggers
+                if (item.type === "food") {
+                    document.getElementById('btn-bag-eat').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-bag-eat').classList.add('hidden');
+                }
+
+                // Can sell raw items or food to the shop
+                document.getElementById('btn-bag-sell').classList.remove('hidden');
+            } else {
+                renderBagSlots();
+            }
+        }
+
+        // Gift clothes to NPC
+        function handleGiftClothesToNPC(npcData) {
+            // Find if player has clothes in bought items inventory
+            const clothesItem = boughtFurnitures.find(item => item.type === "clothes");
+            if (!clothesItem) {
+                triggerMessageBox("👕", "입을 옷이 없어요", "아더의 만물상점에서 먼저 예쁜 옷을 사서 준비해 보세요!");
+                return;
+            }
+
+            // Remove apparel item from bought storage list
+            const index = boughtFurnitures.indexOf(clothesItem);
+            boughtFurnitures.splice(index, 1);
+
+            // Change physical garment mesh color on model
+            npcData.currentClothesColor = clothesItem.color;
+            if (npcData.bodyMesh) {
+                npcData.bodyMesh.material.color.setHex(clothesItem.color);
+            }
+
+            AudioSynth.playCoin();
+            document.getElementById('dialogue-panel').classList.add('hidden');
+            triggerMessageBox("🎁", "선물 성공!", `${npcData.name}에게 멋진 옷을 선물했습니다! 기뻐하며 새 옷으로 갈아입었어요.`);
+            addSocialChat(npcData.name, "우와! 나에게 딱 어울리는 멋진 옷이야! 고마워 친구야 💖");
+        }
+    </script>
+
+    <!-- 3D Physics and Animation Cycle Controller Loops -->
+    <script>
+        // Mouse and Touch listeners to manipulate Camera Orbit Yaw
+        window.addEventListener('load', () => {
+            const canvas = document.getElementById('game-canvas');
+            if (!canvas) return;
+
+            // Mouse events
+            canvas.addEventListener('mousedown', e => {
+                isDraggingCamera = true;
+                previousMouseX = e.clientX;
+            });
+
+            window.addEventListener('mousemove', e => {
+                if (!isDraggingCamera) return;
+                const deltaX = e.clientX - previousMouseX;
+                cameraYaw -= deltaX * 0.0055; // horizontal rotation speed
+                previousMouseX = e.clientX;
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDraggingCamera = false;
+            });
+
+            // Mobile Touch support
+            canvas.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) {
+                    isDraggingCamera = true;
+                    previousMouseX = e.touches[0].clientX;
+                }
+            });
+
+            window.addEventListener('touchmove', e => {
+                if (!isDraggingCamera || e.touches.length !== 1) return;
+                const deltaX = e.touches[0].clientX - previousMouseX;
+                cameraYaw -= deltaX * 0.0075; // slightly faster on swipe
+                previousMouseX = e.touches[0].clientX;
+            });
+
+            window.addEventListener('touchend', () => {
+                isDraggingCamera = false;
+            });
+        });
+
+        // Setup Player 3D Mesh
+        function createPlayerAvatar() {
+            player = new THREE.Group();
+
+            // Hoody body
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.8, 8), new THREE.MeshLambertMaterial({ color: 0xFBBF24 }));
+            body.position.y = 0.4;
+            body.castShadow = true;
+            player.add(body);
+
+            // Head
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), new THREE.MeshLambertMaterial({ color: 0xFFE0B2 }));
+            head.position.y = 0.9;
+            head.castShadow = true;
+            player.add(head);
+
+            // Backpack
+            const pack = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.35, 0.2), new THREE.MeshLambertMaterial({ color: 0x8D6E63 }));
+            pack.position.set(0, 0.45, -0.3);
+            player.add(pack);
+
+            player.position.set(0, 0.1, 4);
+            scene.add(player);
+        }
+
+        // Handle proximity interaction triggers
+        function checkInteractiveZones() {
+            if (!player) return;
+
+            const prompt = document.getElementById('interact-prompt');
+            let isPromptVisible = false;
+
+            // 1. Check home door entry
+            const distToHouse = player.position.distanceTo(houseGroup.position);
+            if (!isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse && distToHouse < 1.8) {
+                isPromptVisible = true;
+                insideHouseTriggerRange = true;
+                document.getElementById('prompt-emoji').innerText = "🏡";
+                document.getElementById('prompt-txt').innerText = "우리 집 안으로 입장하기 (F 키)";
+            } else if (isInsideHouse && player.position.distanceTo(new THREE.Vector3(50, 0, 55)) < 1.6) {
+                isPromptVisible = true;
+                insideHouseTriggerRange = true;
+                document.getElementById('prompt-emoji').innerText = "🚪";
+                document.getElementById('prompt-txt').innerText = "바깥 마을로 외출하기 (F 키)";
+            } else {
+                insideHouseTriggerRange = false;
+            }
+
+            // 2. Check NPC Charlie House Doors
+            const distToCharlieH = player.position.distanceTo(charlieHouseGroup.position);
+            if (!isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse && distToCharlieH < 1.8) {
+                isPromptVisible = true;
+                insideNPCCharlieTrigger = true;
+                document.getElementById('prompt-emoji').innerText = "🏠";
+                document.getElementById('prompt-txt').innerText = "Charlie의 방 구경하기 (F 키)";
+            } else if (isInsideCharlieHouse && player.position.distanceTo(new THREE.Vector3(100, 0, 105)) < 1.6) {
+                isPromptVisible = true;
+                insideNPCCharlieTrigger = true;
+                document.getElementById('prompt-emoji').innerText = "🚪";
+                document.getElementById('prompt-txt').innerText = "바깥 마을로 외출하기 (F 키)";
+            } else {
+                insideNPCCharlieTrigger = false;
+            }
+
+            // 3. Check NPC Luna House Doors
+            const distToLunaH = player.position.distanceTo(lunaHouseGroup.position);
+            if (!isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse && distToLunaH < 1.8) {
+                isPromptVisible = true;
+                insideNPCLunaTrigger = true;
+                document.getElementById('prompt-emoji').innerText = "🏰";
+                document.getElementById('prompt-txt').innerText = "Luna의 방 구경하기 (F 키)";
+            } else if (isInsideLunaHouse && player.position.distanceTo(new THREE.Vector3(150, 0, 155)) < 1.6) {
+                isPromptVisible = true;
+                insideNPCLunaTrigger = true;
+                document.getElementById('prompt-emoji').innerText = "🚪";
+                document.getElementById('prompt-txt').innerText = "바깥 마을로 외출하기 (F 키)";
+            } else {
+                insideNPCLunaTrigger = false;
+            }
+
+            // 4. Check NPC Oliver House Doors
+            const distToOliverH = player.position.distanceTo(oliverHouseGroup.position);
+            if (!isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse && distToOliverH < 1.8) {
+                isPromptVisible = true;
+                insideNPCOliverTrigger = true;
+                document.getElementById('prompt-emoji').innerText = "🏢";
+                document.getElementById('prompt-txt').innerText = "Oliver의 방 구경하기 (F 키)";
+            } else if (isInsideOliverHouse && player.position.distanceTo(new THREE.Vector3(200, 0, 205)) < 1.6) {
+                isPromptVisible = true;
+                insideNPCOliverTrigger = true;
+                document.getElementById('prompt-emoji').innerText = "🚪";
+                document.getElementById('prompt-txt').innerText = "바깥 마을로 외출하기 (F 키)";
+            } else {
+                insideNPCOliverTrigger = false;
+            }
+
+            // 5. Check NPC Dialogues
+            targetTalkingNPC = null;
+            if (!isPromptVisible && !isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse) {
+                for (let i = 0; i < npcs.length; i++) {
+                    const n = npcs[i];
+                    
+                    // Arthur schedule check
+                    if (n.name === "Arthur" && gameDay % 2 === 0) {
+                        continue; // Arthur is missing today!
+                    }
+
+                    const dist = player.position.distanceTo(n.mesh.position);
+                    if (dist < 1.4) {
+                        isPromptVisible = true;
+                        targetTalkingNPC = n;
+                        document.getElementById('prompt-emoji').innerText = "💬";
+                        document.getElementById('prompt-txt').innerText = `${n.name}와 이야기 나누기 (F 키)`;
+                        break;
+                    }
+                }
+            }
+
+            // 6. Check raw gathering objects
+            if (!isPromptVisible && !isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse) {
+                for (let i = 0; i < collectibles.length; i++) {
+                    const c = collectibles[i];
+                    const dist = player.position.distanceTo(c.mesh.position);
+                    if (dist < c.radius) {
+                        isPromptVisible = true;
+                        document.getElementById('prompt-emoji').innerText = ITEM_DB[c.type].emoji;
+                        document.getElementById('prompt-txt').innerText = `${ITEM_DB[c.type].name} 채집하기 (F 키)`;
+                        break;
+                    }
+                }
+            }
+
+            // 7. Check fishing pier coordinates
+            if (!isPromptVisible && !isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse) {
+                const distToPier = player.position.distanceTo(new THREE.Vector3(-10, 0.1, -10));
+                if (distToPier < 1.6) {
+                    isPromptVisible = true;
+                    nearPondFishingPier = true;
+                    document.getElementById('prompt-emoji').innerText = "🎣";
+                    document.getElementById('prompt-txt').innerText = "낚시 바늘 던지기 (F 키)";
+                } else {
+                    nearPondFishingPier = false;
+                }
+            } else {
+                nearPondFishingPier = false;
+            }
+
+            // 8. Check interior stove & bed zones
+            if (!isPromptVisible && isInsideHouse) {
+                // Bed
+                if (player.position.distanceTo(new THREE.Vector3(53.5, 0, 47)) < 1.5) {
+                    isPromptVisible = true;
+                    document.getElementById('prompt-emoji').innerText = "💤";
+                    document.getElementById('prompt-txt').innerText = "침대에서 푹 잠자기 (F 키)";
+                }
+                // Kitchen stove
+                else if (player.position.distanceTo(new THREE.Vector3(46.5, 0, 46.5)) < 1.5) {
+                    isPromptVisible = true;
+                    document.getElementById('prompt-emoji').innerText = "🍳";
+                    document.getElementById('prompt-txt').innerText = "맛있는 요리 시작하기 (F 키)";
+                }
+                // Shower Stall
+                else if (player.position.distanceTo(new THREE.Vector3(46.5, 0, 53.5)) < 1.5) {
+                    isPromptVisible = true;
+                    document.getElementById('prompt-emoji').innerText = "🧼";
+                    document.getElementById('prompt-txt').innerText = "따뜻하게 샤워하기 (F 키)";
+                }
+            }
+
+            if (isPromptVisible) {
+                prompt.classList.remove('hidden');
+            } else {
+                prompt.classList.add('hidden');
+            }
+        }
+
+        // Primary Contextual Action Button handler
+        function handleInteraction() {
+            // 1. Enter/Exit home door transitions
+            if (insideHouseTriggerRange) {
+                AudioSynth.playUI();
+                if (!isInsideHouse) {
+                    isInsideHouse = true;
+                    player.position.set(50, 0.1, 54); // Inside spawn door spot
+                    triggerMessageBox("🏡", "내 집 도착!", "방 한가운데의 문을 통해 밖으로 나갈 수 있으며, 침대, 주방 가스레인지, 샤워 부스를 마음껏 누려보세요!");
+                } else {
+                    isInsideHouse = false;
+                    player.position.set(10, 0.1, 9.5); // Outside spawn spot
+                }
+                return;
+            }
+
+            // NPC Charlie house Transitions
+            if (insideNPCCharlieTrigger) {
+                AudioSynth.playUI();
+                if (!isInsideCharlieHouse) {
+                    isInsideCharlieHouse = true;
+                    player.position.set(100, 0.1, 104);
+                    triggerMessageBox("🦊", "Charlie의 아늑한 오렌지 집", "오렌지빛 가구와 아늑한 인테리어를 자랑하는 Charlie의 집입니다!");
+                } else {
+                    isInsideCharlieHouse = false;
+                    player.position.set(-6, 0.1, -3.5);
+                }
+                return;
+            }
+
+            // NPC Luna house Transitions
+            if (insideNPCLunaTrigger) {
+                AudioSynth.playUI();
+                if (!isInsideLunaHouse) {
+                    isInsideLunaHouse = true;
+                    player.position.set(150, 0.1, 154);
+                    triggerMessageBox("🏰", "Luna의 찬란한 퍼플 성", "황금 왕좌와 우아한 샹들리에가 가득한 화려한 궁전 스타일 내부입니다!");
+                } else {
+                    isInsideLunaHouse = false;
+                    player.position.set(6, 0.1, -3.5);
+                }
+                return;
+            }
+
+            // NPC Oliver house Transitions
+            if (insideNPCOliverTrigger) {
+                AudioSynth.playUI();
+                if (!isInsideOliverHouse) {
+                    isInsideOliverHouse = true;
+                    player.position.set(200, 0.1, 204);
+                    triggerMessageBox("🐶", "Oliver의 모던 아쿠아 룸", "현대적인 다용도 컴퓨터 데스크와 스마트한 가구가 배치된 쾌적한 방입니다.");
+                } else {
+                    isInsideOliverHouse = false;
+                    player.position.set(-6, 0.1, 6.5);
+                }
+                return;
+            }
+
+            // 2. Show dialogue for target talking NPC
+            if (targetTalkingNPC) {
+                openNPCDialogue(targetTalkingNPC);
+                return;
+            }
+
+            // 3. Catch raw items
+            let gatheredIndex = -1;
+            if (!isInsideHouse && !isInsideCharlieHouse && !isInsideLunaHouse && !isInsideOliverHouse) {
+                for (let i = 0; i < collectibles.length; i++) {
+                    const c = collectibles[i];
+                    if (player.position.distanceTo(c.mesh.position) < c.radius) {
+                        gatheredIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (gatheredIndex !== -1) {
+                const target = collectibles[gatheredIndex];
+                playerInventory[target.type] = (playerInventory[target.type] || 0) + 1;
+                AudioSynth.playEat(); // Soft gather popping chime
+                
+                scene.remove(target.mesh);
+                collectibles.splice(gatheredIndex, 1);
+
+                addSocialChat("나 (플레이어)", `${ITEM_DB[target.type].emoji} 신선한 ${ITEM_DB[target.type].name} 자원을 가방에 담았습니다.`);
+                
+                // Mission check
+                if (activeMission && activeMission.type === "gather" && activeMission.target === target.type) {
+                    const currentCount = playerInventory[target.type] || 0;
+                    if (currentCount >= activeMission.reqCount) {
+                        claimMissionCompletion(activeMission.id);
+                    }
+                }
+
+                // Respawn new natural flora/fruits after 8-12 seconds
+                setTimeout(() => {
+                    const rx = Math.floor(Math.random() * 8) - 15; // Nature zone bounds
+                    const rz = Math.floor(Math.random() * 8) + 7;
+                    createCollectibleInScene(target.type, rx, rz);
+                }, 10000);
+                return;
+            }
+
+            // 4. Interactive Fishing mini-game logic
+            if (nearPondFishingPier) {
+                startFishingMiniGame();
+                return;
+            }
+
+            // 5. Interior interactions
+            if (isInsideHouse) {
+                // Bed
+                if (player.position.distanceTo(new THREE.Vector3(53.5, 0, 47)) < 1.5) {
+                    triggerSleepRecovery();
+                }
+                // Cooking Stove
+                else if (player.position.distanceTo(new THREE.Vector3(46.5, 0, 46.5)) < 1.5) {
+                    document.getElementById('cooking-modal').classList.remove('hidden');
+                    AudioSynth.playUI();
+                }
+                // Shower
+                else if (player.position.distanceTo(new THREE.Vector3(46.5, 0, 53.5)) < 1.5) {
+                    triggerShowerWashing();
+                }
+            }
+        }
+
+        // Dialogues
+        function openNPCDialogue(npc) {
+            AudioSynth.playAnimalese(npc.pitch);
+            
+            document.getElementById('dialogue-name').innerText = npc.name;
+            document.getElementById('dialogue-role').innerText = npc.role;
+            
+            let dialogMsg = "";
+            if (npc.name === "Arthur") {
+                dialogMsg = "안녕! 나는 온 세상을 여행하며 진귀하고 아기자기한 가구들과 정령들의 예쁜 옷들을 파는 아더란다. 내 가게 물건들을 둘러볼래?";
+                // Add Shop button optionally
+                document.getElementById('dialogue-options').innerHTML = `
+                    <button id="btn-shop-open" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-1.5 rounded-xl text-xs">상점 열기 🏬</button>
+                    <button id="btn-close-dialogue" class="bg-amber-400 hover:bg-amber-500 text-white font-bold px-4 py-1.5 rounded-xl text-xs">종료</button>
+                `;
+            } else {
+                const lines = [
+                    "우리들의 숲은 참 평온하고 무해해. 너와 같은 친구들이 매일 놀러오면 좋겠어!",
+                    "오늘따라 따뜻하고 맑은 가을바람이 솔솔 불어서 낮잠 자기 딱 좋네, 히히 😴",
+                    "혹시 나에게 입혀줄 수 있는 따스하고 예쁜 새 옷이 있다면 참 좋을 텐데!",
+                    "오늘 강물에서 싱싱한 붕어를 잡았다는 소식을 들었어. 부러워라!"
+                ];
+                dialogMsg = lines[Math.floor(Math.random() * lines.length)];
+                
+                document.getElementById('dialogue-options').innerHTML = `
+                    <button id="btn-gift-clothes" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs">👕 옷 선물하기</button>
+                    <button id="btn-close-dialogue" class="bg-amber-400 hover:bg-amber-500 text-white font-bold px-4 py-1.5 rounded-xl text-xs">확인</button>
+                `;
+            }
+            
+            document.getElementById('dialogue-text').innerText = dialogMsg;
+            document.getElementById('dialogue-panel').classList.remove('hidden');
+
+            // Wire up internal dialog buttons
+            document.getElementById('btn-close-dialogue').onclick = () => {
+                document.getElementById('dialogue-panel').classList.add('hidden');
+                AudioSynth.playUI();
+
+                // Mission check
+                if (activeMission && activeMission.type === "talk" && activeMission.target === npc.name) {
+                    claimMissionCompletion(activeMission.id);
+                }
+            };
+
+            if (npc.name === "Arthur") {
+                document.getElementById('btn-shop-open').onclick = () => {
+                    document.getElementById('dialogue-panel').classList.add('hidden');
+                    document.getElementById('shop-modal').classList.remove('hidden');
+                    renderShopItemsGrid();
+                    AudioSynth.playUI();
+                };
+            } else {
+                document.getElementById('btn-gift-clothes').onclick = () => {
+                    handleGiftClothesToNPC(npc);
+                };
+            }
+        }
+    </script>
+
+    <!-- Day-Night cycle and Survival Stats Decay Updates -->
+    <script>
+        let isFishingCast = false;
+
+        // Decaying Stats over time tick loop
+        setInterval(() => {
+            if (document.getElementById('start-menu').style.display !== 'none') return; // Do not decay during start screen
+
+            vitalHunger -= 0.12;
+            vitalThirst -= 0.18;
+            vitalFatigue += 0.1; // Fatigue increases over time
+
+            updateVitalsUI();
+
+            // Starvation and extreme fatigue alerts
+            if (vitalHunger <= 10) {
+                addSocialChat("배고픔 경고", "현재 무척 시장하고 배가 고픕니다! 요리된 식품을 드셔야 합니다.");
+            }
+            if (vitalThirst <= 10) {
+                addSocialChat("목마름 경고", "갈증이 무척 심해 수분 보충이 절실합니다.");
+            }
+            if (vitalFatigue >= 95) {
+                addSocialChat("피로 경고", "몸이 너무나 지치고 피곤하여 졸음이 가득 쏟아집니다.");
+            }
+        }, 1500);
+
+        // Day-Night progression cycles
+        setInterval(() => {
+            if (document.getElementById('start-menu').style.display !== 'none') return;
+
+            const oldTime = timeOfDay;
+            timeOfDay = (timeOfDay + 0.1) % 24;
+
+            // Increment Day count if day cycle resets
+            if (timeOfDay < oldTime) {
+                gameDay++;
+                addSocialChat("새로운 아침", `🌅 Day ${gameDay}가 시작되었습니다! 기지개를 켜보세요.`);
+                
+                // Toggle Merchant Arthur visual appearance based on Schedule: Odd Day = Present, Even Day = Away
+                const arthurNPC = npcs.find(n => n.name === "Arthur");
+                if (arthurNPC) {
+                    if (gameDay % 2 === 1) {
+                        arthurNPC.mesh.visible = true;
+                        arthurMerchantSpotSign.visible = false;
+                        addSocialChat("상인 아더 알림", "🏬 만물상인 아더가 오늘 마을 광장에 찾아왔습니다! 귀한 물건들을 구경해 보세요.");
+                    } else {
+                        arthurNPC.mesh.visible = false;
+                        arthurMerchantSpotSign.visible = true;
+                        addSocialChat("상인 아더 알림", "✈️ 아더가 오늘은 멀리 무역 여행을 떠났습니다. 내일 오전에 다시 돌아옵니다!");
+                    }
+                }
+            }
+
+            const hour = Math.floor(timeOfDay);
+            const displayHour = hour.toString().padStart(2, '0');
+            
+            let emoji = "☀️";
+            let txt = "낮";
+            if (hour >= 6 && hour < 12) {
+                emoji = "🌅"; txt = "아침";
+            } else if (hour >= 18 && hour < 20) {
+                emoji = "🌇"; txt = "노을 저녁";
+            } else if (hour >= 20 || hour < 6) {
+                emoji = "🌌"; txt = "어두운 밤";
+            }
+
+            document.getElementById('time-emoji').innerText = emoji;
+            document.getElementById('time-text').innerText = `Day ${gameDay} - ${txt} ${displayHour}:00`;
+
+            // Adjust lighting of 3D scene smoothly
+            if (scene) {
+                if (hour >= 20 || hour < 5) {
+                    // Dark midnight tones
+                    scene.background.setHex(0x1A237E);
+                    scene.fog.color.setHex(0x1A237E);
+                    sunLight.intensity = 0.1;
+                    streetLights.forEach(light => light.intensity = 1.0); // turn on street lamps
+                } else if (hour >= 17 && hour < 20) {
+                    // Warm golden red Sunset
+                    scene.background.setHex(0xFF7043);
+                    scene.fog.color.setHex(0xFF7043);
+                    sunLight.intensity = 0.55;
+                    streetLights.forEach(light => light.intensity = 0.4);
+                } else {
+                    // Bright pastel daylight sky
+                    scene.background.setHex(0xE3F2FD);
+                    scene.fog.color.setHex(0xE3F2FD);
+                    sunLight.intensity = 0.85;
+                    streetLights.forEach(light => light.intensity = 0.0);
+                }
+            }
+        }, 1200);
+
+        // --- RHYTHM FISHING GAME ENGINE ---
+        function startFishingMiniGame() {
+            if (isFishingCast || isFishingActive) return;
+            isFishingCast = true;
+
+            triggerMessageBox("🎣", "낚시 찌 던짐", "연못에 찌를 드리웠습니다. 물고기 입질이 올 때까지 가만히 잠시만 기다려주세요...");
+            
+            // Generate bite event at random interval
+            setTimeout(() => {
+                if (!isFishingCast) return;
+                AudioSynth.playFishBite();
+                addSocialChat("낚시 찌", "🚨 찌가 강하게 요동치며 입질이 왔습니다! 지금 상호작용창을 눌러 당기세요! 🚨");
+                
+                // Allow user to trigger rhythm minigame
+                isFishingCast = false;
+                initiateRhythmFishingBar();
+            }, 3000 + Math.random() * 3000);
+        }
+
+        function initiateRhythmFishingBar() {
+            isFishingActive = true;
+            fishingSuccesses = 0;
+            fishingFailures = 0;
+            markerPos = 0;
+            markerDirection = 1;
+
+            // Reset stars in UI
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`fish-star-${i}`).innerText = "☆";
+                document.getElementById(`fish-star-${i}`).className = "text-slate-500 text-sm";
+                document.getElementById(`fish-fail-${i}`).innerText = "☆";
+                document.getElementById(`fish-fail-${i}`).className = "text-slate-500 text-sm";
+            }
+
+            document.getElementById('fishing-bar-container').classList.remove('hidden');
+        }
+
+        // Spacebar or button trigger inside Rhythm Fishing Game
+        function triggerReelAttempt() {
+            if (!isFishingActive) return;
+
+            // Safe Zone is between 40% and 60%
+            if (markerPos >= 40 && markerPos <= 60) {
+                // Success!
+                fishingSuccesses++;
+                AudioSynth.playCoin();
+                if (fishingSuccesses <= 3) {
+                    const star = document.getElementById(`fish-star-${fishingSuccesses}`);
+                    star.innerText = "★";
+                    star.className = "text-emerald-400 text-sm animate-bounce";
+                }
+            } else {
+                // Failure!
+                fishingFailures++;
+                AudioSynth.playUI();
+                if (fishingFailures <= 3) {
+                    const failStar = document.getElementById(`fish-fail-${fishingFailures}`);
+                    failStar.innerText = "★";
+                    failStar.className = "text-red-500 text-sm animate-ping";
+                }
+            }
+
+            // Check game state outcomes
+            if (fishingSuccesses >= 3) {
+                endRhythmFishing(true);
+            } else if (fishingFailures >= 3) {
+                endRhythmFishing(false);
+            }
+        }
+
+        function endRhythmFishing(isSuccess) {
+            isFishingActive = false;
+            document.getElementById('fishing-bar-container').classList.add('hidden');
+
+            if (isSuccess) {
+                playerInventory.carp = (playerInventory.carp || 0) + 1;
+                AudioSynth.playCoin();
+                addSocialChat("나 (플레이어)", "월척입니다! 싱싱하고 펄떡이는 붕어 1마리를 낚았습니다! 🐠");
+                triggerMessageBox("🐠", "낚시 대성공!", "연못에서 완벽한 릴 조작으로 싱싱한 붕어를 낚았습니다! 인벤토리에 보관됩니다.");
+
+                // Daily quest check
+                if (activeMission && activeMission.type === "fish") {
+                    claimMissionCompletion(activeMission.id);
+                }
+            } else {
+                triggerMessageBox("❌", "물고기 놓침", "물고기가 요리조리 강하게 힘을 쓰며 낚싯줄을 끊고 도망쳐 버렸습니다...");
+            }
+        }
+
+        // Interior bed sleep triggers
+        function triggerSleepRecovery() {
+            AudioSynth.playUI();
+            vitalFatigue = 0; // fatigue cured
+            vitalHunger = Math.max(10, vitalHunger - 25); // waking up hungry
+            vitalThirst = Math.max(10, vitalThirst - 20); // waking up dry
+            
+            updateVitalsUI();
+            triggerMessageBox("💤", "잘 자고 일어났습니다!", "침대에서 푹 자고 나니 피로도가 싹 풀렸습니다. 자는 동안 시장함과 갈증이 생겼습니다.");
+            addSocialChat("나 (플레이어)", "온 몸에 가벼운 활력이 가득 차올랐어!");
+        }
+
+        function triggerShowerWashing() {
+            AudioSynth.playUI();
+            isShowering = true;
+            vitalFatigue = Math.max(0, vitalFatigue - 30);
+            updateVitalsUI();
+            
+            // Turn off shower after 4 seconds
+            setTimeout(() => {
+                isShowering = false;
+            }, 4500);
+
+            triggerMessageBox("🧼", "시원한 비눗방울 온수 샤워", "향긋하고 반짝이는 온수 거품 속에서 몸을 씻고 나니 쌓여있던 피로가 개운하게 가셨습니다!");
+        }
+    </script>
+
+    <!-- Cooking, Merchant Buying, Furniture Placing & Custom UI Events logic -->
+    <script>
+        // Shop Grid Items loader
+        function renderShopItemsGrid() {
+            const grid = document.getElementById('shop-items-grid');
+            grid.innerHTML = '';
+
+            SHOP_ITEMS.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-3.5 rounded-2xl border border-amber-100 flex flex-col items-center text-center justify-between";
+                card.innerHTML = `
+                    <span class="text-3xl mb-1">${item.emoji}</span>
+                    <span class="text-xs font-bold text-slate-800 leading-tight">${item.name}</span>
+                    <span class="text-[10px] text-slate-400 mt-1">${item.price} 코인</span>
+                    <button class="mt-2.5 w-full bg-amber-400 hover:bg-amber-500 text-white font-bold py-1.5 rounded-xl text-[10px]" onclick="buyShopItem('${item.id}')">구매하기</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.buyShopItem = function(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (item) {
+                if (playerCoins < item.price) {
+                    triggerMessageBox("🪙", "코인 부족", "가지고 계신 코인이 모자라 물건을 구매할 수 없습니다.");
+                    return;
+                }
+
+                playerCoins -= item.price;
+                boughtFurnitures.push(item);
+                updateCoinsUI();
+                AudioSynth.playCoin();
+
+                triggerMessageBox("🛍️", "구매 성공!", `아더 상인에게 ${item.name}을(를) 성공적으로 구매하였습니다!\n(인벤토리에 보관됩니다.)`);
+                document.getElementById('shop-modal').classList.add('hidden');
+
+                // If bought furniture, trigger building mode placements optionally inside house
+                if (item.type === "furniture" && isInsideHouse) {
+                    renderFurniturePlaceMenu();
+                }
+            }
+        };
+
+        // Interior customize building mechanics
+        function renderFurniturePlaceMenu() {
+            const container = document.getElementById('furniture-place-container');
+            container.innerHTML = '';
+
+            const itemsToPlace = boughtFurnitures.filter(i => i.type === "furniture");
+            if (itemsToPlace.length > 0) {
+                document.getElementById('build-panel').classList.remove('hidden');
+
+                itemsToPlace.forEach((item, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-amber-50 border border-amber-300 px-3.5 py-1.5 rounded-xl font-bold text-xs hover:bg-amber-100 flex items-center gap-1";
+                    btn.innerHTML = `<span>${item.emoji}</span> <span>${item.name} 배치</span>`;
+                    btn.onclick = () => {
+                        // Place randomly on free spots of house floor coordinates
+                        const rx = (Math.random() * 6 - 3).toFixed(1);
+                        const rz = (Math.random() * 6 - 3).toFixed(1);
+                        
+                        spawnFurnitureInRoom(item.buildType, parseFloat(rx), parseFloat(rz));
+                        
+                        // Remove placed item from inv storage
+                        const bIndex = boughtFurnitures.indexOf(item);
+                        boughtFurnitures.splice(bIndex, 1);
+
+                        AudioSynth.playUI();
+                        document.getElementById('build-panel').classList.add('hidden');
+                        triggerMessageBox("🔨", "가구 설치 성공!", "가구가 내 아늑한 방 안 바닥에 멋지게 고정되었습니다!");
+                    };
+                    container.appendChild(btn);
+                });
+            } else {
+                document.getElementById('build-panel').classList.add('hidden');
+            }
+        }
+
+        // Cooking Recipes Combination
+        document.querySelectorAll('.cook-recipe-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const recipeType = e.currentTarget.dataset.recipe;
+                let success = false;
+
+                if (recipeType === "soup") {
+                    if (playerInventory.mushroom >= 2) {
+                        playerInventory.mushroom -= 2;
+                        playerInventory.soup = (playerInventory.soup || 0) + 1;
+                        success = true;
+                    }
+                } else if (recipeType === "pie") {
+                    if (playerInventory.apple >= 2 && playerInventory.flower >= 1) {
+                        playerInventory.apple -= 2;
+                        playerInventory.flower -= 1;
+                        playerInventory.pie = (playerInventory.pie || 0) + 1;
+                        success = true;
+                    }
+                } else if (recipeType === "roasted") {
+                    if (playerInventory.carp >= 1 && playerInventory.mushroom >= 1) {
+                        playerInventory.carp -= 1;
+                        playerInventory.mushroom -= 1;
+                        playerInventory.roasted = (playerInventory.roasted || 0) + 1;
+                        success = true;
+                    }
+                }
+
+                if (success) {
+                    AudioSynth.playEat();
+                    document.getElementById('cooking-modal').classList.add('hidden');
+                    triggerMessageBox("🍲", "조리 완료!", `가스레인지 오븐으로 환상적인 건강 특제 요리를 완성했습니다!\n(가방에 요리가 추가되었습니다)`);
+                } else {
+                    triggerMessageBox("❌", "재료 부족", "오븐 요리를 하는 데 필요한 식자재가 모자랍니다. 채집이나 낚시로 재료를 먼저 모으세요.");
+                }
+            });
+        });
+    </script>
+
+    <!-- Booting, Event Wiring & Core Responders loop -->
+    <script>
+        // Window load and UI handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            // General Modal click binders
+            document.getElementById('btn-modal-box-ok').addEventListener('click', () => {
+                document.getElementById('custom-modal-box').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            document.getElementById('btn-tutorial').addEventListener('click', () => {
+                document.getElementById('tutorial-modal').classList.remove('hidden');
+                AudioSynth.playUI();
+            });
+
+            document.getElementById('btn-close-tutorial').addEventListener('click', () => {
+                document.getElementById('tutorial-modal').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+            document.getElementById('btn-understand-tutorial').addEventListener('click', () => {
+                document.getElementById('tutorial-modal').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            // HUD Bag handlers
+            document.getElementById('btn-bag').addEventListener('click', () => {
+                document.getElementById('bag-modal').classList.remove('hidden');
+                renderBagSlots();
+                AudioSynth.playUI();
+            });
+            document.getElementById('btn-bag-close').addEventListener('click', () => {
+                document.getElementById('bag-modal').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            // Use item (Eating/Drinking food) inside Bag
+            document.getElementById('btn-bag-eat').addEventListener('click', () => {
+                if (activeItemKey && playerInventory[activeItemKey] > 0) {
+                    const item = ITEM_DB[activeItemKey];
+                    playerInventory[activeItemKey]--;
+                    
+                    // Consume food stats impact
+                    vitalHunger += item.valHunger || 0;
+                    vitalThirst += item.valThirst || 0;
+                    vitalFatigue = Math.max(0, vitalFatigue - 10); // eating slightly refreshes vigor
+
+                    AudioSynth.playEat();
+                    renderBagSlots();
+                    selectBagItem(activeItemKey);
+                    updateVitalsUI();
+                }
+            });
+
+            // Selling gathered raw products to merchant Arthur
+            document.getElementById('btn-bag-sell').addEventListener('click', () => {
+                if (activeItemKey && playerInventory[activeItemKey] > 0) {
+                    const item = ITEM_DB[activeItemKey];
+                    playerInventory[activeItemKey]--;
+                    playerCoins += item.value;
+
+                    AudioSynth.playCoin();
+                    renderBagSlots();
+                    selectBagItem(activeItemKey);
+                    updateCoinsUI();
+                    addSocialChat("상인 아더", `좋은 거래 고마워! 네가 가져온 ${item.name}을(를) ${item.value} 코인에 매입할게.`);
+                }
+            });
+
+            // Shop binders
+            document.getElementById('btn-shop-close').addEventListener('click', () => {
+                document.getElementById('shop-modal').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            document.getElementById('btn-cooking-close').addEventListener('click', () => {
+                document.getElementById('cooking-modal').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            // Missions Board Binders
+            document.getElementById('btn-missions').addEventListener('click', () => {
+                document.getElementById('missions-modal').classList.remove('hidden');
+                renderMissionsBoard();
+                AudioSynth.playUI();
+            });
+            document.getElementById('btn-missions-close').addEventListener('click', () => {
+                document.getElementById('missions-modal').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            // Exit building placement mode
+            document.getElementById('btn-build-exit').addEventListener('click', () => {
+                document.getElementById('build-panel').classList.add('hidden');
+                AudioSynth.playUI();
+            });
+
+            // Rhythm Fishing minigame buttons
+            document.getElementById('btn-fish-pull').addEventListener('click', () => {
+                triggerReelAttempt();
+            });
+
+            // Start screen action entry
+            document.getElementById('btn-enter').addEventListener('click', () => {
+                AudioSynth.playUI();
+                const menu = document.getElementById('start-menu');
+                menu.classList.add('opacity-0', 'scale-105');
+                setTimeout(() => {
+                    menu.style.display = 'none';
+                    buildCozy3DWorld();
+                    animateLoop();
+                }, 700);
+
+                // Auto launch ambient lo-fi music progression
+                if (!AudioSynth.isPlayingBgm) {
+                    AudioSynth.toggleBgm(status => {
+                        syncMusicIconStatus(status);
+                    });
+                }
+            });
+
+            // Setup Music status syncer
+            const btnMenuMusic = document.getElementById('btn-menu-music');
+            const menuMusicTxt = document.getElementById('music-status-txt');
+            const btnHudMusic = document.getElementById('btn-audio-toggle');
+
+            function syncMusicIconStatus(isPlaying) {
+                if (isPlaying) {
+                    menuMusicTxt.innerText = "켜짐";
+                    menuMusicTxt.className = "text-green-500 font-bold";
+                    btnHudMusic.innerText = "🔊";
+                    btnHudMusic.classList.add('bg-amber-100');
+                } else {
+                    menuMusicTxt.innerText = "꺼짐";
+                    menuMusicTxt.className = "text-red-500 font-bold";
+                    btnHudMusic.innerText = "🎵";
+                    btnHudMusic.classList.remove('bg-amber-100');
+                }
+            }
+
+            btnMenuMusic.addEventListener('click', () => {
+                AudioSynth.toggleBgm(status => {
+                    syncMusicIconStatus(status);
+                    AudioSynth.playUI();
+                });
+            });
+
+            btnHudMusic.addEventListener('click', () => {
+                AudioSynth.toggleBgm(status => {
+                    syncMusicIconStatus(status);
+                    AudioSynth.playUI();
+                });
+            });
+
+            // Keyboard inputs
+            window.addEventListener('keydown', e => {
+                keyMap[e.code] = true;
+                if (e.code === 'KeyF') {
+                    handleInteraction();
+                }
+                // Handle Spacebar pull inside fishing
+                if (e.code === 'Space') {
+                    e.preventDefault(); // stop page jump
+                    triggerReelAttempt();
+                }
+            });
+            window.addEventListener('keyup', e => {
+                keyMap[e.code] = false;
+            });
+
+            // Auto load first Daily Mission on startup
+            activeMission = availableMissions[Math.floor(Math.random() * availableMissions.length)];
+            document.getElementById('mission-tracker-desc').innerText = activeMission.desc;
+        });
+
+        // Handle SOAP bubbles generation loop
+        function spawnShowerBubbleParticles() {
+            if (!player || !isShowering) return;
+
+            const bubbleGeo = new THREE.SphereGeometry(0.08 + Math.random() * 0.08, 8, 8);
+            const bubbleMat = new THREE.MeshBasicMaterial({
+                color: 0xE0F7FA,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const mesh = new THREE.Mesh(bubbleGeo, bubbleMat);
+            // Spawn inside shower cubicle space slightly wobbled near player
+            mesh.position.set(
+                player.position.x + (Math.random() - 0.5) * 0.4,
+                player.position.y + 0.3 + Math.random() * 1.4,
+                player.position.z + (Math.random() - 0.5) * 0.4
+            );
+            scene.add(mesh);
+
+            showerBubbles.push({
+                mesh: mesh,
+                life: 1.0,
+                speedY: 0.02 + Math.random() * 0.03,
+                wobbleSpeed: 2 + Math.random() * 4,
+                wobbleDir: Math.random() * Math.PI * 2
+            });
+        }
+
+        function updateShowerBubbleParticles() {
+            for (let i = showerBubbles.length - 1; i >= 0; i--) {
+                const bubble = showerBubbles[i];
+                bubble.life -= 0.02; // lifespan decrement
+                bubble.mesh.position.y += bubble.speedY;
+                bubble.mesh.position.x += Math.sin(Date.now() * 0.002 * bubble.wobbleSpeed + bubble.wobbleDir) * 0.01;
+                bubble.mesh.material.opacity = bubble.life * 0.8;
+
+                if (bubble.life <= 0) {
+                    scene.remove(bubble.mesh);
+                    bubble.mesh.geometry.dispose();
+                    bubble.mesh.material.dispose();
+                    showerBubbles.splice(i, 1);
+                }
+            }
+        }
+
+        // Main WebGL frame ticker
+        function animateLoop() {
+            requestAnimationFrame(animateLoop);
+
+            // 1. Update Rhythm fishing needle marker positions swing
+            if (isFishingActive) {
+                markerPos += markerDirection * markerSpeed;
+                if (markerPos >= 100) {
+                    markerPos = 100;
+                    markerDirection = -1;
+                } else if (markerPos <= 0) {
+                    markerPos = 0;
+                    markerDirection = 1;
+                }
+                document.getElementById('fishing-needle').style.left = `${markerPos}%`;
+            }
+
+            // 2. Spawn 3D Soap shower bubbles if active
+            if (isShowering) {
+                spawnShowerBubbleParticles();
+            }
+            updateShowerBubbleParticles();
+
+            // Handle player displacements smoothly
+            if (player) {
+                let dx = 0;
+                let dz = 0;
+
+                if (keyMap['KeyW'] || keyMap['ArrowUp']) dz -= 1;
+                if (keyMap['KeyS'] || keyMap['ArrowDown']) dz += 1;
+                if (keyMap['KeyA'] || keyMap['ArrowLeft']) dx -= 1;
+                if (keyMap['KeyD'] || keyMap['ArrowRight']) dx += 1;
+
+                if (dx !== 0 || dz !== 0) {
+                    const length = Math.sqrt(dx * dx + dz * dz);
+                    const ndx = dx / length;
+                    const ndz = dz / length;
+
+                    // Calculate look angle relative to the 360-degree camera yaw
+                    const inputAngle = Math.atan2(ndx, -ndz);
+                    const moveAngle = cameraYaw - inputAngle + Math.PI;
+
+                    const moveX = Math.sin(moveAngle) * speedMultiplier;
+                    const moveZ = Math.cos(moveAngle) * speedMultiplier;
+
+                    const nextX = player.position.x + moveX;
+                    const nextZ = player.position.z + moveZ;
+
+                    // Bounds checking based on map type (inside vs outside)
+                    if (isInsideHouse) {
+                        // Cozy Room borders [45 to 55] coordinates
+                        if (nextX > 45.2 && nextX < 54.8 && nextZ > 45.2 && nextZ < 54.8) {
+                            player.position.x = nextX;
+                            player.position.z = nextZ;
+                        }
+                    } else if (isInsideCharlieHouse) {
+                        // Charlie interior room boundary [95 to 105]
+                        if (nextX > 95.2 && nextX < 104.8 && nextZ > 95.2 && nextZ < 104.8) {
+                            player.position.x = nextX;
+                            player.position.z = nextZ;
+                        }
+                    } else if (isInsideLunaHouse) {
+                        // Luna interior boundary [145 to 155]
+                        if (nextX > 145.2 && nextX < 154.8 && nextZ > 145.2 && nextZ < 154.8) {
+                            player.position.x = nextX;
+                            player.position.z = nextZ;
+                        }
+                    } else if (isInsideOliverHouse) {
+                        // Oliver interior boundary [195 to 205]
+                        if (nextX > 195.2 && nextX < 204.8 && nextZ > 195.2 && nextZ < 204.8) {
+                            player.position.x = nextX;
+                            player.position.z = nextZ;
+                        }
+                    } else {
+                        // Outside general village bounds
+                        const distToOrigin = Math.sqrt(nextX * nextX + nextZ * nextZ);
+                        if (distToOrigin < 22) {
+                            player.position.x = nextX;
+                            player.position.z = nextZ;
+                        }
+                    }
+
+                    // Look direction rotation based on calculated move vector
+                    const angle = Math.atan2(moveX, moveZ);
+                    player.rotation.y += (angle - player.rotation.y) * 0.15;
+                }
+            }
+
+            // Smoothly wander NPC Villagers inside town
+            npcs.forEach(n => {
+                if (n.mesh && n.name !== "Arthur") {
+                    // Random wander logic
+                    if (Math.random() < 0.008) {
+                        n.wanderDirX = (Math.random() - 0.5) * 0.035;
+                        n.wanderDirZ = (Math.random() - 0.5) * 0.035;
+                        n.wanderTime = 30 + Math.random() * 60;
+                    }
+                    if (n.wanderTime && n.wanderTime > 0) {
+                        const targetX = n.mesh.position.x + n.wanderDirX;
+                        const targetZ = n.mesh.position.z + n.wanderDirZ;
+                        const dist = Math.sqrt(targetX * targetX + targetZ * targetZ);
+                        
+                        // Stay within general town limits
+                        if (dist < 20) {
+                            n.mesh.position.x = targetX;
+                            n.mesh.position.z = targetZ;
+                        }
+                        
+                        // Look at walking direction
+                        const walkAngle = Math.atan2(n.wanderDirX, n.wanderDirZ);
+                        n.mesh.rotation.y += (walkAngle - n.mesh.rotation.y) * 0.1;
+
+                        n.wanderTime--;
+                    }
+                }
+            });
+
+            // Smooth tracking camera interpolation with horizontal orbit system
+            if (player && camera) {
+                const targetCamX = player.position.x + cameraDistance * Math.sin(cameraYaw);
+                const targetCamZ = player.position.z + cameraDistance * Math.cos(cameraYaw);
+                const targetCamY = player.position.y + cameraHeight;
+
+                camera.position.x += (targetCamX - camera.position.x) * 0.085;
+                camera.position.z += (targetCamZ - camera.position.z) * 0.085;
+                camera.position.y += (targetCamY - camera.position.y) * 0.085;
+                camera.lookAt(player.position.x, player.position.y + 0.3, player.position.z);
+            }
+
+            // Proximity highlight indicators and pointer updates
+            checkInteractiveZones();
+            updateGuideArrow();
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Add dynamically updated social feed notifications
+        function addSocialChat(sender, message) {
+            const feed = document.getElementById('social-chat-feed');
+            const row = document.createElement('div');
+            row.className = "bg-amber-50/50 p-2 rounded-xl border border-amber-100/30 text-xs";
+            row.innerHTML = `<strong class="text-amber-800">${sender}</strong>: <span class="text-slate-600">${message}</span>`;
+            feed.appendChild(row);
+            feed.scrollTop = feed.scrollHeight;
+
+            if (feed.children.length > 10) {
+                feed.removeChild(feed.firstChild);
+            }
+        }
+    </script>
+</body>
+</html>

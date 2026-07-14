@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태안 고딩들의 단톡방 - 캠페인</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        /* 손글씨 폰트 적용 */
+        .student-font {
+            font-family: 'Gaegu', cursive, sans-serif;
+        }
+        /* 말풍선 애니메이션 효과 */
+        @keyframes popIn {
+            0% { transform: scale(0.9) translateY(10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .chat-bubble {
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        /* 타이핑 로더 애니메이션 */
+        .dot {
+            animation: typing 1.4s infinite both;
+        }
+        .dot:nth-child(2) { animation-delay: .2s; }
+        .dot:nth-child(3) { animation-delay: .4s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        /* 스크롤바 감추기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start bg-slate-950 overflow-x-hidden antialiased">
+
+    <!-- 글로벌 사운드 스위치 및 로고 상단바 -->
+    <header class="w-full max-w-4xl px-6 py-4 flex justify-between items-center z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0">
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-semibold tracking-wider text-emerald-400 uppercase">Taean Youth Voice</span>
+        </div>
+        <button id="soundToggle" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-all bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
+            <svg id="soundOnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+            <svg id="soundOffIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zm12.364-5.364L15.364 12m0 0l-2.636 2.636m2.636-2.636L12.728 9.364m2.636 2.636l2.636 2.636"/></svg>
+            <span id="soundText">효과음 켜짐</span>
+        </button>
+    </header>
+
+    <main class="w-full max-w-4xl flex-grow flex flex-col items-center justify-center py-6 px-4">
+        
+        <!-- ==================== 화면 1: 랜딩 스크린 (밝은 인스타 스타일 파스텔톤) ==================== -->
+        <section id="screenIntro" class="w-full max-w-2xl text-center flex flex-col items-center py-10 px-6 bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50 border-4 border-pink-200 rounded-3xl shadow-2xl transition-all duration-500 transform hover:scale-[1.01]">
+            
+            <!-- 인스타그램 형태의 알록달록한 그라데이션 아이콘 박스 -->
+            <div class="mb-5 p-4 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 rounded-3xl shadow-xl shadow-pink-500/20">
+                <svg class="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+            </div>
+            
+            <!-- 인스타 로고 분위기의 트렌디한 서브 뱃지 -->
+            <span class="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-4 py-1.5 rounded-full font-bold uppercase tracking-wider mb-3 shadow-md shadow-pink-500/10">Instagram DM Game</span>
+
+            <!-- 학생 손글씨 폰트(student-font)를 적극 활용한 화사한 헤더 -->
+            <h1 class="student-font text-4xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 mb-4 leading-normal">
+                태안 고딩들의 단톡방
+            </h1>
+            
+            <p class="student-font text-slate-700 text-lg md:text-xl mb-8 max-w-md leading-relaxed">
+                "태안에 놀러 오세요! 바다도 예쁘고 펜션도 많아요!"<br>
+                화려한 광고 뒤에 가려진 진짜 10대들의 주말은 어떨까요? <br>
+                <strong>당신은 태안에 사는 고등학생입니다.</strong> 다른 지역 친구들의 화려한 자랑 속에서 태안의 진짜 주말을 이야기해 주세요.
+            </p>
+            
+            <!-- 인스타 무드의 비비드한 그라데이션 시작 버튼 -->
+            <button id="btnStartGame" class="w-full md:w-auto px-12 py-4.5 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 hover:from-purple-600 hover:to-orange-500 text-white font-extrabold text-xl rounded-2xl shadow-2xl shadow-pink-500/30 transition-all transform hover:-translate-y-1 active:translate-y-0 active:scale-95">
+                단톡방 들어가기 (START)
+            </button>
+            
+            <div class="flex items-center gap-1.5 mt-5 text-pink-600/70 text-xs font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-ping"></span>
+                <span>실제 청소년 놀거리 부족 현실 고증 수록</span>
+            </div>
+        </section>
+
+
+        <!-- ==================== 화면 2: 단톡방 시뮬레이터 (인스타 DM 스타일 라이트 모드) ==================== -->
+        <section id="screenChat" class="w-full max-w-md hidden flex-col h-[800px] bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden transition-all duration-500">
+            <!-- 단톡방 상단바 -->
+            <div class="px-5 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <!-- 실제 인스타 그룹 DM 스타일의 겹친 프사 연출 -->
+                        <div class="flex items-center -space-x-4">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-400 to-orange-400 border-2 border-white flex items-center justify-center text-xs shadow-sm">😎</div>
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 border-2 border-white flex items-center justify-center text-xs shadow-sm">⚡</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">영크크 (3)</h2>
+                        <p class="text-[11px] text-slate-400 font-medium">민우, 수아, 나</p>
+                    </div>
+                </div>
+                <div class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 font-medium">실시간 주말 대화</div>
+            </div>
+
+            <!-- 대화 메시지 영역 -->
+            <div id="chatMessageArea" class="flex-grow overflow-y-auto p-5 space-y-4 no-scrollbar bg-white">
+                <!-- 메시지 및 말풍선들이 동적으로 주입됩니다. -->
+            </div>
+
+            <!-- 하단 타이핑 바 (친구들 타이핑 중 표시용) -->
+            <div id="typingIndicator" class="px-5 py-2.5 bg-slate-50 text-xs text-slate-500 flex items-center gap-2 border-t border-slate-100 hidden">
+                <div class="flex items-center space-x-1">
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full dot"></span>
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full dot"></span>
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full dot"></span>
+                </div>
+                <span id="typingUserText">누군가 입력 중...</span>
+            </div>
+
+            <!-- 사용자의 대답 선택 공간 (flex-shrink-0를 붙여 두 번째 답변 목록이 찌그러지거나 잘리는 현상 방지) -->
+            <div id="userResponseArea" class="p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2 min-h-[160px] justify-center flex-shrink-0">
+                <p id="responseAreaTitle" class="text-xs text-slate-400 text-center mb-2 font-medium">답변 선택하기</p>
+                <!-- 선택지 버튼들이 동적으로 주입됩니다. -->
+                <div id="choiceContainer" class="flex flex-col gap-2 w-full">
+                    <!-- Dynamic Choices -->
+                </div>
+                <!-- 소감 직접 입력 폼 (게임 내 통합) -->
+                <div id="inlineFeedbackForm" class="hidden flex-col gap-2 w-full">
+                    <textarea id="inlineFeedbackText" placeholder="태안 청소년들이 겪는 답답함에 대한 솔직한 소감을 한마디 남겨주세요... (엔딩 보드에 전시됩니다)" class="w-full h-24 p-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 resize-none placeholder-slate-400 shadow-inner"></textarea>
+                    <button onclick="submitInlineFeedback()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-95 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/10">
+                        소감 전송하고 엔딩 확인하기
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== 화면 3: 캠페인 허브 & 실태 리포트 (강렬하고 묵직한 딥 레드 테마) ==================== -->
+        <section id="screenReport" class="w-full hidden flex-col gap-8 transition-all duration-700">
+            
+            <!-- 인트로 배너: 씁쓸한 요약 -->
+            <div class="w-full text-center py-10 px-6 bg-gradient-to-br from-red-950/40 via-red-900/10 to-slate-950 border-2 border-red-800/40 rounded-3xl shadow-2xl shadow-red-900/10 relative overflow-hidden">
+                <div class="absolute -top-10 -left-10 w-40 h-40 bg-red-600/10 blur-3xl rounded-full"></div>
+                <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-red-600/10 blur-3xl rounded-full"></div>
+
+                <span class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-4 py-1.5 rounded-full font-bold uppercase tracking-wider mb-5 inline-block">시뮬레이션 분석 결과</span>
+                
+                <h1 class="text-2xl md:text-4xl font-black text-white tracking-tight mb-5 leading-tight">
+                    아무리 멋진 답을 고르려 해도,<br>
+                    결국 <span class="text-red-400 underline decoration-red-500 decoration-4 underline-offset-4">‘놀 게 없어서 떠나고 싶어’</span>로 끝나는 현실.
+                </h1>
+                
+                <!-- 플레이어가 작성한 한 줄 소감 전시 구역 -->
+                <div class="my-6 max-w-xl mx-auto bg-slate-900/90 border border-red-500/30 p-5 rounded-2xl text-left shadow-lg">
+                    <span class="text-[10px] text-red-400 font-extrabold block mb-1">방금 당신이 단톡방에 외친 진심 💬</span>
+                    <p id="playerRevealedFeedback" class="text-base text-slate-200 italic leading-relaxed font-semibold">
+                        "아직 입력된 소감이 없습니다."
+                    </p>
+                </div>
+
+                <p class="text-slate-300 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-6 font-medium">
+                    문화 인프라가 점점 사라지니 주말이 지루하고, 그로 인해 청소년들이 정떨어져 태안을 떠나며, <br>
+                    이로 인해 청소년 인구가 더 급감해 시설이 추가 소멸하는 <span class="text-red-400 font-bold">비극적인 악순환</span>이 매년 반복되고 있습니다.
+                </p>
+
+                <p class="text-rose-400 text-base md:text-lg font-bold max-w-2xl mx-auto mb-8 border-t border-b border-red-900/30 py-3 bg-red-950/20 rounded-xl">
+                    📢 "관광객만이 아닌 태안 청소년도 행복해야 합니다.<br> 청소년이 머물고 싶은 멋진 태안을 만들어주세요!"
+                </p>
+                
+                <div class="inline-flex flex-wrap gap-3 justify-center">
+                    <button onclick="restartGame()" class="px-5 py-2.5 bg-red-950/60 hover:bg-red-900/40 text-red-200 text-xs font-semibold rounded-xl border border-red-800/40 transition-all">
+                        다른 답변 골라보기 (다시 하기)
+                    </button>
+                    <button id="btnCopyToClipboard" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl border border-slate-800 transition-all flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 10.742l4.755-4.755m0 0l4.755 4.755m-4.755-4.755V14m0 4h.01"/></svg>
+                        이 대화방 공유하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== 고증 통계 데이터 대시보드 ==================== -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                
+                <!-- 1. 원정 지도 (어느 지역까지 몇 시간을 가야 하는가) -->
+                <div class="p-6 bg-slate-900/80 border border-slate-800 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-1 block">지리적 소외 지도</span>
+                        <h2 class="text-xl font-extrabold text-white mb-2">"놀려면 어디로, 얼마나 가야 할까요?"</h2>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-6">
+                            태안 청소년들은 일상적인 핫플(마라탕, 네컷사진)이나 문화 체험을 누리려면 버스 요금과 긴 대기 시간을 감수하고 무조건 다른 대도시로 나가야 합니다.
+                        </p>
+                    </div>
+
+                    <!-- 버스 이동 경로 인포그래픽 -->
+                    <div class="space-y-3.5 bg-slate-950/60 p-4 rounded-2xl border border-slate-850">
+                        <!-- 서산행 -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">1</span>
+                                <span class="text-xs text-slate-300 font-semibold">태안 ➔ 서산 터미널 (마라탕, 인생네컷)</span>
+                            </div>
+                            <span class="text-xs text-amber-400 font-bold">왕복 1.5~2시간</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-400 rounded-full" style="width: 45%"></div>
+                        </div>
+                        
+                        <!-- 천안행 -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xs font-bold">2</span>
+                                <span class="text-xs text-slate-300 font-semibold">태안 ➔ 천안 야우리 (멀티플렉스, 대형 쇼핑몰)</span>
+                            </div>
+                            <span class="text-xs text-red-400 font-bold">왕복 4시간 이상</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-400 rounded-full" style="width: 80%"></div>
+                        </div>
+
+                        <!-- 서울행 -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs font-bold">3</span>
+                                <span class="text-xs text-slate-300 font-semibold">태안 ➔ 서울 홍대/롯데월드 (종합 여가/놀이시설)</span>
+                            </div>
+                            <span class="text-xs text-rose-500 font-bold">왕복 5.5시간 이상</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full bg-rose-500 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 인구 소멸 악순환 연도별 그래프 (SVG 기반 정교한 트렌드 차트) -->
+                <div class="p-6 bg-slate-900/80 border border-slate-800 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-1 block">청소년 인구 감소 데이터</span>
+                        <h2 class="text-xl font-extrabold text-white mb-2">태안 청소년 인구 유출 추이 (명)</h2>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-4">
+                            놀거리가 없어 고향에 대한 애착이 약해진 청소년들은 결국 졸업과 동시에 무조건 다른 지역으로 빠져나갑니다.
+                        </p>
+                    </div>
+
+                    <!-- SVG 기반 수치 감소 그래프 -->
+                    <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-850 relative">
+                        <svg class="w-full h-32" viewBox="0 0 400 130" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Grid lines -->
+                            <line x1="10" y1="20" x2="390" y2="20" stroke="#1e293b" stroke-dasharray="4,4" />
+                            <line x1="10" y1="60" x2="390" y2="60" stroke="#1e293b" stroke-dasharray="4,4" />
+                            <line x1="10" y1="100" x2="390" y2="100" stroke="#1e293b" stroke-dasharray="4,4" />
+                            
+                            <!-- Graph line -->
+                            <path d="M 40 25 L 140 45 L 240 75 L 340 105" fill="none" stroke="#f87171" stroke-width="3" />
+                            
+                            <!-- Dots & Text indicators -->
+                            <circle cx="40" cy="25" r="4.5" fill="#f87171" />
+                            <text x="40" y="15" fill="#94a3b8" font-size="9" text-anchor="middle" font-weight="bold">2020년 (7.2k)</text>
+
+                            <circle cx="140" cy="45" r="4.5" fill="#f87171" />
+                            <text x="140" y="35" fill="#94a3b8" font-size="9" text-anchor="middle" font-weight="bold">2022년 (6.6k)</text>
+
+                            <circle cx="240" cy="75" r="4.5" fill="#f87171" />
+                            <text x="240" y="65" fill="#94a3b8" font-size="9" text-anchor="middle" font-weight="bold">2024년 (5.9k)</text>
+
+                            <circle cx="340" cy="105" r="4.5" fill="#ef4444" class="animate-ping" />
+                            <circle cx="340" cy="105" r="4.5" fill="#ef4444" />
+                            <text x="340" y="95" fill="#f87171" font-size="9" text-anchor="middle" font-weight="bold">2026년 (5.2k)</text>
+                        </svg>
+                        <div class="text-center text-[10px] text-red-400 font-semibold mt-2">
+                            ⚠️ "시설이 사라져 인구가 감소하고, 인구가 줄어 편의·문화시설이 추가 철수하는 악순환"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 타 지역과의 인프라 비교 & 만족도 설문 ==================== -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                
+                <!-- 3. 타 지역 인프라와의 극단적 격차 비교표 -->
+                <div class="p-6 bg-slate-900/80 border border-slate-800 rounded-3xl">
+                    <span class="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-1 block">인프라 불균형 지표</span>
+                    <h2 class="text-xl font-extrabold text-white mb-4">지자체별 청소년 문화 인프라 격차</h2>
+                    
+                    <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60 text-xs">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-900 text-slate-400 border-b border-slate-800 font-bold">
+                                <tr>
+                                    <th class="p-3">구분</th>
+                                    <th class="p-3">청소년 전용 문화의집</th>
+                                    <th class="p-3">인생네컷/핫플</th>
+                                    <th class="p-3">영화관/멀티플렉스</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-850 text-slate-300 font-semibold">
+                                <tr>
+                                    <td class="p-3 text-slate-400 font-bold">서울 마포</td>
+                                    <td class="p-3 text-emerald-400">12곳 이상</td>
+                                    <td class="p-3 text-emerald-400">수백 곳</td>
+                                    <td class="p-3 text-emerald-400">10개 이상</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-slate-400 font-bold">충남 천안</td>
+                                    <td class="p-3 text-emerald-400">6곳 이상</td>
+                                    <td class="p-3 text-emerald-400">80여 곳</td>
+                                    <td class="p-3 text-emerald-400">4개 이상</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-slate-400 font-bold">이웃 서산</td>
+                                    <td class="p-3 text-amber-400">2곳</td>
+                                    <td class="p-3 text-amber-400">12여 곳</td>
+                                    <td class="p-3 text-amber-400">1개</td>
+                                </tr>
+                                <tr class="bg-red-950/10 text-red-300">
+                                    <td class="p-3 font-extrabold text-red-400">충남 태안</td>
+                                    <td class="p-3 font-extrabold text-red-400">0곳 (수련관 전용)</td>
+                                    <td class="p-3 font-extrabold text-red-400">극히 부족</td>
+                                    <td class="p-3 font-extrabold text-red-400">0개 (멀티플렉스 무)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. 태안 청소년 만족도 조사 리포트 -->
+                <div class="p-6 bg-slate-900/80 border border-slate-800 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-1 block">청소년 인식조사 결과</span>
+                        <h2 class="text-xl font-extrabold text-white mb-2">"이대로 태안에 더 살고 싶으신가요?"</h2>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-6">
+                            태안 관내 청소년 만족도 조사에 따르면, 압도적인 다수가 지역에 머무르기 싫어하는 실정입니다.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-850">
+                        <div class="text-center">
+                            <span class="block text-3xl font-extrabold text-red-400">82.4%</span>
+                            <span class="text-[11px] text-slate-400 mt-1.5 block">"주말 문화/여가 시설 매우 부족"</span>
+                        </div>
+                        <div class="text-center border-l border-slate-850">
+                            <span class="block text-3xl font-extrabold text-red-400">78.9%</span>
+                            <span class="text-[11px] text-slate-400 mt-1.5 block">"놀거리 부족해 태안 살기 싫다"</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 다른 학생들의 생생한 한마디 대시보드 ==================== -->
+            <div class="w-full p-6 md:p-8 bg-slate-900/80 border border-slate-800 rounded-3xl">
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-widest">온라인 의견수렴 대시보드</h3>
+                    </div>
+                    <h2 class="text-xl md:text-2xl font-extrabold text-white">태안군수님, 청소년들은 이런 시설이 필요해요!</h2>
+                    <p class="text-slate-400 text-xs md:text-sm mt-1">태안에 정말 필요하다고 생각하는 놀이/체험/여가 공간과 맛집 아이디어를 포스트잇처럼 자유롭게 게시해 주세요.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="stickyNoteGrid">
+                    <!-- 다른 학생들의 코멘트들 -->
+                    <div class="p-5 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex flex-col justify-between text-xs text-yellow-300 space-y-4 shadow-lg min-h-[140px] student-font">
+                        <p class="leading-relaxed text-sm">“주말에 애들이랑 갈 맛집 프랜차이즈나 디저트 카페, 핫플레이스 갈 만한 실내 스트리트가 생겼으면 좋겠습니다. 태안은 너무 시골집뿐이에요.”</p>
+                        <span class="text-[10px] text-yellow-400/80 font-bold">#청소년푸드코트_태안터미널 #원북면학생</span>
+                    </div>
+                    <div class="p-5 bg-teal-500/10 border border-teal-500/20 rounded-2xl flex flex-col justify-between text-xs text-teal-300 space-y-4 shadow-lg min-h-[140px] student-font">
+                        <p class="leading-relaxed text-sm">“친구들이랑 다 같이 오락 게임도 하고 가상 체험도 하고 하루필름 인생네컷도 찍을 수 있는 종합 액티비티 룸이 절실합니다.”</p>
+                        <span class="text-[10px] text-teal-400/80 font-bold">#액티비티아일랜드_놀거리 #안면도학생</span>
+                    </div>
+                    <div class="p-5 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex flex-col justify-between text-xs text-purple-300 space-y-4 shadow-lg min-h-[140px] student-font">
+                        <p class="leading-relaxed text-sm">“청소년 전용 미니 롤러스케이트장이나 가상 트램펄린 카페 같은 실내 운동 및 놀이시설이 필요합니다. 맨날 PC방만 갈 순 없잖아요.”</p>
+                        <span class="text-[10px] text-purple-400/80 font-bold">#청소년스포츠파크 #고남면학생</span>
+                    </div>
+
+                    <!-- 포스트잇 작성 유도 카드 -->
+                    <div id="btnAddStickyNoteCard" class="p-5 bg-slate-950 border-2 border-dashed border-slate-800 hover:border-slate-750 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all gap-2 group min-h-[140px]">
+                        <svg class="w-8 h-8 text-slate-600 group-hover:text-emerald-400 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span class="text-xs font-bold text-slate-500 group-hover:text-slate-300">새 제안 붙이기</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 캠페인 서명 운동 -->
+            <div class="w-full p-6 md:p-8 bg-slate-900/80 border border-slate-800 rounded-3xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                            <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-widest">온라인 서명 참여</h3>
+                        </div>
+                        <h2 class="text-xl md:text-2xl font-extrabold text-white">태안 청소년 놀이·문화공간 건립을 지지해 주세요.</h2>
+                        <p class="text-slate-400 text-xs md:text-sm mt-1">서명해 주신 여러분의 한 걸음이 지자체를 변화시키는 큰 목소리가 됩니다.</p>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 px-6 py-4 rounded-2xl text-center md:text-right">
+                        <span class="text-xs text-slate-500 block">현재 지지 서명 현황</span>
+                        <div class="flex items-baseline justify-center md:justify-end gap-1">
+                            <span id="petitionCount" class="text-3xl font-extrabold text-emerald-400">1028</span>
+                            <span class="text-sm text-slate-300">명 완료</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="petitionForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-850">
+                    <input type="text" id="signerName" required placeholder="이름 또는 닉네임" class="px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-slate-500">
+                    <input type="text" id="signerMessage" required placeholder="한 줄 지지 메세지 (예: 청소년들도 마음껏 놀 권리가 있습니다!)" class="px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-slate-500">
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all text-sm py-3 md:py-0">
+                        서명 동참하기
+                    </button>
+                </form>
+
+                <div class="mt-6">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">실시간 참여 한마디</h4>
+                    <div id="signatureBoard" class="space-y-2.5 max-h-[160px] overflow-y-auto pr-2 no-scrollbar">
+                        <div class="flex items-center justify-between text-xs bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                            <div>
+                                <span class="font-bold text-emerald-400 mr-2">김*우 (고1)</span>
+                                <span class="text-slate-300">진짜 영화 한 번 보거나 트렌디한 프랜차이즈 가려고 차비 들여서 옆동네 가는 거 지겨워요.. 태안이 싫어지려고 해요.</span>
+                            </div>
+                            <span class="text-slate-500 text-[10px]">방금 전</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                            <div>
+                                <span class="font-bold text-emerald-400 mr-2">이지영 (학부모)</span>
+                                <span class="text-slate-300">아이들이 주말에 너무 심심하다고 징징대고 맨날 다른 지역으로 데려가 달라고 합니다. 청소년 여가 인프라 확충 부탁드립니다.</span>
+                            </div>
+                            <span class="text-slate-500 text-[10px]">5분 전</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                            <div>
+                                <span class="font-bold text-emerald-400 mr-2">최*혁 (중3)</span>
+                                <span class="text-slate-300">친구들이랑 하루 필름 찍고 보드게임 하려면 서산 터미널까지 주말마다 시외버스 타야 합니다... 태안에는 놀 만한 곳이 1개도 없어요.</span>
+                            </div>
+                            <span class="text-slate-500 text-[10px]">12분 전</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- 포스트잇 작성 전용 모달 -->
+    <div id="stickyModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
+            <h3 class="text-lg font-bold text-white mb-4">군수님께 보낼 제안서 작성</h3>
+            <textarea id="modalTextarea" required placeholder="청소년을 위한 소중한 한 줄 제안을 담아주세요..." class="w-full h-32 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-slate-600 resize-none mb-4"></textarea>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="closeStickyModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs font-semibold rounded-xl border border-slate-700 transition-all">
+                    취소
+                </button>
+                <button onclick="submitStickyNote()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+                    게시판에 붙이기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공유 및 안내 전용 커스텀 토스트 알림 -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 bg-slate-900 border border-emerald-500/40 text-slate-200 text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-[200]">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="toastMessage">클립보드에 링크가 복사되었습니다.</span>
+    </div>
+
+    <!-- 자바스크립트 엔진 -->
+    <script>
+        // 사운드 관련 전역 변수 및 웹 오디오 API를 이용한 음계 신디사이저
+        let isSoundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone(freq, duration, type = "sine") {
+            if (!isSoundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio play failed: ", e);
+            }
+        }
+
+        const sfx = {
+            receive: () => {
+                playTone(523.25, 0.15, "triangle");
+                setTimeout(() => playTone(659.25, 0.15, "triangle"), 80);
+            },
+            send: () => {
+                playTone(587.33, 0.1, "sine");
+                setTimeout(() => playTone(783.99, 0.15, "sine"), 60);
+            },
+            popup: () => playTone(880, 0.2, "sine"),
+            success: () => {
+                playTone(523.25, 0.15, "triangle");
+                setTimeout(() => playTone(659.25, 0.15, "triangle"), 80);
+                setTimeout(() => playTone(783.99, 0.15, "triangle"), 160);
+                setTimeout(() => playTone(1046.50, 0.3, "triangle"), 240);
+            }
+        };
+
+        const soundToggle = document.getElementById("soundToggle");
+        const soundOnIcon = document.getElementById("soundOnIcon");
+        const soundOffIcon = document.getElementById("soundOffIcon");
+        const soundText = document.getElementById("soundText");
+
+        soundToggle.addEventListener("click", () => {
+            isSoundEnabled = !isSoundEnabled;
+            if (isSoundEnabled) {
+                soundOnIcon.classList.remove("hidden");
+                soundOffIcon.classList.add("hidden");
+                soundText.innerText = "효과음 켜짐";
+                sfx.send();
+            } else {
+                soundOnIcon.classList.add("hidden");
+                soundOffIcon.classList.remove("hidden");
+                soundText.innerText = "효과음 꺼짐";
+            }
+        });
+
+        // ==================== 대화 시나리오 엔진 (고등학생 현실 대화 적용) ====================
+        const users = {
+            minwoo: { name: "서울 민우", color: "bg-slate-100 text-slate-850", avatar: "💻" },
+            sua: { name: "천안 수아", color: "bg-slate-100 text-slate-850", avatar: "🎨" },
+            me: { name: "나(태안)", color: "bg-[#0095f6] text-white", avatar: "🌊" }
+        };
+
+        const chatScenario = [
+            {
+                speaker: "minwoo",
+                text: "야 니네 이번 주말에 뭐함? 난 오늘 애들이랑 연남동 핫플 돌고 마라탕 조진 다음에 롯데월드 야간개장 갈 거임 ㅋㅋ 사진 개갈겨야지"
+            },
+            {
+                speaker: "sua",
+                text: "아 롯데월드 개부럽네 ㅠㅠ 난 애들이랑 신부동 터미널 나가서 엽떡 조지고 하루필름 찍기로 함! 보드게임 카페도 예약함 ㅋㅋㅋ"
+            },
+            {
+                speaker: "minwoo",
+                text: "근데 태안 사는 @나 야 넌 주말에 보통 친구들이랑 어디서 노냐? 태안 바다 개이쁘잖아 수목원도 있고 주말마다 바닷가 카페에서 인생샷 갈기고 개낭만 지릴 거 같은데? 부럽다"
+            }
+        ];
+
+        // 대화 영역에 메시지 렌더링하기
+        function renderBubble(speaker, text, isMe = false) {
+            const chatArea = document.getElementById("chatMessageArea");
+            const bubbleWrap = document.createElement("div");
+            bubbleWrap.className = `flex ${isMe ? 'justify-end' : 'justify-start'} w-full items-start gap-2.5 mb-2`;
+
+            const userInfo = users[speaker];
+            
+            let htmlContent = "";
+            if (isMe) {
+                htmlContent = `
+                    <div class="flex flex-col items-end max-w-[85%]">
+                        <span class="text-[10px] text-slate-400 mb-1">나(태안)</span>
+                        <div class="bg-[#0095f6] text-white text-sm font-semibold p-3.5 rounded-2xl rounded-tr-none shadow-sm chat-bubble leading-relaxed">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+            } else {
+                htmlContent = `
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-400 via-rose-400 to-amber-300 flex items-center justify-center text-xs border border-slate-100 shadow-sm flex-shrink-0 mt-3">
+                        ${userInfo.avatar}
+                    </div>
+                    <div class="flex flex-col max-w-[85%]">
+                        <span class="text-[10px] text-slate-400 mb-1">${userInfo.name}</span>
+                        <div class="bg-slate-100 text-slate-800 text-sm p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-slate-200/50 chat-bubble leading-relaxed">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+            }
+
+            bubbleWrap.innerHTML = htmlContent;
+            chatArea.appendChild(bubbleWrap);
+            chatArea.scrollTo({ top: chatArea.scrollHeight, behavior: 'smooth' });
+            
+            if (isMe) sfx.send();
+            else sfx.receive();
+        }
+
+        function showTyping(userKey, textSuffix = "입력 중...") {
+            const indicator = document.getElementById("typingIndicator");
+            const userText = document.getElementById("typingUserText");
+            if (userKey) {
+                userText.innerText = `${users[userKey].name}님이 ${textSuffix}`;
+                indicator.classList.remove("hidden");
+            } else {
+                indicator.classList.add("hidden");
+            }
+            const chatArea = document.getElementById("chatMessageArea");
+            chatArea.scrollTo({ top: chatArea.scrollHeight, behavior: 'smooth' });
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        document.getElementById("btnStartGame").addEventListener("click", () => {
+            document.getElementById("screenIntro").classList.add("hidden");
+            document.getElementById("screenChat").classList.remove("hidden");
+            document.getElementById("screenChat").classList.add("flex");
+            runOpeningScenario();
+        });
+
+        // 1단계 오프닝
+        async function runOpeningScenario() {
+            for (let i = 0; i < chatScenario.length; i++) {
+                const msg = chatScenario[i];
+                showTyping(msg.speaker);
+                await delay(2000);
+                showTyping(null);
+                renderBubble(msg.speaker, msg.text);
+                await delay(800);
+            }
+            showChoiceOptions1();
+        }
+
+        // 1단계 선택지 렌더링
+        function showChoiceOptions1() {
+            const choiceContainer = document.getElementById("choiceContainer");
+            choiceContainer.innerHTML = `
+                <button onclick="handleChoice1('ocean')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm whitespace-normal break-keep leading-snug">
+                    🏖️ "바다는 관광객 어른들 맛집뿐임 ㅠ 우린 친구끼리 갈 만한 핫플이나 놀거리 1도 없어."
+                </button>
+                <button onclick="handleChoice1('pc')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm whitespace-normal break-keep leading-snug">
+                    🎮 "할 거 진짜 개없어서 맨날 똑같은 피시방 갔다가 코노 돌고 멍때리는 게 일상임 ㅠ"
+                </button>
+                <button onclick="handleChoice1('study')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm whitespace-normal break-keep leading-snug">
+                    ✍️ "여긴 엽떡 마라탕은커녕 그 흔한 네컷사진 찍는 곳도 없어서 놀기 개힘들어..."
+                </button>
+            `;
+        }
+
+        // 1단계 선택지 처리 및 2단계 분기
+        async function handleChoice1(path) {
+            const container = document.getElementById("choiceContainer");
+            container.innerHTML = ""; // 클리어
+
+            if (path === 'ocean') {
+                renderBubble("me", "바다는 그냥 멀리서 보는 어른들 관광지일 뿐이고.. 그 근처는 횟집이나 펜션뿐이라 ㅠ 우린 친구끼리 편하게 놀 만한 시설이나 청소년 핫플이 진짜 단 하나도 없어.", true);
+                await delay(1200);
+                showTyping("sua");
+                await delay(2000);
+                showTyping(null);
+                renderBubble("sua", "ㄹㅇ? 헐 근데 관광도시잖아;; 10대들 노는 테마파크나 볼링장, 네컷사진관 같은 것도 진짜 하나도 없음??");
+                await delay(1000);
+                showChoiceOptions2('ocean');
+            } else if (path === 'pc') {
+                renderBubble("me", "여긴 주말에 진짜 할 거 없어서 친구들 만나도 맨날 읍내 똑같은 낡은 피시방이랑 코노 한 바퀴 뱅뱅 돌다가 편의점 벤치에 앉아서 시간 때워 ㅠ", true);
+                await delay(1200);
+                showTyping("minwoo");
+                await delay(2000);
+                showTyping(null);
+                renderBubble("minwoo", "에이 구라치지마 ㅋㅋㅋ 매일 피시방 코노만 간다고? 개오바임;; 방탈출이나 롤러장, 대형 오락실 같은 거 아예 없어?");
+                await delay(1000);
+                showChoiceOptions2('pc');
+            } else if (path === 'study') {
+                renderBubble("me", "수목원이랑 해변만 널렸지, 정작 우린 놀이공원은커녕 애들이랑 맛있는 마라탕이나 엽떡 조지고 갈 예쁜 인생네컷 사진관 같은 기본 프랜차이즈도 너무 부족해...", true);
+                await delay(1200);
+                showTyping("sua");
+                await delay(2000);
+                showTyping(null);
+                renderBubble("sua", "에바야 마라탕 먹고 네컷 찍는 것도 안 된다고?? 주말에 친구들이랑 밥 한 끼 먹고 놀 만한 기본 상권도 없는 거야??");
+                await delay(1000);
+                showChoiceOptions2('study');
+            }
+        }
+
+        // 2단계 선택지 렌더링
+        function showChoiceOptions2(path) {
+            const choiceContainer = document.getElementById("choiceContainer");
+            if (path === 'ocean') {
+                choiceContainer.innerHTML = `
+                    <button onclick="handleChoice2('ocean_bus')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                        🎪 "전혀 없음... 보드게임방도 없어서 놀거리 자체가 0에 수렴함 ㅠㅠ"
+                    </button>
+                    <button onclick="handleChoice2('ocean_tourist')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                        😢 "갈 데 없으니까 주말에 존나 숨 막힘.. 졸업하면 무조건 태안 뜬다 진짜."
+                    </button>
+                `;
+            } else if (path === 'pc') {
+                choiceContainer.innerHTML = `
+                    <button onclick="handleChoice2('pc_none')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                        ❌ "응 진짜 없음 ㅠ 갈 데 없어서 주말 오는 게 오히려 더 심심하고 개노잼임."
+                    </button>
+                    <button onclick="handleChoice2('pc_seosan')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                        🚗 "진짜 제대로 놀려고 버스비 내가면서 옆 도시 서산이나 천안으로 원정 탈출함 ㅠ"
+                    </button>
+                `;
+            } else if (path === 'study') {
+                choiceContainer.innerHTML = `
+                    <button onclick="handleChoice2('study_room')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                        😢 "기본 프랜차이즈나 인스타 감성 맛집 자체가 없어서 노는 선택지 개좁음."
+                    </button>
+                    <button onclick="handleChoice2('study_bed')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                        💔 "도시 애들은 인스타에 핫플 올릴 때 우린 자랑할 게 아예 없어서 자괴감 들고 정 떨어짐..."
+                    </button>
+                `;
+            }
+        }
+
+        // 2단계 처리 및 3단계(최종) 피드백 유도
+        async function handleChoice2(subPath) {
+            const container = document.getElementById("choiceContainer");
+            container.innerHTML = ""; // 클리어
+
+            let responseText = "";
+            if (subPath === 'ocean_bus') responseText = "보드게임방? 볼링장? 그런 액티비티 1도 없어.. 애초에 10대들을 위한 놀이시설 자체가 태안에 0개임 ㅠㅠ";
+            else if (subPath === 'ocean_tourist') responseText = "주말마다 진짜 좁은 동네에 갇힌 기분이라 숨 막혀.. 졸업하자마자 뒤도 안 돌아보고 서울이나 천안으로 탈출할 거임 진짜로.";
+            else if (subPath === 'pc_none') responseText = "진짜 구라 안 치고 아예 없음.. 갈 데 없으니까 주말 내내 집에서 유튜브 쇼츠만 보는데, 무기력해지고 태안에 정 뚝 떨어짐 ㅠ";
+            else if (subPath === 'pc_seosan') responseText = "오죽하면 영화 한 편 보거나 인생네컷 찍으려고 차비 모아서 버스 타고 서산터미널까지 가겠냐.. 왕복만 거의 2시간 넘게 버림 ㅠ";
+            else if (subPath === 'study_room') responseText = "진짜 그 흔한 이쁜 카페나 소품샵도 없고 맨날 피시방 코노 뿐임.. 선택지가 없으니까 너무 아쉽고 지루해.";
+            else if (subPath === 'study_bed') responseText = "도시 사는 애들 주말에 성수나 연남 핫플 투어 올릴 때 우린 편의점 벤치 사진뿐임 ㅋㅋㅋ 상대적 박탈감 개쩔고 태안 살기 존나 싫어짐 ㅠ";
+
+            renderBubble("me", responseText, true);
+            await delay(2000);
+
+            // 다른 친구들의 깊어진 리액션 (Phase 3 진입 전)
+            showTyping("minwoo");
+            await delay(2500);
+            showTyping(null);
+            renderBubble("minwoo", "하.. 놀거리도 없고 주말마다 고향 탈출 고민하는 거 실화냐;; 졸업하고 바로 뜰 생각만 한다는 게 진짜 씁쓸하네.. 추억 쌓을 공간이 1도 없구나.");
+            await delay(1200);
+
+            showTyping("sua");
+            await delay(2500);
+            showTyping(null);
+            renderBubble("sua", "관광지만 뻔지르르하게 짓고, 정작 태안에서 매일 살아가는 청소년들의 소소한 일상과 놀이 권리는 완전 방치해 둔 거잖아 ㅠㅠ 정 떨어져서 떠나고 싶어지는 게 ㄹㅇ 이해 감...");
+            await delay(1500);
+
+            // 3단계 선택지 렌더링
+            showChoiceOptions3();
+        }
+        
+        function showChoiceOptions3() {
+            const choiceContainer = document.getElementById("choiceContainer");
+            choiceContainer.innerHTML = `
+                <button onclick="handleChoice3('final1')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                    🗣️ "맞아.. 갈 곳 없어서 태안 미워지는 게 슬픔. 우리도 우리 동네 자랑하고 싶다고 ㅠ"
+                </button>
+                <button onclick="handleChoice3('final2')" class="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-500 text-slate-700 font-semibold text-xs md:text-sm p-3.5 rounded-xl transition-all shadow-sm">
+                    ✨ "더 이상 대도시 애들 인스타만 부러워하기 싫어.. 우리 공간 좀 지어줬으면 좋겠음"
+                </button>
+            `;
+        }
+
+        async function handleChoice3(finalPath) {
+            const container = document.getElementById("choiceContainer");
+            container.innerHTML = ""; // 클리어
+
+            let responseText = "";
+            if (finalPath === 'final1') {
+                responseText = "맞아.. 갈 곳 없어서 태안 미워지는 게 너무 슬퍼. 우리도 우리 동네 진심으로 사랑하고 친구들한테 막 자랑하고 싶다고 ㅠ";
+            } else {
+                responseText = "그래서 진짜 간절함... 더 이상 대도시 애들 인스타만 보면서 손가락 빨고 부러워하기 싫어. 우리 전용 놀이/체험 공간 좀 지어줬으면 좋겠음.";
+            }
+            
+            renderBubble("me", responseText, true);
+            await delay(1500);
+
+            showTyping("minwoo");
+            await delay(2000);
+            showTyping(null);
+            renderBubble("minwoo", "@나 야.. 진짜 이 답답한 현실 어른들이 꼭 알아야 됨. 너 이 사태에 대해 군수님이랑 어른들한테 마지막으로 하고 싶은 말 있으면 여기에 다 적어봐. 진짜 팩트 폭행 갈겨!!");
+            await delay(1000);
+
+            // 소감 한마디를 직접 작성하게 만드는 '인게임 소감 인터랙션' 유도
+            promptForInlineFeedback();
+        }
+
+        // 인게임 피드백 수집 폼 표시
+        function promptForInlineFeedback() {
+            document.getElementById("responseAreaTitle").innerText = "💬 태안군수님과 어른들께 보낼 한마디";
+            document.getElementById("choiceContainer").classList.add("hidden");
+            document.getElementById("inlineFeedbackForm").classList.remove("hidden");
+            document.getElementById("inlineFeedbackForm").classList.add("flex");
+            
+            // 효과음
+            sfx.popup();
+        }
+
+        // 사용자가 적은 소감을 단톡방과 엔딩보드에 통합
+        async function submitInlineFeedback() {
+            const feedbackText = document.getElementById("inlineFeedbackText").value.trim();
+            if (!feedbackText) {
+                showToast("소감을 1자 이상 적어주세요!");
+                return;
+            }
+
+            // UI 폼 끄기
+            document.getElementById("inlineFeedbackForm").classList.remove("flex");
+            document.getElementById("inlineFeedbackForm").classList.add("hidden");
+            document.getElementById("responseAreaTitle").innerText = "전송 완료";
+
+            // 내 말풍선으로 소감 추가
+            renderBubble("me", feedbackText, true);
+            await delay(1500);
+
+            // 친구들의 마지막 지지와 공감
+            showTyping("sua");
+            await delay(1800);
+            showTyping(null);
+            renderBubble("sua", "대박.. 마음을 울린다 ㅠㅠ 네가 남긴 한마디가 어른들을 꼭 움직여서 태안에 청소년들의 웃음소리가 가득한 놀이터를 지어줄 거야! 화이팅!! 💖");
+            await delay(1500);
+
+            // 최종 플레이어 소감 전역 셋팅 & 포스트잇 생성
+            document.getElementById("playerRevealedFeedback").innerText = `“${feedbackText}”`;
+            
+            // 자동 포스트잇 추가 생성
+            createPlayerStickyNote(feedbackText);
+
+            // 드라마틱한 성공 연출 후 리포트 화면 전환
+            sfx.success();
+            transitionToReport();
+        }
+
+        // 포스트잇 게시판에 사용자의 실제 인게임 소감 박제
+        function createPlayerStickyNote(text) {
+            const newCard = document.createElement("div");
+            newCard.className = `p-5 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl flex flex-col justify-between text-xs text-emerald-300 space-y-4 shadow-xl min-h-[140px] transform hover:scale-[1.02] transition-all duration-300 ring-2 ring-emerald-500/20 student-font`;
+            newCard.innerHTML = `
+                <p class="leading-relaxed text-sm">“${text}”</p>
+                <div class="flex justify-between items-center text-[10px]">
+                    <span class="text-emerald-400 font-bold">#플레이어_생생소감</span>
+                    <span class="text-slate-500">방금 전</span>
+                </div>
+            `;
+            // 대시보드 그리드 맨 앞에 추가
+            const stickyNoteGrid = document.getElementById("stickyNoteGrid");
+            const btnAddStickyNoteCard = document.getElementById("btnAddStickyNoteCard");
+            stickyNoteGrid.insertBefore(newCard, btnAddStickyNoteCard);
+        }
+
+        function transitionToReport() {
+            const screenChat = document.getElementById("screenChat");
+            const screenReport = document.getElementById("screenReport");
+
+            screenChat.classList.add("opacity-0");
+            setTimeout(() => {
+                screenChat.classList.add("hidden");
+                screenChat.classList.remove("flex", "opacity-0");
+                screenReport.classList.remove("hidden");
+                screenReport.classList.add("flex");
+                
+                // 스크롤 상단으로
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 500);
+        }
+
+        function restartGame() {
+            document.getElementById("screenReport").classList.add("hidden");
+            document.getElementById("screenChat").classList.remove("hidden");
+            document.getElementById("screenChat").classList.add("flex");
+            document.getElementById("chatMessageArea").innerHTML = "";
+            
+            // 입력폼 리셋
+            document.getElementById("inlineFeedbackText").value = "";
+            document.getElementById("inlineFeedbackForm").classList.add("hidden");
+            document.getElementById("choiceContainer").classList.remove("hidden");
+            document.getElementById("responseAreaTitle").innerText = "답변 선택하기";
+
+            runOpeningScenario();
+        }
+
+
+        // ==================== 캠페인 참여형 허브 기능 ====================
+
+        // 기능 1: 지지 서명 폼 처리
+        const petitionForm = document.getElementById("petitionForm");
+        const petitionCount = document.getElementById("petitionCount");
+        const signatureBoard = document.getElementById("signatureBoard");
+
+        petitionForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = document.getElementById("signerName").value.trim();
+            const msg = document.getElementById("signerMessage").value.trim();
+
+            if (!name || !msg) return;
+
+            // 서명 인원 1명 증가 연출
+            let currentNum = parseInt(petitionCount.innerText);
+            petitionCount.innerText = currentNum + 1;
+
+            // 실시간 서명 목록에 애니메이션과 함께 새 데이터 탑재
+            const newSign = document.createElement("div");
+            newSign.className = "flex items-center justify-between text-xs bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 shadow-md transition-all duration-300";
+            newSign.innerHTML = `
+                <div>
+                    <span class="font-bold text-emerald-400 mr-2">${name}</span>
+                    <span class="text-slate-200">${msg}</span>
+                </div>
+                <span class="text-emerald-400 font-semibold text-[10px] animate-pulse">방금 전 서명</span>
+            `;
+            
+            signatureBoard.insertBefore(newSign, signatureBoard.firstChild);
+            
+            // 폼 리셋
+            petitionForm.reset();
+            
+            // 효과음 및 알림 팝업
+            sfx.success();
+            showToast("소중한 지지 서명이 정상적으로 등록되었습니다!");
+        });
+
+        // 기능 2: 군수님 건의 포스트잇 모달 처리
+        const stickyModal = document.getElementById("stickyModal");
+        const modalTextarea = document.getElementById("modalTextarea");
+        const btnAddStickyNoteCard = document.getElementById("btnAddStickyNoteCard");
+
+        // 랜덤 포스트잇 파스텔 컬러 리스트
+        const cardColors = [
+            { bg: "bg-yellow-500/10", border: "border-yellow-500/20", text: "text-yellow-300", tag: "text-yellow-400/80" },
+            { bg: "bg-teal-500/10", border: "border-teal-500/20", text: "text-teal-300", tag: "text-teal-400/80" },
+            { bg: "bg-purple-500/10", border: "border-purple-500/20", text: "text-purple-300", tag: "text-purple-400/80" },
+            { bg: "bg-pink-500/10", border: "border-pink-500/20", text: "text-pink-300", tag: "text-pink-400/80" },
+            { bg: "bg-blue-500/10", border: "border-blue-500/20", text: "text-blue-300", tag: "text-blue-400/80" }
+        ];
+
+        btnAddStickyNoteCard.addEventListener("click", () => {
+            sfx.popup();
+            stickyModal.classList.remove("hidden");
+            modalTextarea.focus();
+        });
+
+        function closeStickyModal() {
+            stickyModal.classList.add("hidden");
+            modalTextarea.value = "";
+        }
+
+        function submitStickyNote() {
+            const text = modalTextarea.value.trim();
+            if (!text) return;
+
+            // 랜덤 색상 셀렉트
+            const randomColor = cardColors[Math.floor(Math.random() * cardColors.length)];
+
+            // 새 카드 생성
+            const newCard = document.createElement("div");
+            newCard.className = `p-5 ${randomColor.bg} border ${randomColor.border} rounded-2xl flex flex-col justify-between text-xs ${randomColor.text} space-y-4 shadow-lg min-h-[140px] transform hover:scale-[1.02] transition-all duration-300 student-font`;
+            newCard.innerHTML = `
+                <p class="leading-relaxed text-sm">“${text}”</p>
+                <span class="text-[10px] ${randomColor.tag} font-bold">#주민제안 #태안군수님께</span>
+            `;
+
+            // 그리드의 첫번째 위치(추가 카드 버튼 앞)에 인서트
+            const stickyNoteGrid = document.getElementById("stickyNoteGrid");
+            stickyNoteGrid.insertBefore(newCard, btnAddStickyNoteCard);
+
+            // 닫기 및 알림
+            closeStickyModal();
+            sfx.success();
+            showToast("군수님 수렴 보드에 의견이 성공적으로 부착되었습니다!");
+        }
+
+        // 기능 3: 클립보드 복사 및 토스트 유틸
+        const toastNotification = document.getElementById("toastNotification");
+        const toastMessage = document.getElementById("toastMessage");
+
+        function showToast(msg) {
+            toastMessage.innerText = msg;
+            toastNotification.classList.remove("translate-y-20", "opacity-0");
+            toastNotification.classList.add("translate-y-0", "opacity-100");
+            
+            setTimeout(() => {
+                toastNotification.classList.remove("translate-y-0", "opacity-100");
+                toastNotification.classList.add("translate-y-20", "opacity-0");
+            }, 3000);
+        }
+
+        // 공유하기 클립보드 복사 대응
+        document.getElementById("btnCopyToClipboard").addEventListener("click", () => {
+            const dummyText = "태안 청소년들의 영혼 없는 단톡방 - 놀거리 부족으로 고향을 떠나고 싶어지는 청소년 현실 고발 캠페인에 동참해 주세요! https://taean-youth-voice.org";
+            
+            const tempInput = document.createElement("textarea");
+            tempInput.value = dummyText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            sfx.success();
+            showToast("캠페인 링크가 클립보드에 복사되었습니다!");
+        });
+    </script>
+</body>
+</html>

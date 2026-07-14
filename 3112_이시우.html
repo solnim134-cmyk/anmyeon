@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>면접의 신 - 취업 면접 시뮬레이터</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&display=swap');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            user-select: none;
+        }
+        .progress-bar-transition {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-blur {
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Sound & Music Controller (Web Audio API fallback) -->
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <button id="bgm-toggle" onclick="toggleMute()" class="bg-slate-800/80 hover:bg-slate-700 text-white p-2.5 rounded-full border border-slate-700 transition-all flex items-center justify-center">
+            <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-6 max-w-4xl mx-auto w-full">
+        
+        <!-- 1. START SCREEN -->
+        <section id="start-screen" class="w-full bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl backdrop-blur-sm my-auto">
+            <div class="inline-flex p-3 bg-blue-500/10 text-blue-400 rounded-2xl mb-6 border border-blue-500/20">
+                <i data-lucide="briefcase" class="w-10 h-10"></i>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                면접의 신
+            </h1>
+            <p class="text-slate-400 text-base md:text-lg max-w-md mx-auto mb-8 leading-relaxed">
+                "합격이냐, 광탈이냐!"<br>대기업 마케팅 직무 최종 면접에 오신 것을 환영합니다. 면접관들의 마음을 사로잡고 최종 합격 통지서를 쟁취하세요.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8 text-left">
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
+                    <div class="flex items-center gap-2 text-rose-400 font-bold mb-1">
+                        <i data-lucide="heart" class="w-4 h-4"></i> 멘탈 관리
+                    </div>
+                    <p class="text-xs text-slate-400">압박 질문에 멘탈이 깨지지 않게 주의하세요. 0이 되면 즉시 탈락합니다.</p>
+                </div>
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold mb-1">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i> 신뢰도 & 재치
+                    </div>
+                    <p class="text-xs text-slate-400">직무 역량을 어필해 신뢰도를 높이고, 적절한 유머로 호감을 사세요.</p>
+                </div>
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50">
+                    <div class="flex items-center gap-2 text-amber-400 font-bold mb-1">
+                        <i data-lucide="zap" class="w-4 h-4"></i> 돌발 피하기
+                    </div>
+                    <p class="text-xs text-slate-400">면접 도중 찾아오는 다리 떨기 등 신체 긴장 유혹을 빠르게 차단하세요.</p>
+                </div>
+            </div>
+
+            <!-- NAME INPUT -->
+            <div class="max-w-xs mx-auto mb-8">
+                <label for="player-name" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 text-left">지원자 성함</label>
+                <input type="text" id="player-name" value="김취준" max-length="8" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-center text-white focus:outline-none focus:border-blue-500 font-semibold tracking-wide transition-all">
+            </div>
+
+            <button onclick="startGame()" class="relative group overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-lg">
+                면접실 입장하기
+            </button>
+        </section>
+
+        <!-- 2. GAMEPLAY SCREEN (HIDDEN BY DEFAULT) -->
+        <section id="game-screen" class="w-full hidden flex-col gap-6 my-auto">
+            
+            <!-- TOP BAR (STATUS BARS) -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-lg backdrop-blur-sm">
+                <!-- Mental -->
+                <div>
+                    <div class="flex items-center justify-between text-xs font-bold text-rose-400 mb-1.5">
+                        <span class="flex items-center gap-1"><i data-lucide="heart" class="w-3.5 h-3.5"></i> 멘탈</span>
+                        <span id="stat-mental-val">80/100</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden">
+                        <div id="stat-mental" class="bg-gradient-to-r from-rose-500 to-pink-500 h-full progress-bar-transition" style="width: 80%"></div>
+                    </div>
+                </div>
+                <!-- Trust -->
+                <div>
+                    <div class="flex items-center justify-between text-xs font-bold text-emerald-400 mb-1.5">
+                        <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 신뢰도</span>
+                        <span id="stat-trust-val">50/100</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden">
+                        <div id="stat-trust" class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full progress-bar-transition" style="width: 50%"></div>
+                    </div>
+                </div>
+                <!-- Wit -->
+                <div>
+                    <div class="flex items-center justify-between text-xs font-bold text-amber-400 mb-1.5">
+                        <span class="flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 재치</span>
+                        <span id="stat-wit-val">50/100</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden">
+                        <div id="stat-wit" class="bg-gradient-to-r from-amber-500 to-yellow-500 h-full progress-bar-transition" style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTERVIEWERS VIEW -->
+            <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6 md:p-8 flex flex-col justify-between relative overflow-hidden min-h-[340px] md:min-h-[380px] shadow-inner">
+                <!-- Grid of Interviewers -->
+                <div class="grid grid-cols-3 gap-4 mb-6 z-10">
+                    
+                    <!-- Interviewer 1: 김깐깐 (깐깐한 팀장) -->
+                    <div id="interviewer-0" class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all">
+                        <div class="w-14 h-14 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center mb-2 overflow-hidden relative shadow-md">
+                            <!-- SVG Custom Face -->
+                            <svg class="w-12 h-12 md:w-16 md:h-16 text-slate-300" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="32" cy="24" r="14" fill="#1e293b"/>
+                                <path d="M12 54C12 44 20 40 32 40C44 40 52 44 52 54" stroke-linecap="round"/>
+                                <path d="M24 20C26 22 30 22 30 20" stroke-linecap="round"/> <!-- 찌푸린 눈썹 -->
+                                <path d="M34 20C36 22 40 22 40 20" stroke-linecap="round"/>
+                                <path d="M26 25H38" stroke-linecap="round"/> <!-- 굳게 닫힌 입 -->
+                            </svg>
+                            <!-- Talking Indicator -->
+                            <div class="talk-indicator absolute inset-0 bg-blue-500/10 border-2 border-blue-400 rounded-full hidden animate-pulse"></div>
+                        </div>
+                        <div class="text-xs md:text-sm font-bold text-slate-200">김깐깐 <span class="text-[10px] text-rose-400 font-normal">팀장</span></div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">논리 마왕 / 압박 특기</div>
+                    </div>
+
+                    <!-- Interviewer 2: 박온화 (따뜻한 임원) -->
+                    <div id="interviewer-1" class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all">
+                        <div class="w-14 h-14 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center mb-2 overflow-hidden relative shadow-md">
+                            <svg class="w-12 h-12 md:w-16 md:h-16 text-slate-300" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="32" cy="24" r="14" fill="#1e293b"/>
+                                <path d="M12 54C12 44 20 40 32 40C44 40 52 44 52 54" stroke-linecap="round"/>
+                                <path d="M22 22C24 20 28 20 28 22" stroke-linecap="round"/> <!-- 미소 눈 -->
+                                <path d="M36 22C38 20 42 20 42 22" stroke-linecap="round"/>
+                                <path d="M26 28C28 31 36 31 38 28" stroke-linecap="round"/> <!-- 미소 입 -->
+                            </svg>
+                            <div class="talk-indicator absolute inset-0 bg-emerald-500/10 border-2 border-emerald-400 rounded-full hidden animate-pulse"></div>
+                        </div>
+                        <div class="text-xs md:text-sm font-bold text-slate-200">박온화 <span class="text-[10px] text-emerald-400 font-normal">임원</span></div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">경청 빌런 / 인성 중시</div>
+                    </div>
+
+                    <!-- Interviewer 3: 최실무 (바쁜 대리) -->
+                    <div id="interviewer-2" class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all">
+                        <div class="w-14 h-14 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center mb-2 overflow-hidden relative shadow-md">
+                            <svg class="w-12 h-12 md:w-16 md:h-16 text-slate-300" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="32" cy="24" r="14" fill="#1e293b"/>
+                                <path d="M12 54C12 44 20 40 32 40C44 40 52 44 52 54" stroke-linecap="round"/>
+                                <path d="M23 23H27" stroke-linecap="round"/> <!-- 무표정 눈 -->
+                                <path d="M37 23H41" stroke-linecap="round"/>
+                                <path d="M28 27H36" stroke-linecap="round"/> <!-- 일자 입 -->
+                            </svg>
+                            <div class="talk-indicator absolute inset-0 bg-amber-500/10 border-2 border-amber-400 rounded-full hidden animate-pulse"></div>
+                        </div>
+                        <div class="text-xs md:text-sm font-bold text-slate-200">최실무 <span class="text-[10px] text-amber-400 font-normal">인사</span></div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">피로 누적 / 트렌드 민감</div>
+                    </div>
+
+                </div>
+
+                <!-- Dialogue Speech Bubble -->
+                <div class="relative bg-slate-900 border border-slate-800 p-5 rounded-2xl z-10 shadow-lg min-h-[100px] flex items-center">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 rounded-full text-[10px] font-extrabold tracking-wider text-white uppercase" id="dialogue-speaker">
+                        김깐깐 팀장
+                    </div>
+                    <p id="dialogue-text" class="text-slate-200 text-sm md:text-base leading-relaxed w-full text-center">
+                        대기업 마케팅 직무 최종면접을 시작하겠습니다. 먼저 본인에 대해 가볍게 자기소개 해주세요.
+                    </p>
+                </div>
+
+                <!-- Floating Matrix Background Effects -->
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 pointer-events-none opacity-40"></div>
+            </div>
+
+            <!-- CHOICES / OPTIONS -->
+            <div id="choices-container" class="flex flex-col gap-3">
+                <!-- Will be dynamically populated -->
+            </div>
+
+            <!-- DYNAMIC MINIGAME WARNING (POP-UP DETECTOR) -->
+            <div id="minigame-container" class="hidden bg-red-950/40 border border-red-500/40 rounded-2xl p-4 flex items-center justify-between shadow-lg animate-bounce">
+                <div class="flex items-center gap-3">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <div>
+                        <div class="text-xs font-bold text-red-400 uppercase tracking-wider">돌발 상황 발생!</div>
+                        <div class="text-xs text-slate-300" id="minigame-desc">긴장한 탓에 다리를 떨기 시작했습니다! 멈추게 하세요!</div>
+                    </div>
+                </div>
+                <button onclick="resolveMinigame()" id="minigame-btn" class="bg-red-600 hover:bg-red-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wide shadow-md transition-all active:scale-95">
+                    다리 멈추기!
+                </button>
+            </div>
+
+        </section>
+
+        <!-- 3. GAME OVER / RESULT SCREEN (HIDDEN BY DEFAULT) -->
+        <section id="result-screen" class="w-full hidden bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl backdrop-blur-sm my-auto">
+            <div id="result-badge-container" class="inline-flex p-4 rounded-3xl mb-6 shadow-lg border">
+                <!-- Dynamic badge -->
+            </div>
+            
+            <h2 id="result-title" class="text-2xl md:text-4xl font-extrabold mb-2"></h2>
+            <p id="result-subtitle" class="text-slate-400 text-sm md:text-base max-w-md mx-auto mb-8"></p>
+
+            <!-- Final Stats Summary -->
+            <div class="grid grid-cols-3 gap-4 max-w-sm mx-auto mb-8 text-center bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                <div>
+                    <div class="text-xs text-slate-400 mb-1">최종 멘탈</div>
+                    <div class="text-lg font-bold text-rose-400" id="final-mental">50</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 mb-1">최종 신뢰</div>
+                    <div class="text-lg font-bold text-emerald-400" id="final-trust">80</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 mb-1">최종 재치</div>
+                    <div class="text-lg font-bold text-amber-400" id="final-wit">60</div>
+                </div>
+            </div>
+
+            <!-- Feedback Card -->
+            <div class="bg-slate-800/30 border border-slate-700/50 max-w-xl mx-auto rounded-2xl p-6 text-left mb-8">
+                <div class="flex items-center gap-2 text-indigo-400 font-bold mb-3">
+                    <i data-lucide="award" class="w-5 h-5"></i> 면접관들의 종합 평가서
+                </div>
+                <p id="result-feedback" class="text-slate-300 text-sm leading-relaxed whitespace-pre-line">
+                    피드백 내용이 여기에 표기됩니다.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
+                <button onclick="restartGame()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md">
+                    처음부터 다시 도전
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-6 border-t border-slate-900 text-center text-xs text-slate-600">
+        © 2026 면접의 신. Designed for Career Breakthrough.
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Sound System (using Web Audio API for synthetic retro sfx to avoid external file dependencies)
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'select') {
+                // Soft click
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'success') {
+                // Bright chime
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'fail') {
+                // Buzz
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'alert') {
+                // High alert pitch
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.linearRampToValueAtTime(660, now + 0.2);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('mute-icon');
+            if (isMuted) {
+                icon.setAttribute('data-lucide', 'volume-x');
+            } else {
+                icon.setAttribute('data-lucide', 'volume-2');
+            }
+            lucide.createIcons();
+            playSound('select');
+        }
+
+        // GAME STATE
+        let gameState = {
+            playerName: "김취준",
+            mental: 80,
+            trust: 50,
+            wit: 50,
+            currentQuestionIndex: 0,
+            minigameActive: false,
+            minigameTimer: null,
+            answersHistory: [] // To dynamically tailor feedback/branching
+        };
+
+        // INTERVIEW SCENARIO TREE
+        // Structuring branches to dynamically flow based on choices
+        const interviewQuestions = [
+            {
+                id: 0,
+                speakerIndex: 0, // 김깐깐
+                question: "자, 1분 자기소개 부탁드립니다. 간결하게 핵심만 말씀하세요.",
+                choices: [
+                    {
+                        text: "안녕하십니까! 마케팅 트렌드를 읽어내는 인간 AI, 김취준입니다! 준비한 자료를 보시죠!",
+                        mentalEffect: 5, trustEffect: 5, witEffect: 15,
+                        feedback: "당돌하군요. 신선하긴 하지만 너무 가볍진 않을지 지켜보겠습니다.",
+                        nextId: 1
+                    },
+                    {
+                        text: "대학 시절 3회의 마케팅 서포터즈 활동으로 총 매출 20% 상승을 이끌어 낸 데이터 분석가 김취준입니다.",
+                        mentalEffect: 0, trustEffect: 15, witEffect: 0,
+                        feedback: "깔끔하고 역량이 정확하게 느껴지는 소중한 정보군요.",
+                        nextId: 1
+                    },
+                    {
+                        text: "준비해 왔는데... 갑자기 긴장돼서 머리가 새하얘졌습니다. 조, 조금만 이따 다시 하면 안 될까요?",
+                        mentalEffect: -25, trustEffect: -15, witEffect: 5,
+                        feedback: "흠... 실전에서도 긴장하면 발표를 미루실 건가요? 긴장 푸세요.",
+                        nextId: 1
+                    }
+                ]
+            },
+            {
+                id: 1,
+                speakerIndex: 1, // 박온화
+                question: "반갑습니다. 지원서의 대외활동 이력이 눈에 띄네요. 혹시 팀 활동을 하면서 갈등이 생겼던 경험과, 이를 극복한 과정을 구체적으로 설명해주시겠어요?",
+                choices: [
+                    {
+                        text: "갈등이 생겼을 때, 제 의견만을 고집하기보다는 상대방 주장의 데이터를 분석하여 합의점을 찾아 타협을 이끌어냈습니다.",
+                        mentalEffect: 5, trustEffect: 15, witEffect: 0,
+                        feedback: "이성적이고 차분한 갈등해결법이 마음에 드는군요.",
+                        nextId: 2
+                    },
+                    {
+                        text: "솔직히 말씀드리면 갈등을 만들지 않기 위해 제가 밤을 새우며 팀원의 몫까지 완벽하게 처리해 성공시켰습니다.",
+                        mentalEffect: -10, trustEffect: 5, witEffect: 10,
+                        feedback: "책임감은 인정하지만, 조직 생활에서 독단적 행동이나 과부하는 건강하지 않을 수 있어요.",
+                        nextId: 2
+                    },
+                    {
+                        text: "저는 갈등 유발자와는 겸상도 안 합니다. 논리적으로 상대방의 뚝배... 아니, 주장을 무력화시켜서 해결했습니다.",
+                        mentalEffect: 10, trustEffect: -20, witEffect: 20,
+                        feedback: "굉장히 공격적이시네요. 협업에 문제가 있지 않을까 강한 의구심이 듭니다.",
+                        nextId: 2
+                    }
+                ]
+            },
+            {
+                id: 2,
+                speakerIndex: 2, // 최실무
+                question: "저희 실무팀은 일정이 타이트할 때 야근이 정말 잦은 편입니다. 갑자기 오늘 퇴근 전에 내일까지 완성해야 하는 돌발 과제가 떨어진다면 어떻게 하시겠습니까?",
+                choices: [
+                    {
+                        text: "약속은 다음으로 미루고 회사에 남아 최상의 결과물을 만들겠습니다. 저의 성장 기회라고 생각합니다!",
+                        mentalEffect: -15, trustEffect: 15, witEffect: 0,
+                        feedback: "열정은 고맙지만, 매번 야근으로만 해결하려는 모습은 체력 관리에 독이 될 텐데요?",
+                        nextId: 3
+                    },
+                    {
+                        text: "우선 과제의 범위를 파악한 뒤, 내일 아침까지 물리적으로 완료 가능한지 상사에게 보고하고 필요하면 협업을 요청하겠습니다.",
+                        mentalEffect: 5, trustEffect: 15, witEffect: 5,
+                        feedback: "현실적이고 똑 부러지는 문제 해결 방식이군요. 좋습니다.",
+                        nextId: 3
+                    },
+                    {
+                        text: "챗GPT에게 5분 만에 기획안을 뽑아내게 한 뒤, 검토 후 빠르게 퇴근하겠습니다! AI 시대 아닙니까?",
+                        mentalEffect: 20, trustEffect: -10, witEffect: 15,
+                        feedback: "효율을 추구하시는 건 좋은데, 보안 문제나 퀄리티 체크는 제대로 할 수 있겠어요?",
+                        nextId: 3
+                    }
+                ]
+            },
+            {
+                id: 3,
+                speakerIndex: 0, // 김깐깐
+                question: "전공이나 경력을 보면 우리 회사 말고 타 경쟁사인 'A사'에 더 어울려 보입니다. 만약 그곳에도 합격한다면 어디로 갈 건가요? 솔직히 말씀하세요.",
+                choices: [
+                    {
+                        text: "당연히 우리 회사입니다! 경쟁사인 A사는 올드하고 정체되어 있지만, 당사는 파괴적 혁신을 이끌어가기 때문입니다.",
+                        mentalEffect: -5, trustEffect: 10, witEffect: 10,
+                        feedback: "충성심은 보기 좋지만 무조건적인 찬양보다는 차가운 비교 분석이 있었다면 좋았겠네요.",
+                        nextId: 4
+                    },
+                    {
+                        text: "솔직히 A사도 매력적이지만, 저의 커리어 핵심인 '글로벌 마케팅' 기회는 오직 당사에서만 펼칠 수 있기에 이 자리에 섰습니다.",
+                        mentalEffect: 5, trustEffect: 15, witEffect: 5,
+                        feedback: "합당한 근거가 있는 훌륭한 로열티 표출입니다.",
+                        nextId: 4
+                    },
+                    {
+                        text: "연봉과 복지가 더 좋은 곳으로 가겠습니다. 자본주의 사회에서 당연한 선택 아닐까요? 찡긋-",
+                        mentalEffect: 15, trustEffect: -25, witEffect: 20,
+                        feedback: "정말... 솔직함의 한계를 시험하시는군요. 면접장을 가벼운 거래소로 보시는 건가요?",
+                        nextId: 4
+                    }
+                ]
+            },
+            {
+                id: 4,
+                speakerIndex: 1, // 박온화
+                question: "마지막 질문입니다. 만약 본인이 이번 공채에서 불합격한다면, 그 이유는 무엇일 것 같습니까? 그리고 어떻게 극복할 것인가요?",
+                choices: [
+                    {
+                        text: "제가 실무 경험이 약간 부족하다는 점이 감점 요인일 것 같습니다. 하지만 입사 전까지 인턴십 혹은 자격증 취득으로 빈틈을 메우겠습니다.",
+                        mentalEffect: 5, trustEffect: 15, witEffect: 0,
+                        feedback: "자신의 약점을 정확히 파악하고 보완책을 제시하는 태도가 든든합니다.",
+                        nextId: 5 // End of game marker
+                    },
+                    {
+                        text: "불합격할 이유가 전혀 없습니다! 만약 떨어진다면 면접관님들의 마케터 안목을 진지하게 의심해 보셔야 합니다.",
+                        mentalEffect: 15, trustEffect: -30, witEffect: 25,
+                        feedback: "근거 없는 자신감은 독선이 되기 쉽습니다. 오만함이 가장 무서운 법이지요.",
+                        nextId: 5
+                    },
+                    {
+                        text: "제 노력이 부족한 탓이겠지요... 떨어진다면 집에 가서 조용히 이불킥을 한 뒤, 다시 취업 스터디를 열심히 하겠습니다.",
+                        mentalEffect: -15, trustEffect: 5, witEffect: 5,
+                        feedback: "조금 소극적이지만, 겸허하게 피드백을 수용하는 정직함은 보이네요.",
+                        nextId: 5
+                    }
+                ]
+            }
+        ];
+
+        // START GAME
+        function startGame() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if (nameInput) {
+                gameState.playerName = nameInput;
+            }
+            
+            gameState.mental = 80;
+            gameState.trust = 50;
+            gameState.wit = 50;
+            gameState.currentQuestionIndex = 0;
+            gameState.answersHistory = [];
+            gameState.minigameActive = false;
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+
+            playSound('success');
+            updateUI();
+            showQuestion();
+
+            // Setup first dynamic minigame triggers
+            triggerRandomMinigameChance();
+        }
+
+        // UPDATE UI STATUS
+        function updateUI() {
+            document.getElementById('stat-mental-val').innerText = `${gameState.mental}/100`;
+            document.getElementById('stat-mental').style.width = `${gameState.mental}%`;
+
+            document.getElementById('stat-trust-val').innerText = `${gameState.trust}/100`;
+            document.getElementById('stat-trust').style.width = `${gameState.trust}%`;
+
+            document.getElementById('stat-wit-val').innerText = `${gameState.wit}/100`;
+            document.getElementById('stat-wit').style.style = `${gameState.wit}%`;
+            document.getElementById('stat-wit').style.width = `${gameState.wit}%`;
+
+            // Active visual effects based on mental danger
+            const mentalBar = document.getElementById('stat-mental');
+            if (gameState.mental < 30) {
+                mentalBar.classList.remove('from-rose-500', 'to-pink-500');
+                mentalBar.classList.add('from-red-600', 'to-red-800', 'animate-pulse');
+            } else {
+                mentalBar.classList.add('from-rose-500', 'to-pink-500');
+                mentalBar.classList.remove('from-red-600', 'to-red-800', 'animate-pulse');
+            }
+
+            // Sync Lucide icons
+            lucide.createIcons();
+        }
+
+        // DISPLAY CURRENT QUESTION & ACTIVE TALKING INTERVIEWER
+        function showQuestion() {
+            const currentQ = interviewQuestions[gameState.currentQuestionIndex];
+            if (!currentQ) {
+                endGame();
+                return;
+            }
+
+            // 1. Highlight Talking Interviewer
+            for (let i = 0; i < 3; i++) {
+                const card = document.getElementById(`interviewer-${i}`);
+                const indicator = card.querySelector('.talk-indicator');
+                if (i === currentQ.speakerIndex) {
+                    card.classList.add('border-blue-500', 'bg-slate-800/90', 'scale-105');
+                    card.classList.remove('border-slate-800', 'bg-slate-900/80');
+                    indicator.classList.remove('hidden');
+                } else {
+                    card.classList.remove('border-blue-500', 'bg-slate-800/90', 'scale-105');
+                    card.classList.add('border-slate-800', 'bg-slate-900/80');
+                    indicator.classList.add('hidden');
+                }
+            }
+
+            // 2. Set Speaker Name
+            let speakerName = "김깐깐 팀장";
+            if (currentQ.speakerIndex === 1) speakerName = "박온화 임원";
+            if (currentQ.speakerIndex === 2) speakerName = "최실무 인사";
+            document.getElementById('dialogue-speaker').innerText = speakerName;
+
+            // 3. Set Question Text
+            document.getElementById('dialogue-text').innerText = currentQ.question;
+
+            // 4. Load Choices
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            currentQ.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-4 text-xs md:text-sm font-medium leading-relaxed transition-all transform hover:translate-x-1 active:translate-x-0 group flex items-start gap-3";
+                btn.onclick = () => selectChoice(choice, index);
+                
+                // Index badge
+                const badge = document.createElement('span');
+                badge.className = "flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors";
+                badge.innerText = index + 1;
+
+                const textSpan = document.createElement('span');
+                textSpan.className = "text-slate-300 group-hover:text-white transition-colors";
+                textSpan.innerText = choice.text;
+
+                btn.appendChild(badge);
+                btn.appendChild(textSpan);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // USER SELECTS ANSWER
+        function selectChoice(choice, index) {
+            if (gameState.minigameActive) {
+                // If a mini-game alert is active, force them to clear it or lose health
+                gameState.mental = Math.max(0, gameState.mental - 15);
+                updateUI();
+                playSound('fail');
+                showFloatingFeedback("돌발 현상을 억누르지 못해 면접관에게 안 좋은 첫인상을 주었습니다! (-15 멘탈)");
+            }
+
+            playSound('select');
+
+            // Apply Stat changes
+            gameState.mental = Math.max(0, Math.min(100, gameState.mental + choice.mentalEffect));
+            gameState.trust = Math.max(0, Math.min(100, gameState.trust + choice.trustEffect));
+            gameState.wit = Math.max(0, Math.min(100, gameState.wit + choice.witEffect));
+
+            gameState.answersHistory.push({
+                questionId: gameState.currentQuestionIndex,
+                choiceIndex: index,
+                feedbackText: choice.feedback
+            });
+
+            updateUI();
+
+            // Instant fail condition: Mental depletion
+            if (gameState.mental <= 0) {
+                endGame(true); // Game over due to mental breakdown
+                return;
+            }
+
+            // Render temporary floating response box
+            showDialogueResponse(choice.feedback);
+        }
+
+        // TEMP DIALOGUE TRANSITION BUBBLE FOR FEEDS
+        function showDialogueResponse(feedback) {
+            // Disable choices momentarily
+            const buttons = document.querySelectorAll('#choices-container button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const textContainer = document.getElementById('dialogue-text');
+            textContainer.innerHTML = `<span class="text-amber-300 font-bold">💬 평가: </span>${feedback}`;
+
+            setTimeout(() => {
+                gameState.currentQuestionIndex++;
+                if (gameState.currentQuestionIndex >= interviewQuestions.length) {
+                    endGame(false);
+                } else {
+                    showQuestion();
+                }
+            }, 3000);
+        }
+
+        // DYNAMIC TURN-BASED TOUGH PHYSICAL MINIGAMES
+        function triggerRandomMinigameChance() {
+            // Check randomly or at specific intervals
+            if (gameState.minigameTimer) clearInterval(gameState.minigameTimer);
+
+            gameState.minigameTimer = setInterval(() => {
+                // Occurs with 35% chance every 12 seconds only during active gameplay
+                if (!document.getElementById('game-screen').classList.contains('hidden') && !gameState.minigameActive && Math.random() < 0.4) {
+                    triggerMinigame();
+                }
+            }, 12000);
+        }
+
+        const minigamePresets = [
+            { desc: "과도한 긴장으로 심장이 너무 크게 뛰어 손이 떨립니다!", action: "심호흡하기" },
+            { desc: "자신도 모르게 다리를 엄청나게 떨기 시작했습니다!", action: "다리 고정하기" },
+            { desc: "면접관과 눈이 마주치자 눈동자가 격하게 흔들립니다!", action: "눈동자 고정" },
+            { desc: "목소리가 염소 소리처럼 떨려 나옵니다!", action: "침 삼키기" }
+        ];
+
+        function triggerMinigame() {
+            gameState.minigameActive = true;
+            playSound('alert');
+
+            const randomType = minigamePresets[Math.floor(Math.random() * minigamePresets.length)];
+            document.getElementById('minigame-desc').innerText = randomType.desc;
+            document.getElementById('minigame-btn').innerText = `${randomType.action}!`;
+            document.getElementById('minigame-container').classList.remove('hidden');
+
+            // Must solve within 5 seconds or lose mental health
+            gameState.minigameFailTimeout = setTimeout(() => {
+                if (gameState.minigameActive) {
+                    gameState.mental = Math.max(0, gameState.mental - 20);
+                    updateUI();
+                    playSound('fail');
+                    showFloatingFeedback("긴장을 통제하지 못해 면접 흐름이 끊겼습니다! (-20 멘탈)");
+                    resolveMinigame(true); // Auto close
+                }
+            }, 5000);
+        }
+
+        function resolveMinigame(isTimeout = false) {
+            if (!gameState.minigameActive) return;
+
+            gameState.minigameActive = false;
+            clearTimeout(gameState.minigameFailTimeout);
+            document.getElementById('minigame-container').classList.add('hidden');
+
+            if (!isTimeout) {
+                gameState.mental = Math.min(100, gameState.mental + 5);
+                updateUI();
+                playSound('success');
+                showFloatingFeedback("위기를 모면하고 평온을 되찾았습니다. (+5 멘탈)");
+            }
+        }
+
+        // CUSTOM FLOATING MESSAGES FOR NOTIFICATION
+        function showFloatingFeedback(message) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-xs md:text-sm text-slate-200 px-6 py-3.5 rounded-full z-50 shadow-2xl animate-bounce flex items-center gap-2";
+            toast.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-blue-400"></i> ${message}`;
+            document.body.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-all', 'duration-500');
+                setTimeout(() => toast.remove(), 500);
+            }, 2500);
+        }
+
+        // END GAME & GENERATE DETAILED REALISTIC REPORT
+        function endGame(isMentalBreakdown = false) {
+            if (gameState.minigameTimer) clearInterval(gameState.minigameTimer);
+            if (gameState.minigameFailTimeout) clearTimeout(gameState.minigameFailTimeout);
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const badgeContainer = document.getElementById('result-badge-container');
+            const titleEl = document.getElementById('result-title');
+            const subtitleEl = document.getElementById('result-subtitle');
+            const feedbackEl = document.getElementById('result-feedback');
+
+            // Fill final stats
+            document.getElementById('final-mental').innerText = gameState.mental;
+            document.getElementById('final-trust').innerText = gameState.trust;
+            document.getElementById('final-wit').innerText = gameState.wit;
+
+            if (isMentalBreakdown) {
+                // Case 1: Mental breakdown failure
+                playSound('fail');
+                badgeContainer.className = "inline-flex p-4 rounded-3xl mb-6 shadow-lg border bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse";
+                badgeContainer.innerHTML = `<i data-lucide="heart-off" class="w-14 h-14"></i>`;
+                
+                titleEl.className = "text-2xl md:text-4xl font-extrabold mb-2 text-rose-500";
+                titleEl.innerText = `${gameState.playerName} 지원자, 멘탈 붕괴로 불합격`;
+                subtitleEl.innerText = "면접실에서 극심한 압박감을 이기지 못하고 쓰러졌습니다.";
+
+                feedbackEl.innerText = `● 면접 도중 멘탈이 완벽하게 무너졌습니다. 실무 환경에서는 예상치 못한 돌발 상황과 갈등이 지속적으로 발생합니다. 면접관들은 과도하게 위축되거나 당황하는 지원자에게 신뢰를 주기 어렵다고 판단했습니다.\n\n● 피드백: 실패를 두려워하지 말고, 모르는 질문이 나오거나 실수하더라도 끝까지 웃으며 평정심을 유지하는 연출이 절실히 필요합니다.`;
+            } else {
+                // Case 2: Success / Regular Scoring based on Stat matrix
+                const score = (gameState.trust * 1.2) + (gameState.wit * 0.8) + (gameState.mental * 0.5);
+                
+                if (score >= 150) {
+                    // S-Rank Success
+                    playSound('success');
+                    badgeContainer.className = "inline-flex p-4 rounded-3xl mb-6 shadow-lg border bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+                    badgeContainer.innerHTML = `<i data-lucide="crown" class="w-14 h-14 animate-bounce"></i>`;
+
+                    titleEl.className = "text-2xl md:text-4xl font-extrabold mb-2 text-emerald-400";
+                    titleEl.innerText = `[최종 합격] ${gameState.playerName} 지원자, 당사 수석 합격!`;
+                    subtitleEl.innerText = "수석 합격자이자 면접의 정석이라는 찬사를 한몸에 받았습니다.";
+
+                    feedbackEl.innerText = `● 신뢰도(${gameState.trust})와 재치(${gameState.wit})의 균형이 가히 완벽에 가까운 독보적인 지원자입니다. 김깐깐 팀장의 논리적인 꼬리 질문과 박온화 임원의 가치관 검증 질문에도 흔들리지 않고 성실하면서도 기민한 명답을 내어놓았습니다.\n\n● 특히 돌발 상황에 대처하는 센스와 포커페이스 유지가 매우 탁월하여 즉시 핵심 인재로 현업에 투입되더라도 무리가 없다는 내부 평가가 있었습니다. 축하드립니다!`;
+                } else if (score >= 105) {
+                    // A-Rank Success
+                    playSound('success');
+                    badgeContainer.className = "inline-flex p-4 rounded-3xl mb-6 shadow-lg border bg-blue-500/10 border-blue-500/30 text-blue-400";
+                    badgeContainer.innerHTML = `<i data-lucide="check-circle-2" class="w-14 h-14"></i>`;
+
+                    titleEl.className = "text-2xl md:text-4xl font-extrabold mb-2 text-blue-400";
+                    titleEl.innerText = `[최종 합격] ${gameState.playerName} 지원자, 무난한 합격 통보`;
+                    subtitleEl.innerText = "부서 평균을 훨씬 웃도는 역량으로 당당히 합격 명단에 올라섰습니다.";
+
+                    feedbackEl.innerText = `● 면접 전반에서 균형 잡힌 안정적인 호감을 보여주었습니다. 특히 면접의 기초인 성실함과 구체적인 성과 위주의 직무 강점을 성실하게 잘 어필했습니다.\n\n● 간혹 발생한 돌발 압박 상황에서 약간 긴장하는 기색을 보였으나 스스로 훌륭히 마인드 컨트롤을 이뤄낸 점이 고득점을 견인했습니다. 성실한 마케터로서의 활약이 매우 기대됩니다.`;
+                } else {
+                    // Fail due to low scores (C-Rank / D-Rank)
+                    playSound('fail');
+                    badgeContainer.className = "inline-flex p-4 rounded-3xl mb-6 shadow-lg border bg-amber-500/10 border-amber-500/30 text-amber-500";
+                    badgeContainer.innerHTML = `<i data-lucide="alert-triangle" class="w-14 h-14"></i>`;
+
+                    titleEl.className = "text-2xl md:text-4xl font-extrabold mb-2 text-amber-500";
+                    titleEl.innerText = `[최종 불합격] 아쉬운 역량 미흡으로 탈락`;
+                    subtitleEl.innerText = "충분한 노력을 보였으나 면접관들의 니즈를 관통하지 못했습니다.";
+
+                    feedbackEl.innerText = `● 직무 신뢰도 혹은 답변의 성실도가 다소 결여된 모습을 보여 아쉽게 탈락 통보를 보냅니다. 지나치게 가벼운 입담 위주(재치 과다)로 일관하였거나, 반대로 매뉴얼대로만 기계처럼 답변하는 답답함을 초래했을 수 있습니다.\n\n● 피드백: 실제 업무 수행에 즉각 투입할 만한 설득력 있는 스토리텔링이 필요합니다. 자신의 장점을 숫자가 담긴 구체적 실적으로 명시하고, 신뢰를 형성하는 차분한 어조를 연습해 보세요.`;
+                }
+            }
+
+            lucide.createIcons();
+        }
+
+        // RESTART GAME
+        function restartGame() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            playSound('select');
+        }
+
+        // Page load initialization
+        window.onload = function() {
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

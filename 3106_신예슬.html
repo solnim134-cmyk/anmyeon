@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎀 슈의 태안 빈집 리모델링 🎀</title>
+    <!-- 아기자기한 한글 폰트 적용 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gamja+Flower&display=swap" rel="stylesheet">
+    <!-- FontAwesome 아이콘 (슈게임 스타일의 반짝이 및 데코레이션용) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #ff69b4;
+            --light-pink: #ffe6f0;
+            --border-pink: #ffb6c1;
+            --dark-pink: #d147a3;
+            --pastel-yellow: #fff9db;
+            --pastel-green: #e8f9ed;
+            --pastel-purple: #f3e8ff;
+            --pastel-blue: #e8f4fd;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--light-pink);
+            font-family: 'Jua', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-image: radial-gradient(#fff0f5 20%, transparent 20%), radial-gradient(#fff0f5 20%, transparent 20%);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            overflow-x: hidden;
+        }
+
+        /* 메인 게임 콘솔 프레임 */
+        #game-container {
+            background: #ffffff;
+            border: 10px solid var(--border-pink);
+            border-radius: 40px;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 15px 35px rgba(255, 105, 180, 0.35), inset 0 0 15px rgba(255, 182, 193, 0.5);
+            padding: 25px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 데코레이션 리본/하트 */
+        .deco-ribbon-left {
+            position: absolute;
+            left: -20px;
+            top: -20px;
+            font-size: 45px;
+            color: var(--primary-pink);
+            transform: rotate(-15deg);
+            text-shadow: 2px 2px 0px #fff;
+        }
+
+        .deco-ribbon-right {
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            font-size: 45px;
+            color: var(--primary-pink);
+            transform: rotate(15deg);
+            text-shadow: 2px 2px 0px #fff;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        h1 {
+            color: var(--primary-pink);
+            font-size: 40px;
+            margin: 0;
+            text-shadow: 3px 3px 0px #fff, 5px 5px 0px var(--border-pink);
+            letter-spacing: 2px;
+            animation: bounce 1.5s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-5px); }
+        }
+
+        /* 스탯 바 */
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background: #fff5f8;
+            border: 3px dashed var(--border-pink);
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-size: 19px;
+            color: var(--dark-pink);
+            text-align: center;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-item i {
+            color: #ff1493;
+            filter: drop-shadow(1px 1px 0px #fff);
+        }
+
+        /* 게임 메인 레이아웃 (상단 프리뷰 & 하단 선택창 분할) */
+        .game-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 리모델링 실시간 캔버스 (좌측) */
+        .house-canvas-wrapper {
+            background: #eef9ff;
+            border: 4px solid var(--border-pink);
+            border-radius: 25px;
+            height: 380px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 20px;
+        }
+
+        /* 맑은 하늘 태안 배경 데코 */
+        .sky-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .cloud {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 100px;
+            opacity: 0.9;
+        }
+        .cloud-1 { width: 80px; height: 30px; top: 30px; left: 20px; }
+        .cloud-2 { width: 100px; height: 40px; top: 50px; right: 30px; }
+        .sun {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ffb74d;
+            border-radius: 50%;
+            top: 15px;
+            right: 15px;
+            box-shadow: 0 0 15px #ffa726;
+        }
+
+        /* 캔버스 하우스 레이어 빌더 */
+        .house-builder {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            z-index: 2;
+        }
+
+        /* 지붕 레이어 */
+        .layer-roof {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-bottom: 75px solid #d3d3d3; /* 기본 회색 벽돌 느낌 */
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+        /* 벽지(본체) 레이어 */
+        .layer-wall {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 125px;
+            background-color: #f5f5f5;
+            border: 4px solid #8b7355;
+            border-radius: 5px;
+            z-index: 4;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        /* 본체 내부 기본 문과 창문 */
+        .house-door {
+            width: 35px;
+            height: 60px;
+            background-color: #8b5a2b;
+            border: 2px solid #5c3a21;
+            border-radius: 3px 3px 0 0;
+            margin-right: 15px;
+            margin-bottom: 0;
+            position: relative;
+        }
+        .house-door::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: gold;
+            border-radius: 50%;
+            top: 30px;
+            right: 4px;
+        }
+        .house-window {
+            width: 40px;
+            height: 40px;
+            background-color: #e0f7fa;
+            border: 3px solid #8b5a2b;
+            border-radius: 5px;
+            margin-bottom: 45px;
+            position: relative;
+        }
+        .house-window::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #8b5a2b;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        .house-window::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #8b5a2b;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+        }
+
+        /* 마당 레이어 */
+        .layer-yard {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 260px;
+            height: 70px;
+            background-color: #e2e2e2;
+            border-radius: 50% 50% 10px 10px;
+            z-index: 3;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .yard-item {
+            font-size: 24px;
+            margin-bottom: -10px;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+        }
+
+        /* 울타리 레이어 */
+        .layer-fence {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 240px;
+            height: 50px;
+            z-index: 6;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .fence-post {
+            width: 12px;
+            height: 45px;
+            background-color: transparent;
+            border-radius: 5px 5px 0 0;
+            box-shadow: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        /* 울타리 가로지르는 선 */
+        .layer-fence::after {
+            content: '';
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: transparent;
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+
+        /* 대화방/오더 지시 영역 (우측 상단) */
+        .interactive-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .npc-bubble {
+            background: var(--pastel-yellow);
+            border: 4px solid #ffda79;
+            border-radius: 25px;
+            padding: 15px 20px;
+            position: relative;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .npc-avatar {
+            width: 60px;
+            height: 60px;
+            background: #ffb6c1;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .npc-text-content {
+            flex: 1;
+        }
+
+        .npc-name {
+            font-size: 15px;
+            color: #d147a3;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .npc-request {
+            font-size: 18px;
+            color: #4a4a4a;
+            line-height: 1.4;
+        }
+
+        /* 작업 흐름/스텝 인디케이터 */
+        .flow-indicator {
+            display: flex;
+            justify-content: space-between;
+            background: var(--pastel-purple);
+            border: 3px solid #d6bcfa;
+            border-radius: 15px;
+            padding: 8px 15px;
+        }
+
+        .flow-step {
+            font-size: 15px;
+            color: #805ad5;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .flow-step.active {
+            opacity: 1;
+            font-weight: bold;
+            transform: scale(1.05);
+            color: #553c9a;
+        }
+
+        /* 가구 상점 리스트 박스 */
+        .shop-container {
+            background: #fff;
+            border: 4px solid var(--border-pink);
+            border-radius: 25px;
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 250px;
+        }
+
+        .shop-header {
+            font-size: 20px;
+            color: var(--primary-pink);
+            border-bottom: 2px dashed var(--border-pink);
+            padding-bottom: 8px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 220px;
+            padding-right: 5px;
+        }
+
+        /* 개별 아이템 카드 */
+        .item-card {
+            background: #fff;
+            border: 3px solid #ffd3e8;
+            border-radius: 18px;
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(255, 182, 193, 0.1);
+        }
+
+        .item-card:hover:not(.locked) {
+            transform: translateY(-2px);
+            border-color: var(--primary-pink);
+            background: #fff0f5;
+            box-shadow: 0 6px 12px rgba(255, 105, 180, 0.15);
+        }
+
+        .item-card:active:not(.locked) {
+            transform: translateY(1px);
+        }
+
+        /* 아이템 카드 내의 프리뷰 그림 박스 */
+        .item-preview {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            border: 2px solid #ffccd5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            background: #fffaf0;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .item-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .item-name {
+            font-size: 15px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .item-price {
+            font-size: 14px;
+            color: #e03131;
+        }
+
+        .item-tag {
+            font-size: 11px;
+            color: #888;
+            background: #f1f3f5;
+            padding: 1px 5px;
+            border-radius: 5px;
+            align-self: flex-start;
+        }
+
+        /* 잠금 상태 스타일 */
+        .item-card.locked {
+            background: #f1f3f5;
+            border-color: #ced4da;
+            cursor: not-allowed;
+            opacity: 0.75;
+        }
+
+        .item-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 14px;
+        }
+
+        .item-card.locked .item-name {
+            color: #868e96;
+        }
+        .item-card.locked .item-price {
+            color: #adb5bd;
+        }
+
+        /* 결과 화면 모달 오버레이 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .result-modal {
+            background: #ffffff;
+            border: 8px solid var(--border-pink);
+            border-radius: 35px;
+            width: 480px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .result-modal {
+            transform: scale(1);
+        }
+
+        .result-title {
+            color: var(--primary-pink);
+            font-size: 32px;
+            margin: 10px 0;
+            text-shadow: 2px 2px 0px #ffe5ec;
+        }
+
+        .result-avatar {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        .result-stats {
+            background: #fff0f5;
+            border: 2px dashed var(--border-pink);
+            border-radius: 20px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 17px;
+            color: #4a4a4a;
+            line-height: 1.6;
+        }
+
+        .result-stats b {
+            color: var(--dark-pink);
+        }
+
+        /* 핑크스타 버튼 스타일 */
+        .pink-btn {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-family: 'Jua', sans-serif;
+            font-size: 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--dark-pink);
+            transition: all 0.1s ease;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pink-btn:hover {
+            background: #ff52a0;
+        }
+
+        .pink-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 var(--dark-pink);
+        }
+
+        /* 귀여운 폭죽 효과 */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            font-size: 20px;
+            animation: shoot 1s ease-out forwards;
+            z-index: 9999;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- 데코 요소 -->
+        <div class="deco-ribbon-left"><i class="fa-solid fa-ribbon"></i></div>
+        <div class="deco-ribbon-right"><i class="fa-solid fa-ribbon"></i></div>
+
+        <!-- 헤더 영역 -->
+        <header>
+            <h1>🎀 슈의 태안 빈집 리모델링 🎀</h1>
+        </header>
+
+        <!-- 현재 계정 상황판 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <i class="fa-solid fa-crown"></i>
+                <span>레벨: <b id="ui-level" style="color: #e03131;">1</b></span>
+            </div>
+            <div class="status-item">
+                <i class="fa-solid fa-star"></i>
+                <span>포인트: <b id="ui-points">0</b> / <span id="ui-next-points" style="font-size: 14px;">100</span> XP</span>
+            </div>
+            <div class="status-item">
+                <i class="fa-solid fa-wallet"></i>
+                <span>정부 지원금: <b id="ui-money">1,000,000</b>원</span>
+            </div>
+        </div>
+
+        <!-- 게임 주 레이어 -->
+        <div class="game-layout">
+            <!-- 1. 리모델링 실시간 하우스 그래픽 영역 -->
+            <div class="house-canvas-wrapper">
+                <div class="sky-bg">
+                    <div class="sun"></div>
+                    <div class="cloud cloud-1"></div>
+                    <div class="cloud cloud-2"></div>
+                </div>
+                
+                <!-- 집 짓기 빌더 -->
+                <div class="house-builder">
+                    <!-- 지붕 -->
+                    <div id="view-roof" class="layer-roof"></div>
+                    
+                    <!-- 벽지 (집 모양 본체) -->
+                    <div id="view-wall" class="layer-wall">
+                        <!-- 기본 장식 -->
+                        <div class="house-door"></div>
+                        <div class="house-window"></div>
+                    </div>
+                    
+                    <!-- 마당 -->
+                    <div id="view-yard" class="layer-yard">
+                        <!-- 예시 마당 장식물 이모지 -->
+                        <span class="yard-item" id="yard-emoji-1">🌱</span>
+                        <span class="yard-item" id="yard-emoji-2">🌱</span>
+                    </div>
+
+                    <!-- 울타리 -->
+                    <div id="view-fence" class="layer-fence">
+                        <div class="fence-post"></div>
+                        <div class="fence-post"></div>
+                        <div class="fence-post"></div>
+                        <div class="fence-post"></div>
+                        <div class="fence-post"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 우측 플레이어 조작 및 선택 창 -->
+            <div class="interactive-zone">
+                <!-- NPC 말풍선 정보 -->
+                <div class="npc-bubble">
+                    <div class="npc-avatar" id="ui-npc-avatar">👵</div>
+                    <div class="npc-text-content">
+                        <div class="npc-name" id="ui-npc-name">태안 할머니</div>
+                        <div class="npc-request" id="ui-npc-request">
+                            "귀여운 느낌으로 해줘! 핑크빛 지붕이랑 울타리가 가득 찬 아기자기한 마당이면 좋겠어 지우~"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 단계 흐름 표시기 -->
+                <div class="flow-indicator">
+                    <div class="flow-step active" id="flow-roof">지붕 🏠</div>
+                    <div class="flow-step" id="flow-wall">벽지 🖼️</div>
+                    <div class="flow-step" id="flow-yard">마당 🌷</div>
+                    <div class="flow-step" id="flow-fence">울타리 🚧</div>
+                </div>
+
+                <!-- 가구 쇼핑 상점 리스트 -->
+                <div class="shop-container">
+                    <div class="shop-header">
+                        <span>🎀 리모델링 카탈로그</span>
+                        <span id="ui-step-indicator" style="font-size: 15px; color:#aaa;">[1 / 4단계]</span>
+                    </div>
+                    <!-- 카탈로그 목록 렌더링 영역 -->
+                    <div class="item-grid" id="ui-item-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결과 대공개 모달 -->
+    <div class="modal-overlay" id="result-modal-overlay">
+        <div class="result-modal">
+            <div class="result-avatar" id="modal-avatar">🥳</div>
+            <h2 class="result-title" id="modal-title">리모델링 완성!</h2>
+            <div class="result-stats" id="modal-stats">
+                의뢰 결과 설명글이 이 자리에 로딩됩니다.
+            </div>
+            <button class="pink-btn" onclick="game.startNewRound()">
+                <i class="fa-solid fa-house-heart"></i> 다음 빈집 꾸미기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 아기자기하고 풍부한 가구 데이터베이스 구성 ---
+        const furnitureCatalog = {
+            "지붕": [
+                { id: "roof_normal", name: "기본 평범한 지붕", price: 100000, tag: "심플", level: 1, preview: "🧱", style: { borderBottomColor: "#a1a1a1" } },
+                { id: "roof_pink", name: "딸기우유 핑크 지붕", price: 150000, tag: "러블리", level: 1, preview: "💗", style: { borderBottomColor: "#ffb6c1" } },
+                { id: "roof_wood", name: "네츄럴 통나무 지붕", price: 180000, tag: "자연", level: 1, preview: "🪵", style: { borderBottomColor: "#8b5a2b" } },
+                { id: "roof_luxury", name: "골드 크라운 황금 지붕", price: 350000, tag: "럭셔리", level: 2, preview: "👑", style: { borderBottomColor: "#ffd700" } },
+                { id: "roof_witch", name: "마법소녀 퍼플 지붕", price: 280000, tag: "러블리", level: 3, preview: "🔮", style: { borderBottomColor: "#b19ffb" } }
+            ],
+            "벽지": [
+                { id: "wall_white", name: "심플 모던 화이트 벽지", price: 50000, tag: "심플", level: 1, preview: "⬜", style: { backgroundColor: "#ffffff" } },
+                { id: "wall_pink", name: "러블리 파스텔 핑크 벽지", price: 80000, tag: "러블리", level: 1, preview: "🌸", style: { backgroundColor: "#fff0f5", backgroundImage: "radial-gradient(#ffb6c1 15%, transparent 15%)", backgroundSize: "15px 15px" } },
+                { id: "wall_green", name: "피크닉 올리브 그린 벽지", price: 90000, tag: "자연", level: 1, preview: "🍃", style: { backgroundColor: "#f4fcf7" } },
+                { id: "wall_gold", name: "골든 바이브 실크 벽지", price: 220000, tag: "럭셔리", level: 2, preview: "⚜️", style: { backgroundColor: "#fffbef", backgroundImage: "linear-gradient(45deg, #dfc674 25%, transparent 25%)", backgroundSize: "20px 20px" } },
+                { id: "wall_ribbon", name: "하트 퐁당 리본 벽지", price: 150000, tag: "러블리", level: 3, preview: "🎀", style: { backgroundColor: "#fff0f3", backgroundImage: "radial-gradient(#ff69b4 10%, transparent 10%)", backgroundSize: "12px 12px" } }
+            ],
+            "마당": [
+                { id: "yard-grass", name: "일반 푸르른 잔디마당", price: 50000, tag: "심플", level: 1, preview: "🌱", emoji1: "🌿", emoji2: "🌿", style: { backgroundColor: "#98fb98" } },
+                { id: "yard-tulip", name: "핑크빛 하트 튤립 꽃밭", price: 120000, tag: "러블리", level: 1, preview: "🌷", emoji1: "🌷", emoji2: "🌸", style: { backgroundColor: "#ffb3d1" } },
+                { id: "yard-camping", name: "야생 캠핑 모닥불 마당", price: 170000, tag: "자연", level: 1, preview: "🔥", emoji1: "🪵", emoji2: "🔥", style: { backgroundColor: "#e2c09b" } },
+                { id: "yard-pool", name: "럭셔리 프라이빗 수영장", price: 450000, tag: "럭셔리", level: 2, preview: "🏊", emoji1: "🐬", emoji2: "💦", style: { backgroundColor: "#afeeee" } },
+                { id: "yard-sheep", name: "솜사탕 양떼 목장 마당", price: 240000, tag: "러블리", level: 3, preview: "🐑", emoji1: "🐑", emoji2: "🍀", style: { backgroundColor: "#e8ffd6" } }
+            ],
+            "울타리": [
+                { id: "fence_normal", name: "소박한 브라운 나무울타리", price: 40000, tag: "심플", level: 1, preview: "🪵", style: { postColor: "#8b5a2b", connectorColor: "#a0522d" } },
+                { id: "fence_pink", name: "딸기향 화이트핑크 울타리", price: 80000, tag: "러블리", level: 1, preview: "💕", style: { postColor: "#ffb6c1", connectorColor: "#ff69b4" } },
+                { id: "fence_rose", name: "장미 넝굴 로즈 펜스", price: 110000, tag: "자연", level: 1, preview: "🌹", style: { postColor: "#228b22", connectorColor: "#ff1493" } },
+                { id: "fence_luxury", name: "왕실 황금 크리스탈 펜스", price: 200000, tag: "럭셔리", level: 2, preview: "🔱", style: { postColor: "#ffd700", connectorColor: "#ffdf00" } },
+                { id: "fence_ribbon", name: "체리 초코 생크림 울타리", price: 140000, tag: "러블리", level: 3, preview: "🍒", style: { postColor: "#4e3629", connectorColor: "#ffb3d1" } }
+            ]
+        };
+
+        // --- 2. 개성 넘치는 의뢰인들 리스트 ---
+        const npcDatabase = [
+            {
+                name: "귀염둥이 슈슈",
+                avatar: "👧",
+                tag: "러블리",
+                requestText: "정부 지원금으로 태안에 러블리한 주말 별장을 꾸미고 싶어요! 무조건 분홍색 하트 감성이 들어가면 행복할 것 같아요~🎀"
+            },
+            {
+                name: "바람개비 캠핑족",
+                avatar: "⛺",
+                tag: "자연",
+                requestText: "꽃밭이나 풀내음이 물씬 풍기는 자연 친화적인 빈집을 원합니다. 가만히 있어도 힐링 되는 그런 안식처로요! 🌿"
+            },
+            {
+                name: "심플 청년 작가",
+                avatar: "🧑‍💻",
+                tag: "심플",
+                requestText: "깔끔하고 세련된 화이트 앤 모던 느낌이 좋아요. 너무 튀는 장식은 배제하고 군더더기 없이 심플하게 해주세요."
+            },
+            {
+                name: "태안 대지주 만수르",
+                avatar: "🤵",
+                tag: "럭셔리",
+                requestText: "최고로 화려하고 고급스러운 프리미엄 리모델링 하우스를 원해요. 황금빛과 크리스탈 수영장이 들어가야 제 명성에 어울리죠! ✨"
+            },
+            {
+                name: "마법소녀 요정 코코",
+                avatar: "🧚",
+                tag: "러블리",
+                requestText: "지나치게 아기자기해서 눈이 부실 정도로 예쁜 파스텔 분홍/마법 핑크색 아이템들을 많이 골라 주겠니? 기대할게!"
+            }
+        ];
+
+        // --- 3. 핵심 게임 엔진 클래스 ---
+        class TaeanRemodelGame {
+            constructor() {
+                this.money = 1000000; // 정부가 주는 기본 자금
+                this.points = 0;
+                this.level = 1;
+                this.expToNextLevel = 100;
+                
+                this.steps = ["지붕", "벽지", "마당", "울타리"];
+                this.currentStepIdx = 0;
+                
+                this.selectedDecorations = {
+                    "지붕": null,
+                    "벽지": null,
+                    "마당": null,
+                    "울타리": null
+                };
+
+                this.activeNpc = null;
+                this.matchedCount = 0;
+                this.totalSpend = 0;
+            }
+
+            init() {
+                this.renderStatus();
+                this.startNewRound();
+            }
+
+            // 스탯 화면 갱신
+            renderStatus() {
+                document.getElementById("ui-level").innerText = this.level;
+                document.getElementById("ui-points").innerText = this.points;
+                document.getElementById("ui-next-points").innerText = this.expToNextLevel;
+                document.getElementById("ui-money").innerText = this.money.toLocaleString();
+            }
+
+            // 라운드 최초 시작
+            startNewRound() {
+                // 모달 닫기
+                document.getElementById("result-modal-overlay").classList.remove("active");
+                
+                // 임무 설정
+                this.currentStepIdx = 0;
+                this.matchedCount = 0;
+                this.totalSpend = 0;
+                
+                this.selectedDecorations = { "지붕": null, "벽지": null, "마당": null, "울타리": null };
+                
+                // 현재 레벨에서 모든 부위를 자기 취향 가구로 100% 매칭할 수 있는 NPC들만 엄선
+                const availableNpcs = this.getAvailableNpcs();
+                this.activeNpc = availableNpcs[Math.floor(Math.random() * availableNpcs.length)];
+                
+                // UI 갱신
+                document.getElementById("ui-npc-avatar").innerText = this.activeNpc.avatar;
+                document.getElementById("ui-npc-name").innerText = this.activeNpc.name;
+                document.getElementById("ui-npc-request").innerText = `"${this.activeNpc.requestText}"`;
+
+                // 프리뷰 캔버스 초기화 (기본 상태로 세팅)
+                this.resetHouseVisuals();
+                this.updateStepIndicator();
+                this.renderCatalog();
+            }
+
+            // 현재 해금 상황에서 완벽 매칭(4단계 취향 조준)이 보장되는 의뢰인 필터링
+            getAvailableNpcs() {
+                return npcDatabase.filter(npc => {
+                    // 지붕, 벽지, 마당, 울타리 각 단계별로 NPC 취향에 맞으면서 현재 레벨 이하인 아이템이 1개라도 존재하는지 확인
+                    for (let step of this.steps) {
+                        const hasAccessibleItem = furnitureCatalog[step].some(item => 
+                            item.tag === npc.tag && item.level <= this.level
+                        );
+                        if (!hasAccessibleItem) {
+                            return false; // 한 부위라도 해당 취향의 해금 아이템이 없으면 의뢰 제외
+                        }
+                    }
+                    return true;
+                });
+            }
+
+            // 집 그래픽을 완벽한 초기 상태로 되돌리기
+            resetHouseVisuals() {
+                // 지붕 리셋
+                const roof = document.getElementById("view-roof");
+                roof.style.borderBottomColor = "#a1a1a1";
+
+                // 벽지 리셋
+                const wall = document.getElementById("view-wall");
+                wall.style.backgroundColor = "#f5f5f5";
+                wall.style.backgroundImage = "none";
+
+                // 마당 리셋
+                const yard = document.getElementById("view-yard");
+                yard.style.backgroundColor = "#e2e2e2";
+                document.getElementById("yard-emoji-1").innerText = "🌱";
+                document.getElementById("yard-emoji-2").innerText = "🌱";
+
+                // 울타리 리셋
+                const fencePosts = document.querySelectorAll(".fence-post");
+                fencePosts.forEach(post => {
+                    post.style.backgroundColor = "transparent";
+                    post.style.boxShadow = "none";
+                });
+                const fenceLayer = document.getElementById("view-fence");
+                fenceLayer.style.setProperty('--fence-connector', 'transparent');
+            }
+
+            // 몇 번째 단계인지 보여주기
+            updateStepIndicator() {
+                this.steps.forEach((step, idx) => {
+                    const stepEl = document.getElementById(`flow-${this.getStepEnglish(step)}`);
+                    if (idx === this.currentStepIdx) {
+                        stepEl.classList.add("active");
+                    } else {
+                        stepEl.classList.remove("active");
+                    }
+                });
+
+                document.getElementById("ui-step-indicator").innerText = `[${this.currentStepIdx + 1} / 4단계]`;
+            }
+
+            getStepEnglish(stepKOR) {
+                switch(stepKOR) {
+                    case "지붕": return "roof";
+                    case "벽지": return "wall";
+                    case "마당": return "yard";
+                    case "울타리": return "fence";
+                }
+            }
+
+            // 상점 가구 카탈로그 리스트 렌더링
+            renderCatalog() {
+                const currentStepName = this.steps[this.currentStepIdx];
+                const grid = document.getElementById("ui-item-grid");
+                grid.innerHTML = "";
+
+                const items = furnitureCatalog[currentStepName];
+                items.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "item-card";
+
+                    const isLocked = item.level > this.level;
+                    if (isLocked) {
+                        card.classList.add("locked");
+                    }
+
+                    // 아이템 카드 내 미니 이미지(컬러칩/아이콘) 동적 그리기
+                    let miniGraphic = "";
+                    if (currentStepName === "지붕") {
+                        miniGraphic = `<div style="width:100%; height:100%; border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:20px solid ${item.style.borderBottomColor}; margin-top:5px;"></div>`;
+                    } else if (currentStepName === "벽지") {
+                        miniGraphic = `<div style="width:100%; height:100%; background-color:${item.style.backgroundColor}; background-image:${item.style.backgroundImage || 'none'}; background-size: 8px 8px;"></div>`;
+                    } else if (currentStepName === "마당") {
+                        miniGraphic = `<div style="width:100%; height:100%; background-color:${item.style.backgroundColor}; display:flex; justify-content:center; align-items:center; font-size:18px;">${item.preview}</div>`;
+                    } else if (currentStepName === "울타리") {
+                        miniGraphic = `<div style="display:flex; justify-content:space-around; align-items:flex-end; width:100%; height:100%; padding-bottom:5px; background:#fffaf0;">
+                            <div style="width:6px; height:25px; background:${item.style.postColor}; border-radius:2px;"></div>
+                            <div style="width:6px; height:25px; background:${item.style.postColor}; border-radius:2px;"></div>
+                        </div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="item-preview">
+                            ${miniGraphic}
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-price">💰 ${item.price.toLocaleString()}원</span>
+                            <span class="item-tag">#${item.tag}</span>
+                        </div>
+                    `;
+
+                    if (!isLocked) {
+                        card.onclick = (e) => {
+                            this.selectItem(item, e);
+                        };
+                    }
+
+                    grid.appendChild(card);
+                });
+            }
+
+            // 가구 하나를 골랐을 때
+            selectItem(item, event) {
+                const step = this.steps[this.currentStepIdx];
+                this.selectedDecorations[step] = item;
+                this.totalSpend += item.price;
+
+                // 취향 일치 계산
+                if (item.tag === this.activeNpc.tag) {
+                    this.matchedCount++;
+                    // 취향 완벽 저격 시 하트 뿜뿜 파티클 효과
+                    this.spawnParticles(event.clientX, event.clientY, "💖");
+                } else {
+                    // 무난하게 선택 시 작은 꽃빛 가루
+                    this.spawnParticles(event.clientX, event.clientY, "✨");
+                }
+
+                // 🏡 실시간 그래픽 캔버스 뷰 업데이트!
+                this.applyVisualToCanvas(step, item);
+
+                // 다음 단계로 이행
+                this.currentStepIdx++;
+                if (this.currentStepIdx < this.steps.length) {
+                    this.updateStepIndicator();
+                    this.renderCatalog();
+                } else {
+                    this.evaluateResult();
+                }
+            }
+
+            // 프리뷰 캔버스에 실제로 입혀지도록 스타일 주입
+            applyVisualToCanvas(step, item) {
+                if (step === "지붕") {
+                    const el = document.getElementById("view-roof");
+                    el.style.borderBottomColor = item.style.borderBottomColor;
+                } else if (step === "벽지") {
+                    const el = document.getElementById("view-wall");
+                    el.style.backgroundColor = item.style.backgroundColor;
+                    el.style.backgroundImage = item.style.backgroundImage || "none";
+                } else if (step === "마당") {
+                    const el = document.getElementById("view-yard");
+                    el.style.backgroundColor = item.style.backgroundColor;
+                    document.getElementById("yard-emoji-1").innerText = item.emoji1;
+                    document.getElementById("yard-emoji-2").innerText = item.emoji2;
+                } else if (step === "울타리") {
+                    const fencePosts = document.querySelectorAll(".fence-post");
+                    fencePosts.forEach(post => {
+                        post.style.backgroundColor = item.style.postColor;
+                        post.style.boxShadow = `2px 2px 0px rgba(0,0,0,0.15), inset 1px 1px 0px rgba(255,255,255,0.2)`;
+                        post.style.border = `1px solid ${item.style.postColor}`;
+                    });
+                    
+                    // 울타리를 연결하는 스타일을 동적 CSS 주입처럼 적용
+                    const fenceLayer = document.getElementById("view-fence");
+                    const styleTagId = "dynamic-fence-style";
+                    let styleTag = document.getElementById(styleTagId);
+                    if (!styleTag) {
+                        styleTag = document.createElement("style");
+                        styleTag.id = styleTagId;
+                        document.head.appendChild(styleTag);
+                    }
+                    styleTag.innerHTML = `
+                        .layer-fence::after {
+                            background: ${item.style.connectorColor} !important;
+                        }
+                    `;
+                }
+            }
+
+            // 공사 최종 평가 및 모달창 출력
+            evaluateResult() {
+                const modal = document.getElementById("result-modal-overlay");
+                const mAvatar = document.getElementById("modal-avatar");
+                const mTitle = document.getElementById("modal-title");
+                const mStats = document.getElementById("modal-stats");
+
+                modal.classList.add("active");
+
+                // 1. 가계 위기 예산 초과 체크
+                if (this.totalSpend > this.money) {
+                    mAvatar.innerText = "😭";
+                    mTitle.innerText = "예산 초과 실패!";
+                    mTitle.style.color = "#e03131";
+                    mStats.innerHTML = `
+                        의뢰인 <b>${this.activeNpc.name}</b>이 슬퍼하며 돌아갔습니다.<br>
+                        "예산을 넘어서 공사를 완수하지 못하다니 너무해요!"<br><br>
+                        • 총 리모델링 비용: <span style="color:red; font-weight:bold;">${this.totalSpend.toLocaleString()}원</span><br>
+                        • 보유 정부 지원금: <b>${this.money.toLocaleString()}원</b><br><br>
+                        <span style="color:#d147a3;">※ 정부 긴급 구제 지원금 <b>+500,000원</b>이 계좌로 송금되었습니다! 힘내세요!</span>
+                    `;
+                    this.money += 500000;
+                    this.renderStatus();
+                    return;
+                }
+
+                // 2. 예산 범위 이내일 때 정상 정산
+                this.money -= this.totalSpend;
+                
+                // 기본 획득 포인트 공식 (의뢰 매칭 횟수 기반)
+                const basePoints = (this.matchedCount * 35) + 20;
+                
+                // 레벨에 비례하여 포인트 획득 감소 처리 (레벨이 오를수록 분모가 커져 획득량이 줄어듭니다)
+                const pointYield = Math.max(10, Math.round(basePoints / (1 + (this.level - 1) * 0.6)));
+                this.points += pointYield;
+
+                // 만족도 별 등급 산정
+                let ratingEmoji = "⭐";
+                let ratingComment = "";
+                
+                if (this.matchedCount === 4) {
+                    ratingEmoji = "🥰💖👑";
+                    ratingComment = "완벽해요! 저의 꿈꾸던 이상향의 태안 빈집 그 자체예요! 슈마일 100% 대박 감동!";
+                } else if (this.matchedCount >= 2) {
+                    ratingEmoji = "🙂✨🌸";
+                    ratingComment = "아주 아기자기하고 귀여운 점이 많아 마음에 드네요. 정성을 들여줘서 고마워요!";
+                } else {
+                    ratingEmoji = "😐💧🌱";
+                    ratingComment = "조금 제가 원하던 색감이나 느낌과는 살짝 달라요... 그래도 빈집이 깨끗해지긴 했네요!";
+                }
+
+                mAvatar.innerText = ratingEmoji.split("")[0];
+                mTitle.innerText = "완공 및 완벽 정산!";
+                mTitle.style.color = "var(--primary-pink)";
+
+                let levelUpMessage = "";
+                
+                // 레벨업 체크 및 보상 대폭 강화 (레벨업 시 1,000,000원 추가 정부 보조금 지급)
+                if (this.points >= this.expToNextLevel) {
+                    this.level++;
+                    this.points = this.points - this.expToNextLevel;
+                    this.expToNextLevel += 50; // 점점 요구치가 높아짐
+                    
+                    // 레벨업 특별 정부 추가 지원금 (1,000,000원 지급)
+                    const levelUpBonus = 1000000;
+                    this.money += levelUpBonus;
+                    
+                    levelUpMessage = `<br><br><span style="color:#ff1493; font-size:20px; font-weight:bold; animation: bounce 0.5s infinite alternate;">🎉 대축하! 레벨 ${this.level}로 레벨업!<br>신규 인테리어 도구 해금 및 특별 정부 지원금 <b>+${levelUpBonus.toLocaleString()}원</b>이 추가 지급되었습니다! 🔓💰</span>`;
+                }
+
+                mStats.innerHTML = `
+                    의뢰인 <b>${this.activeNpc.name}</b>님의 한줄평:<br>
+                    <span style="color: #6a0dad; font-style: italic;">"${ratingComment}"</span><br><br>
+                    • 사용 정부 자금: <b>${this.totalSpend.toLocaleString()}원</b><br>
+                    • 취향 저격율: <b>${this.matchedCount} / 4개 매칭 성공</b><br>
+                    • 리모델링 획득 경험치: <b>+${pointYield} XP</b> <span style="font-size:12px; color:#888;">(레벨 페널티 적용됨)</span>
+                    ${levelUpMessage}
+                `;
+
+                this.renderStatus();
+            }
+
+            // 아기자기한 이모티콘 팝업 효과
+            spawnParticles(x, y, char) {
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement("div");
+                    particle.className = "particle";
+                    particle.innerText = char;
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 50 + Math.random() * 80;
+                    const tx = Math.cos(angle) * speed;
+                    const ty = Math.sin(angle) * speed;
+
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+
+                    document.body.appendChild(particle);
+
+                    setTimeout(() => {
+                        particle.remove();
+                    }, 1000);
+                }
+            }
+        }
+
+        // 게임 구동 시점
+        let game;
+        window.onload = () => {
+            game = new TaeanRemodelGame();
+            game.init();
+        };
+    </script>
+</body>
+</html>

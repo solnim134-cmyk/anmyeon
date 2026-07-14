@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출근길 서바이벌: 버스를 띄워줘!</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts for Retro/Clean Aesthetics -->
+    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .pixel-font {
+            font-family: 'DungGeunMo', monospace;
+        }
+        /* 게임 스크린 네온 라인 효과 */
+        .game-border {
+            border: 4px solid #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- 상단 캠페인 헤더 -->
+    <header class="bg-slate-900 border-b border-slate-800 py-3 px-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white animate-pulse">
+                    <i data-lucide="bus" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
+                        출근길 서바이벌: 버스를 띄워줘! 
+                        <span class="text-xs bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-normal">캠페인 모드</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">우리 지역 대중교통 심폐소생 시뮬레이션</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+                <span class="text-slate-400 hidden sm:inline">🎯 타겟: 출퇴근 잔혹사를 겪는 모든 주민 & 지자체 관계자</span>
+                <button onclick="toggleMute()" id="mute-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-full transition-all">
+                    <i data-lucide="volume-2" id="mute-icon" class="w-4 h-4"></i>
+                </</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 flex flex-col lg:flex-row gap-6 items-stretch">
+        
+        <!-- 왼쪽: 게임 플레이 보드 -->
+        <div class="flex-grow flex flex-col gap-4 lg:w-2/3">
+            
+            <!-- 오프닝 / 안내 화면 -->
+            <div id="intro-screen" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between items-center text-center flex-grow min-h-[500px]">
+                <div class="my-auto max-w-lg">
+                    <span class="pixel-font text-blue-400 text-sm tracking-wider uppercase bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Citizen Action Game</span>
+                    <h2 class="pixel-font text-3xl sm:text-5xl font-extrabold text-white mt-4 mb-2 tracking-tight">버스를 띄워줘!</h2>
+                    <p class="text-slate-400 text-sm sm:text-base mb-6">
+                        신축 단지와 외곽 지역은 늘어나는데, 우리 동네 버스는 단 1대뿐?!<br>
+                        출근 시간마다 정류장에 쏟아지는 주민들의 <strong class="text-red-400">폭발적인 분노(빡침 지수)</strong>를 잠재우고 무사히 출근시켜 주세요!
+                    </p>
+
+                    <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-left text-xs space-y-3 mb-8">
+                        <div class="flex items-start gap-3">
+                            <span class="bg-red-500 text-white font-bold px-2 py-0.5 rounded shrink-0">규칙 1</span>
+                            <p class="text-slate-300">시간이 지날수록 주민들이 정류장에 쌓이고, 대기 시간이 길어지면 머리 위 분노 게이지가 상승합니다. 100%가 되어 한 명이라도 <strong>폭발(지각)</strong>하면 게임 오버!</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-blue-500 text-white font-bold px-2 py-0.5 rounded shrink-0">규칙 2</span>
+                            <p class="text-slate-300">매초 늘어나는 '교통 예산'을 모아 하단의 <strong>정책 카드(배차 단축, 급행 신설 등)</strong>를 현명하게 발동하세요.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="bg-amber-500 text-white font-bold px-2 py-0.5 rounded shrink-0">규칙 3</span>
+                            <p class="text-slate-300"><strong>상습 정체, 예산 삭감</strong> 등 현실 고증 돌발 이벤트를 극복하고 100명의 주민을 무사히 출근시켜 동네를 구하세요!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-sm flex flex-col gap-2">
+                    <button onclick="startGame()" class="pixel-font w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xl font-bold rounded-xl shadow-lg shadow-indigo-500/20 transform active:scale-98 transition-all">
+                        지옥의 출근길 개선 시작하기 🚀
+                    </button>
+                    <p class="text-[11px] text-slate-500 mt-2">※ 사운드가 포함되어 있으니 볼륨을 적절히 조절해 주세요.</p>
+                </div>
+            </div>
+
+            <!-- 실제 게임 실행 스크린 (숨김 상태였다가 게임 시작 시 오픈) -->
+            <div id="game-screen" class="hidden flex-col flex-grow bg-slate-900 border border-slate-800 rounded-2xl p-4 relative overflow-hidden min-h-[500px]">
+                
+                <!-- 상단 스코어 / 스탯 바 -->
+                <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                    <div class="bg-slate-950/80 border border-slate-800 p-2 rounded-xl">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">💰 가용 교통 예산</span>
+                        <span id="stat-budget" class="pixel-font text-lg font-bold text-emerald-400">500원</span>
+                    </div>
+                    <div class="bg-slate-950/80 border border-slate-800 p-2 rounded-xl">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">💼 안전 출근 완료</span>
+                        <span id="stat-score" class="pixel-font text-lg font-bold text-blue-400">0 / 100 명</span>
+                    </div>
+                    <div class="bg-slate-950/80 border border-slate-800 p-2 rounded-xl">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">🔥 주민 평균 분노</span>
+                        <span id="stat-stress" class="pixel-font text-lg font-bold text-rose-400">0%</span>
+                    </div>
+                </div>
+
+                <!-- 이벤트 알리미 배너 -->
+                <div id="event-ticker" class="hidden bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs py-2 px-3 rounded-lg mb-3 items-center gap-2 animate-bounce">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400"></i>
+                    <span id="event-text" class="font-semibold">돌발 이벤트 발생!</span>
+                </div>
+
+                <!-- 캔버스 영역 (반응형 비율 유지) -->
+                <div class="relative flex-grow bg-slate-950 rounded-xl border border-slate-800 overflow-hidden" id="canvas-container">
+                    <canvas id="game-canvas" class="w-full h-full block"></canvas>
+                    
+                    <!-- 가이드 및 꿀팁 플로팅 메시지 -->
+                    <div id="floating-tip" class="absolute bottom-2 left-2 bg-slate-900/90 border border-slate-800 text-[10px] text-slate-400 px-2 py-1 rounded">
+                        💡 예산이 모일 때마다 하단의 정책 카드를 써서 버스를 호출하세요!
+                    </div>
+                </div>
+
+                <!-- 하단 카드 제어 패널 -->
+                <div class="mt-4">
+                    <h3 class="text-xs text-slate-400 font-semibold mb-2 flex items-center gap-1.5">
+                        <i data-lucide="wallet-cards" class="w-3.5 h-3.5"></i>
+                        현재 실행 가능한 교통 해결 정책 카드 (가용 예산 필요)
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                        
+                        <!-- 카드 1: 배차 간격 단축 -->
+                        <button onclick="deployPolicy('local')" id="card-local" class="group relative bg-slate-950/80 hover:bg-slate-800 border-2 border-slate-800 disabled:opacity-50 disabled:hover:bg-slate-950/80 p-3 rounded-xl flex flex-col justify-between text-left transition-all overflow-hidden">
+                            <div class="absolute top-1 right-1 text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover:text-blue-400">1번 키</div>
+                            <div>
+                                <span class="bg-blue-500/10 text-blue-400 text-[9px] px-1.5 py-0.5 rounded border border-blue-500/20 font-bold">일반 버스</span>
+                                <h4 class="font-bold text-xs sm:text-sm mt-1.5 text-white">배차 단축</h4>
+                                <p class="text-[10px] text-slate-400 mt-1 hidden sm:block">신속한 일반 시내버스를 즉시 증차합니다.</p>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between w-full border-t border-slate-800 pt-2 text-[10px]">
+                                <span class="text-slate-400">인원 15명 / 속도 중</span>
+                                <span class="font-bold text-emerald-400">💰 200원</span>
+                            </div>
+                        </button>
+
+                        <!-- 카드 2: 급행 노선 신설 -->
+                        <button onclick="deployPolicy('express')" id="card-express" class="group relative bg-slate-950/80 hover:bg-slate-800 border-2 border-slate-800 disabled:opacity-50 disabled:hover:bg-slate-950/80 p-3 rounded-xl flex flex-col justify-between text-left transition-all overflow-hidden">
+                            <div class="absolute top-1 right-1 text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover:text-amber-400">2번 키</div>
+                            <div>
+                                <span class="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-500/20 font-bold">이층 급행</span>
+                                <h4 class="font-bold text-xs sm:text-sm mt-1.5 text-white">급행 신설</h4>
+                                <p class="text-[10px] text-slate-400 mt-1 hidden sm:block">환승 거점으로 바로 쏘는 대형 버스 투입.</p>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between w-full border-t border-slate-800 pt-2 text-[10px]">
+                                <span class="text-slate-400">인원 30명 / 속도 빠름</span>
+                                <span class="font-bold text-emerald-400">💰 400원</span>
+                            </div>
+                        </button>
+
+                        <!-- 카드 3: DRT(수요응답형) 소환 -->
+                        <button onclick="deployPolicy('drt')" id="card-drt" class="group relative bg-slate-950/80 hover:bg-slate-800 border-2 border-slate-800 disabled:opacity-50 disabled:hover:bg-slate-950/80 p-3 rounded-xl flex flex-col justify-between text-left transition-all overflow-hidden">
+                            <div class="absolute top-1 right-1 text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover:text-purple-400">3번 키</div>
+                            <div>
+                                <span class="bg-purple-500/10 text-purple-400 text-[9px] px-1.5 py-0.5 rounded border border-purple-500/20 font-bold">맞춤 셔틀</span>
+                                <h4 class="font-bold text-xs sm:text-sm mt-1.5 text-white">DRT 도입</h4>
+                                <p class="text-[10px] text-slate-400 mt-1 hidden sm:block">분노가 극에 달한 주민들을 우선 구출합니다.</p>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between w-full border-t border-slate-800 pt-2 text-[10px]">
+                                <span class="text-slate-400">인원 6명 / 속도 최고</span>
+                                <span class="font-bold text-emerald-400">💰 100원</span>
+                            </div>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- 오른쪽: 실시간 주민 반응 피드 & 캠페인 패널 -->
+        <div class="lg:w-1/3 flex flex-col gap-4">
+            
+            <!-- 실시간 주민 소리 (민원 챗 피드) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col h-[280px]">
+                <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                    실시간 동네 주민 민원창구
+                </h3>
+                
+                <!-- 대화 스레드 상자 -->
+                <div id="chat-feed" class="flex-grow overflow-y-auto space-y-2 bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs">
+                    <div class="text-slate-500 italic text-center py-8">주민들의 여론이 이곳에 실시간으로 접수됩니다.</div>
+                </div>
+            </div>
+
+            <!-- 캠페인 안내 및 서명 운동 참여 카드 -->
+            <div class="bg-gradient-to-br from-slate-900 to-indigo-950/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between flex-grow">
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+                        목소리가 모이면 노선이 생깁니다!
+                    </h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        게임 속 상황은 단순히 연출된 것이 아닙니다. 배차 시간 지연, 만원 버스로 인한 등하교 및 출퇴근 피로는 수많은 주민들이 매일 아침 실제로 느끼는 <strong>기본권 침해</strong>입니다.
+                    </p>
+                    
+                    <div class="mt-3 bg-indigo-950/40 border border-indigo-500/20 p-3 rounded-xl">
+                        <span class="text-[10px] text-indigo-400 font-bold block uppercase">캠페인 진척도</span>
+                        <div class="flex justify-between text-xs mt-1 text-slate-300 font-semibold">
+                            <span>우리 지역 서명 참여율</span>
+                            <span>78% 돌파!</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full mt-1.5 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full" style="width: 78%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 space-y-2">
+                    <button onclick="openCampaignModal('custom')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 border border-slate-700">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-blue-400"></i>
+                        지자체에 1초 민원 건의서 보내기
+                    </button>
+                    <button onclick="openCampaignModal('sign')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-600/10">
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-white"></i>
+                        대중교통 개편 촉구 서명운동 동참
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- 캠페인 서명/민원 모달 (Custom Popups) -->
+    <div id="campaign-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeCampaignModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+
+            <!-- 1. 건의서 모드 내용 -->
+            <div id="modal-content-custom" class="hidden space-y-4">
+                <div class="flex items-center gap-2 text-blue-400">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
+                    <h4 class="text-lg font-bold text-white">시장님께 드리는 온라인 청원서</h4>
+                </div>
+                <p class="text-xs text-slate-400">
+                    아래 작성된 메시지는 지자체 대중교통 불편 신고 게시판 및 교통행정과에 자동으로 접수될 공식 건의문 서식입니다.
+                </p>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div class="text-xs space-y-1">
+                        <label class="text-slate-500 font-semibold">수신</label>
+                        <div class="text-slate-300 font-bold bg-slate-900 px-2 py-1 rounded">OO시 대중교통과 정책실장 귀하</div>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <label class="text-slate-500 font-semibold">제목</label>
+                        <div class="text-slate-300 font-bold bg-slate-900 px-2 py-1 rounded">외곽 지구 대중교통 편의 및 배차 단축 요청 건</div>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <label class="text-slate-500 font-semibold">내용</label>
+                        <textarea class="w-full bg-slate-900 border border-slate-800 rounded p-2 text-slate-300 h-24 text-[11px] focus:outline-none focus:border-blue-500" readonly>안녕하십니까 시정 발전을 위해 힘써주셔 감사합니다. 우리 동네는 신규 주거벨트 형성으로 거주 주민이 급증했음에도 버스 노선 부족과 배차 간격 과다로 매일 아침 극심한 고통을 겪고 있습니다. 1. 출퇴근 시간대 버스 즉각 임시 증차, 2. 거점 지하철역 다이렉트 급행 도입을 강력히 요청합니다.</textarea>
+                    </div>
+                </div>
+                <button onclick="submitCampaign('민원 제출')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all">
+                    건의서 제출 및 민원 접수하기
+                </button>
+            </div>
+
+            <!-- 2. 서명운동 모드 내용 -->
+            <div id="modal-content-sign" class="hidden space-y-4">
+                <div class="flex items-center gap-2 text-indigo-400">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                    <h4 class="text-lg font-bold text-white">대중교통 주권 확보 주민 공동 성명서</h4>
+                </div>
+                <p class="text-xs text-slate-400">
+                    교통은 이동할 권리이자 주민 행복의 기본 복지입니다. 우리 정류장의 정체 해소를 위해 서명해 주세요.
+                </p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">성명 (실명 권장)</label>
+                        <input type="text" id="signer-name" placeholder="홍길동" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">거주 중인 행정구역</label>
+                        <input type="text" id="signer-region" placeholder="마포구 성산동 / 세종시 소담동 등" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="flex items-center gap-2 py-2">
+                        <input type="checkbox" id="signer-agree" class="rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-0">
+                        <label for="signer-agree" class="text-[11px] text-slate-300">개인정보 제공 및 주민 공동 서명 전달에 동의합니다.</label>
+                    </div>
+                </div>
+
+                <button onclick="submitCampaign('서명')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-all">
+                    주민 서명 연대 동참하기
+                </button>
+            </div>
+
+            <!-- 3. 결과 성공 상태 내용 -->
+            <div id="modal-content-success" class="hidden text-center space-y-4 py-4">
+                <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl animate-bounce">
+                    ✓
+                </div>
+                <h4 class="text-lg font-bold text-white">행동해 주셔서 감사합니다!</h4>
+                <p class="text-xs text-slate-400 px-4 leading-relaxed">
+                    주민 여러분의 소중한 참여가 접수되었습니다. 수집된 의견과 서명은 취합되어 대중교통 노선 재조정 심의 위원회 및 지자체 교통과에 공식 문서로 정식 발송됩니다.
+                </p>
+                <button onclick="closeCampaignModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold">
+                    닫기
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 하단 푸터 -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>© 2026 우리 동네 대중교통 개선 주민 대책 위원회. All Rights Reserved.</p>
+            <p>본 게임은 대중교통 기본권 강화를 위한 공익 목적의 캠페인 제작물입니다.</p>
+        </div>
+    </footer>
+
+    <!-- 게임 스크립트 엔진 -->
+    <script>
+        // --- 사운드 효과음 합성기 (Web Audio API 활용) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMuted = false;
+
+        function playSound(type) {
+            if (isMuted) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'button') {
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'board') {
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.05); // A5
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'spawn') {
+                    osc.frequency.setValueAtTime(329.63, audioCtx.currentTime); // E4
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                } else if (type === 'over') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); 
+                    osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.6); 
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                } else if (type === 'event') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(349.23, audioCtx.currentTime); // F4
+                    osc.frequency.setValueAtTime(293.66, audioCtx.currentTime + 0.15); // D4
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                }
+            } catch (e) {
+                console.log("Audio play blocked by browser autoplay policy.");
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('mute-btn');
+            const icon = document.getElementById('mute-icon');
+            if (isMuted) {
+                btn.classList.add('bg-red-500/20', 'text-red-400');
+                icon.setAttribute('data-lucide', 'volume-x');
+            } else {
+                btn.classList.remove('bg-red-500/20', 'text-red-400');
+                icon.setAttribute('data-lucide', 'volume-2');
+            }
+            lucide.createIcons();
+        }
+
+        // --- 실시간 민원 챗 데이터 베이스 ---
+        const randomComplaints = [
+            "버스 또 한 대 건너 뛰었네요. 지각 확정입니다.",
+            "이 추위에 정류장에서 35분 기다렸습니다... 눈물 나네요.",
+            "버스가 오긴 왔는데 사람이 너무 꽉 차서 탈 수가 없어요.",
+            "출퇴근 때라도 집중 증차하면 덧납니까? 시장님 답변 좀!",
+            "우리 애 학교 셔틀 노선 없어져서 매일 아침 생이별 중.",
+            "마을버스 노선이라도 개편해 주십시오. 구석진 골목은 아예 고립이에요.",
+            "교통 카드가 아니라 마동석 카드가 필요함... 밀고 들어타야 됨.",
+            "차 없으면 이 동네는 사람 살 곳이 아니군요.",
+            "버스가 너무 안 와서 택시 타려 해도 택시도 안 잡혀요.",
+            "예산 증액해서 기사님들 충원하는 게 그렇게 어렵습니까?"
+        ];
+
+        function addComplaintFeed(text, highStress = false) {
+            const feed = document.getElementById('chat-feed');
+            const item = document.createElement('div');
+            item.className = `p-2 rounded-lg leading-relaxed border transition-all ${highStress ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'bg-slate-900 border-slate-800 text-slate-300'}`;
+            
+            const time = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            item.innerHTML = `
+                <div class="flex justify-between items-center mb-0.5 text-[10px] text-slate-500">
+                    <span>주민 민원인</span>
+                    <span>${time}</span>
+                </div>
+                <p class="font-medium">${text}</p>
+            `;
+            feed.prepend(item);
+            
+            // 피드 갯수 제한
+            if (feed.children.length > 20) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        // --- 캠페인 모달 제어 ---
+        function openCampaignModal(type) {
+            playSound('button');
+            document.getElementById('campaign-modal').classList.remove('hidden');
+            document.getElementById('modal-content-custom').classList.add('hidden');
+            document.getElementById('modal-content-sign').classList.add('hidden');
+            document.getElementById('modal-content-success').classList.add('hidden');
+            
+            if (type === 'custom') {
+                document.getElementById('modal-content-custom').classList.remove('hidden');
+            } else if (type === 'sign') {
+                document.getElementById('modal-content-sign').classList.remove('hidden');
+            }
+        }
+
+        function closeCampaignModal() {
+            document.getElementById('campaign-modal').classList.add('hidden');
+        }
+
+        function submitCampaign(type) {
+            playSound('win');
+            if (type === '서명') {
+                const name = document.getElementById('signer-name').value;
+                const region = document.getElementById('signer-region').value;
+                const agree = document.getElementById('signer-agree').checked;
+                if (!name || !region || !agree) {
+                    alert("서명인 정보 및 동의 조항에 전부 기재 및 확인해주세요!");
+                    return;
+                }
+            }
+            document.getElementById('modal-content-custom').classList.add('hidden');
+            document.getElementById('modal-content-sign').classList.add('hidden');
+            document.getElementById('modal-content-success').classList.remove('hidden');
+        }
+
+
+        // ==========================================
+        //         🎮 실제 게임 엔진 소스코드
+        // ==========================================
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameLoopId;
+        let isGameRunning = false;
+        
+        // 상태 변수
+        let budget = 500;
+        let score = 0;
+        const targetScore = 100;
+        let averageStress = 0;
+        let commuterSpawnTimer = 0;
+        let commuterSpawnInterval = 120; // 프레임 단위
+        let eventTimer = 0;
+        let activeEvent = null; // null | 'traffic' | 'rush'
+        let activeEventDuration = 0;
+
+        let commuters = [];
+        let buses = [];
+        let particles = []; // 성공 탈출 시 이펙트 효과
+
+        // 버스 타입 메타 데이터
+        const BUS_TYPES = {
+            local: {
+                name: '일반 시내버스',
+                capacity: 15,
+                speed: 3.5,
+                color: '#3b82f6', // 파란 버스
+                cost: 200,
+                width: 70,
+                height: 28
+            },
+            express: {
+                name: '광역 이층버스',
+                capacity: 30,
+                speed: 4.8,
+                color: '#f59e0b', // 오렌지/옐로 이층버스
+                cost: 400,
+                width: 90,
+                height: 32
+            },
+            drt: {
+                name: 'DRT 구출 셔틀',
+                capacity: 6,
+                speed: 6.5,
+                color: '#a855f7', // 보라 미니버스
+                cost: 100,
+                width: 50,
+                height: 24
+            }
+        };
+
+        // 주민(승객) 디자인 메타
+        const PASSENGER_EMOJIS = ['🎒', '💼', '👵', '📱', '🕶️', '🧑‍🎓'];
+
+        class Commuter {
+            constructor() {
+                this.id = Math.random().toString(36).substr(2, 9);
+                // 정류장 구역 랜덤 배치
+                this.x = 80 + Math.random() * 120;
+                this.y = 180 + Math.random() * 60;
+                this.size = 12;
+                this.emoji = PASSENGER_EMOJIS[Math.floor(Math.random() * PASSENGER_EMOJIS.length)];
+                this.stress = 10 + Math.random() * 15; // 초기 빡침지수
+                this.stressRate = 0.05 + Math.random() * 0.05; // 1프레임당 상승률
+                this.isTargeted = false; // DRT 같은 특수버스가 타겟했는지 여부
+                this.isBoarded = false;
+                this.name = "주민_" + this.id.substring(0, 3);
+            }
+
+            update() {
+                // 스트레스 상승 (러시아워 이벤튼 시 1.5배 상승)
+                let rateModifier = (activeEvent === 'rush') ? 1.8 : 1.0;
+                this.stress += this.stressRate * rateModifier;
+                if (this.stress > 100) {
+                    this.stress = 100;
+                    gameOver(this); // 한명이라도 100% 도달하면 게임오버 트리거
+                }
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 분노 지수에 따른 흔들림 효과
+                let shakeX = 0;
+                let shakeY = 0;
+                if (this.stress > 60) {
+                    shakeX = (Math.random() - 0.5) * (this.stress / 20);
+                    shakeY = (Math.random() - 0.5) * (this.stress / 20);
+                }
+
+                // 주민 본체 그리기 (이모지 기반)
+                ctx.font = "14px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.emoji, this.x + shakeX, this.y + shakeY);
+
+                // 분노 게이지 바
+                const barWidth = 18;
+                const barHeight = 3;
+                const barX = this.x - barWidth / 2 + shakeX;
+                const barY = this.y - 14 + shakeY;
+
+                // 배경 바
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                // 컬러 바 (낮을 땐 그린, 중간 옐로, 높을 땐 레드)
+                let color = '#22c55e';
+                if (this.stress > 70) color = '#ef4444';
+                else if (this.stress > 40) color = '#eab308';
+
+                ctx.fillStyle = color;
+                ctx.fillRect(barX, barY, barWidth * (this.stress / 100), barHeight);
+
+                ctx.restore();
+            }
+        }
+
+        class Bus {
+            constructor(type) {
+                this.type = type;
+                const meta = BUS_TYPES[type];
+                this.name = meta.name;
+                this.capacity = meta.capacity;
+                this.maxSpeed = meta.speed;
+                this.speed = meta.speed;
+                this.color = meta.color;
+                this.width = meta.width;
+                this.height = meta.height;
+                
+                // 버스는 우측에서 좌측으로 달림
+                this.x = canvas.width + 10;
+                this.y = 85 + (Math.random() * 15); // 버스 차로
+                this.state = 'approaching'; // approaching, boarding, departing
+                this.passengersLoaded = 0;
+                this.stopTimer = 0;
+                this.shuttleTargets = []; // DRT 전용 타겟
+            }
+
+            update() {
+                // 상습 정체 돌발 이벤트 시 속도 50% 저하
+                if (activeEvent === 'traffic') {
+                    this.speed = this.maxSpeed * 0.4;
+                } else {
+                    this.speed = this.maxSpeed;
+                }
+
+                if (this.state === 'approaching') {
+                    // 정류장 대기 스팟 (x=150)까지 접근
+                    this.x -= this.speed;
+                    if (this.x <= 150) {
+                        this.x = 150;
+                        this.state = 'boarding';
+                        playSound('board');
+                    }
+                } else if (this.state === 'boarding') {
+                    // 승객 탑승 처리
+                    this.stopTimer++;
+                    
+                    // 10프레임마다 1명씩 정류장의 주민을 태움
+                    if (this.stopTimer % 12 === 0) {
+                        this.loadPassenger();
+                    }
+
+                    // 버스가 꽉 찼거나 대기 승객이 아예 없거나 일정 대기 시간이 경과하면 출발
+                    const noMoreCommuters = (commuters.length === 0);
+                    if (this.passengersLoaded >= this.capacity || noMoreCommuters || this.stopTimer > 200) {
+                        this.state = 'departing';
+                    }
+                } else if (this.state === 'departing') {
+                    // 왼쪽 화면 밖으로 퇴장
+                    this.x -= this.speed;
+                    if (this.x < -this.width) {
+                        // 버스가 안전하게 떠남 -> 스코어 처리
+                        score += this.passengersLoaded;
+                        if (score >= targetScore) {
+                            score = targetScore;
+                            gameWin();
+                        }
+                        // 버스 제거
+                        return false; 
+                    }
+                }
+                return true;
+            }
+
+            loadPassenger() {
+                if (commuters.length === 0) return;
+
+                let targetIndex = -1;
+
+                if (this.type === 'drt') {
+                    // DRT는 분노가 가장 심각한 사람부터 매칭 구출!
+                    let maxStress = -1;
+                    for (let i = 0; i < commuters.length; i++) {
+                        if (commuters[i].stress > maxStress) {
+                            maxStress = commuters[i].stress;
+                            targetIndex = i;
+                        }
+                    }
+                } else {
+                    // 일반/급행 버스는 가장 앞에 대기 중인 사람부터 차례로
+                    targetIndex = 0;
+                }
+
+                if (targetIndex !== -1 && this.passengersLoaded < this.capacity) {
+                    const commuter = commuters[targetIndex];
+                    
+                    // 파티클 효과 추가
+                    createBoardParticle(commuter.x, commuter.y, this.color);
+                    
+                    // 제거
+                    commuters.splice(targetIndex, 1);
+                    this.passengersLoaded++;
+                    
+                    // 탑승 사운드 & 버블 팝 효과
+                    if (Math.random() < 0.25) {
+                        const feedback = ["휴 살았다!", "다행이다 버스 탔어!", "오 드디어 간다", "이번엔 지각 면했네!"];
+                        addComplaintFeed(`[안도] ${commuter.name}: "${feedback[Math.floor(Math.random() * feedback.length)]}"`);
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 그림자 효과
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillRect(this.x + 2, this.y + this.height - 4, this.width, 6);
+
+                // 버스 몸체
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+
+                // 창문 그리기
+                ctx.fillStyle = '#94a3b8';
+                const winCount = this.type === 'express' ? 6 : 4;
+                const winWidth = (this.width - 15) / winCount;
+                for (let i = 0; i < winCount; i++) {
+                    ctx.fillRect(this.x + 5 + i * (winWidth + 2), this.y + 4, winWidth, 6);
+                    if (this.type === 'express') {
+                        // 2층 버스 하단 창문 추가
+                        ctx.fillRect(this.x + 5 + i * (winWidth + 2), this.y + 14, winWidth, 6);
+                    }
+                }
+
+                // 바퀴
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(this.x + 12, this.y + this.height, 6, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width - 12, this.y + this.height, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 버스 엠블럼 / 노선번호 표시판
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 7px Pretendard';
+                ctx.fillText(this.type === 'express' ? 'EXP 7700' : (this.type === 'drt' ? 'CALL 20' : 'BUS 100'), this.x + 5, this.y + this.height - 5);
+
+                // 현재 탑승자 수 표기
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 9px DungGeunMo';
+                ctx.fillText(`👥 ${this.passengersLoaded}/${this.capacity}`, this.x + this.width - 32, this.y + this.height - 5);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4 - 2;
+                this.color = color;
+                this.alpha = 1;
+                this.life = 30; // 프레임
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 1 / this.life;
+                return this.alpha > 0;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createBoardParticle(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        // --- 환경 그리기 (도로, 정류장 싸인, 풀밭 등) ---
+        function drawBackground() {
+            // 도로
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 70, canvas.width, 65);
+            
+            // 중앙 분선
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([12, 10]);
+            ctx.beginPath();
+            ctx.moveTo(0, 102);
+            ctx.lineTo(canvas.width, 102);
+            ctx.stroke();
+            ctx.setLineDash([]); // 대시 리셋
+
+            // 인도 / 대기 구역
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, 135, canvas.width, canvas.height - 135);
+
+            // 가이드라인 타일 경계선
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, 135);
+            ctx.lineTo(canvas.width, 135);
+            ctx.stroke();
+
+            // 정류장 대기쉘터 기둥 및 싸인
+            ctx.save();
+            ctx.fillStyle = '#0284c7'; // 정류장 파란색 기둥
+            ctx.fillRect(150, 140, 6, 40);
+            
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(138, 140, 30, 15);
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(138, 140, 30, 15);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 8px DungGeunMo';
+            ctx.textAlign = 'center';
+            ctx.fillText("BUS", 153, 148);
+            ctx.fillText("STOP", 153, 153);
+            ctx.restore();
+        }
+
+        // --- 루프, 인터벌 & 상태 업데이트 ---
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const dpr = window.devicePixelRatio || 1;
+            // 캔버스 크기 맞춤 조정
+            canvas.width = container.clientWidth * dpr;
+            canvas.height = container.clientHeight * dpr;
+            ctx.scale(dpr, dpr);
+            
+            // 논리 해상도를 고정하여 연산 일관성 유지 (예: 500 x 300 범위)
+            // 브라우저 렌더 크기에 상관없이 좌표계 스케일 정렬
+            const ratioX = container.clientWidth / 500;
+            const ratioY = container.clientHeight / 300;
+            ctx.scale(ratioX, ratioY);
+        }
+
+        function startGame() {
+            playSound('button');
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            // 캔버스 초기 크기 셋팅
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // 변수 리셋
+            budget = 300;
+            score = 0;
+            commuters = [];
+            buses = [];
+            particles = [];
+            activeEvent = null;
+            eventTimer = 0;
+            
+            // 초기 주민 소환
+            for (let i = 0; i < 6; i++) {
+                commuters.push(new Commuter());
+            }
+
+            isGameRunning = true;
+            addComplaintFeed("📢 [시뮬레이터 가동] '출근길 서바이벌'이 개시되었습니다. 노선 관리를 시작하세요!");
+            gameLoop();
+        }
+
+        // 대중교통 정책 발동
+        function deployPolicy(type) {
+            if (!isGameRunning) return;
+            const meta = BUS_TYPES[type];
+            if (budget >= meta.cost) {
+                budget -= meta.cost;
+                buses.push(new Bus(type));
+                playSound('spawn');
+                addComplaintFeed(`🚍 [정책 배치] ${meta.name} 노선이 가동되었습니다! (비용: ${meta.cost}원)`);
+            } else {
+                playSound('button');
+                addComplaintFeed(`❌ [예산 부족] 잔액이 부족해 정책 카드를 발동할 수 없습니다. (필요: ${meta.cost}원)`);
+            }
+        }
+
+        // 키보드 핫키 지원
+        window.addEventListener('keydown', (e) => {
+            if (!isGameRunning) return;
+            if (e.key === '1') deployPolicy('local');
+            if (e.key === '2') deployPolicy('express');
+            if (e.key === '3') deployPolicy('drt');
+        });
+
+        // 돌발 이벤트 생성 시스템
+        function processEvents() {
+            eventTimer++;
+            
+            // 15초(900프레임) 마다 새로운 돌발 이벤트 확률적 발생
+            if (eventTimer > 900) {
+                eventTimer = 0;
+                
+                if (activeEvent === null) {
+                    const dice = Math.random();
+                    if (dice < 0.4) {
+                        activeEvent = 'traffic';
+                        activeEventDuration = 500; // 정체 지속 500프레임 (~8초)
+                        playSound('event');
+                        addComplaintFeed(`🚨 [도로 정체] 상습 정체 구간에서 사고 발생! 버스 속도가 급감합니다. (버스전용차로가 시급합니다!)`, true);
+                    } else if (dice < 0.8) {
+                        activeEvent = 'rush';
+                        activeEventDuration = 600; // 러시아워 정점 600프레임 (~10초)
+                        playSound('event');
+                        addComplaintFeed(`🔥 [출근 대란] 인근 거대 아파트 신규 입주! 대기 정류장 유입인구와 분노 폭주!`, true);
+                    } else {
+                        // 예산 삭감
+                        const loss = 150;
+                        budget = Math.max(0, budget - loss);
+                        playSound('event');
+                        addComplaintFeed(`💸 [예산 삭감] 지자체 세수 부족으로 시청 교통 보조금이 갑작스레 ${loss}원 삭감되었습니다!`, true);
+                    }
+                }
+            }
+
+            // 이벤트 활성화 타이머 처리
+            if (activeEvent) {
+                activeEventDuration--;
+                const ticker = document.getElementById('event-ticker');
+                const tickerText = document.getElementById('event-text');
+                ticker.classList.remove('hidden');
+                ticker.classList.add('flex');
+
+                if (activeEvent === 'traffic') {
+                    tickerText.innerText = "🚨 도로 정체 심화! 버스 속도 하락 중 (해결책: 대중교통 우선차로 신설 필요)";
+                } else if (activeEvent === 'rush') {
+                    tickerText.innerText = "🔥 러시아워 최고조! 정류장 주민 대기시간 분노 배가 중";
+                }
+
+                if (activeEventDuration <= 0) {
+                    activeEvent = null;
+                    ticker.classList.add('hidden');
+                    ticker.classList.remove('flex');
+                    addComplaintFeed("ℹ️ [상황 종료] 발생했던 돌발 상황 및 기상 영향이 해제되었습니다.");
+                }
+            }
+        }
+
+        // 전체 메인 루프
+        function gameLoop() {
+            if (!isGameRunning) return;
+
+            // 스케일링 보정 후 캔버스 초기화 (논리 크기 500, 300 기준)
+            ctx.clearRect(0, 0, 500, 300);
+
+            // 1. 배경 드로잉
+            drawBackground();
+
+            // 2. 예산 공급 (초당 약 15원 충전)
+            budget += 0.25;
+            
+            // 3. 주민 소환 스케줄러
+            commuterSpawnTimer++;
+            let currentSpawnRate = commuterSpawnInterval;
+            if (activeEvent === 'rush') {
+                currentSpawnRate = 45; // 러시아워 땐 유입 주기 초고속화
+            }
+            if (commuterSpawnTimer > currentSpawnRate) {
+                commuterSpawnTimer = 0;
+                commuters.push(new Commuter());
+                playSound('spawn');
+                
+                // 가끔 한 번씩 채팅 피드에 민원 추가
+                if (Math.random() < 0.4) {
+                    addComplaintFeed(randomComplaints[Math.floor(Math.random() * randomComplaints.length)], Math.random() > 0.5);
+                }
+            }
+
+            // 4. 주민 데이터 업데이트 및 그리기
+            let totalStress = 0;
+            commuters.forEach(c => {
+                c.update();
+                c.draw();
+                totalStress += c.stress;
+            });
+            
+            // 주민 평균 빡침 지수 산출
+            averageStress = commuters.length > 0 ? Math.round(totalStress / commuters.length) : 0;
+
+            // 5. 버스 데이터 업데이트 및 그리기
+            buses = buses.filter(bus => {
+                const isAlive = bus.update();
+                if (isAlive) {
+                    bus.draw();
+                }
+                return isAlive;
+            });
+
+            // 6. 파티클 이펙트 그리기
+            particles = particles.filter(p => {
+                const active = p.update();
+                if (active) p.draw();
+                return active;
+            });
+
+            // 7. 돌발 이벤트 핸들러
+            processEvents();
+
+            // 8. HTML UI 동기화
+            document.getElementById('stat-budget').innerText = `${Math.floor(budget)}원`;
+            document.getElementById('stat-score').innerText = `${score} / ${targetScore} 명`;
+            document.getElementById('stat-stress').innerText = `${averageStress}%`;
+
+            // 분노 게이지 색상 변경
+            const stressText = document.getElementById('stat-stress');
+            if (averageStress > 70) {
+                stressText.className = "pixel-font text-lg font-bold text-red-500 animate-pulse";
+            } else if (averageStress > 40) {
+                stressText.className = "pixel-font text-lg font-bold text-amber-400";
+            } else {
+                stressText.className = "pixel-font text-lg font-bold text-emerald-400";
+            }
+
+            // 예산 연동 카드 사용불가 처리(비활성화)
+            document.getElementById('card-local').disabled = (budget < BUS_TYPES.local.cost);
+            document.getElementById('card-express').disabled = (budget < BUS_TYPES.express.cost);
+            document.getElementById('card-drt').disabled = (budget < BUS_TYPES.drt.cost);
+
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- 게임 성공 / 실패 모달 처리 ---
+        function gameOver(victim) {
+            isGameRunning = false;
+            cancelAnimationFrame(gameLoopId);
+            playSound('over');
+
+            // 전면 실패 안내
+            const intro = document.getElementById('intro-screen');
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.classList.add('hidden');
+            intro.classList.remove('hidden');
+
+            intro.innerHTML = `
+                <div class="my-auto max-w-lg">
+                    <span class="pixel-font text-rose-500 text-sm tracking-wider uppercase bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">Game Over - 출근 실패!</span>
+                    <h2 class="pixel-font text-3xl sm:text-5xl font-extrabold text-white mt-4 mb-2 tracking-tight">주민 폭발 및 지각 발생!</h2>
+                    <p class="text-slate-400 text-sm sm:text-base mb-6 leading-relaxed">
+                        정류장에서 끈질기게 기다리던 한 주민(${victim.emoji})이 결국 <strong class="text-red-400">분노 한계(빡침 100%)</strong>에 달해 회사를 무단결근하고 말았습니다!<br>
+                        더 시급한 증차 예산 확보와 지선 정비 대안이 없으면, 매일 아침의 평화는 존재하지 않습니다.
+                    </p>
+
+                    <div class="bg-red-950/40 p-4 rounded-xl border border-red-500/20 text-left text-xs mb-8">
+                        <h4 class="font-bold text-red-400 mb-2">실제 현실은 어떨까요?</h4>
+                        <p class="text-slate-300 leading-relaxed">
+                            매일 아침 경기도, 신도시 및 소외 구역 주민들은 편도 40분이 넘는 긴 대기 시간과 불량한 버스 환경으로 고통받고 있습니다. 우리의 사소한 목소리가 행정 제도를 바꿀 유일한 동력입니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-sm flex flex-col gap-2">
+                    <button onclick="startGame()" class="pixel-font w-full py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-lg font-bold rounded-xl shadow-lg transition-all">
+                        다시 도전하기 🔄
+                    </button>
+                    <button onclick="openCampaignModal('sign')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold text-xs rounded-lg transition-all border border-slate-700">
+                        서명하여 진짜 대중교통 살리기 ✍️
+                    </button>
+                </div>
+            `;
+        }
+
+        function gameWin() {
+            isGameRunning = false;
+            cancelAnimationFrame(gameLoopId);
+            playSound('win');
+
+            const intro = document.getElementById('intro-screen');
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.classList.add('hidden');
+            intro.classList.remove('hidden');
+
+            intro.innerHTML = `
+                <div class="my-auto max-w-lg">
+                    <span class="pixel-font text-emerald-400 text-sm tracking-wider uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Victory - 클리어!</span>
+                    <h2 class="pixel-font text-3xl sm:text-5xl font-extrabold text-white mt-4 mb-2 tracking-tight">출근길 대성공!</h2>
+                    <p class="text-slate-400 text-sm sm:text-base mb-6 leading-relaxed">
+                        축하합니다! 당신의 꼼꼼한 노선 추가와 지능형 DRT 셔틀 배치 덕분에 주민 <strong class="text-blue-400">100명</strong>이 안전하고 즐겁게 일터로 복귀하는 최상의 행복 교통 환경을 성취하셨습니다!
+                    </p>
+
+                    <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-500/20 text-left text-xs mb-8">
+                        <h4 class="font-bold text-indigo-400 mb-2">실제 캠페인에 힘을 더해주세요</h4>
+                        <p class="text-slate-300 leading-relaxed">
+                            게임 속에서는 몇 번의 터치로 버스가 늘어났지만, 현실 행정은 오로지 주민들의 단결된 <strong>공식 온라인 서명</strong>과 <strong>지속적인 민원 요구</strong>에 의해서만 예산 편성이 통과됩니다. 아래 성명 운동에 즉시 힘을 합치고 우리 권리를 사수해 주세요!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-sm flex flex-col gap-2">
+                    <button onclick="openCampaignModal('sign')" class="pixel-font w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-lg font-bold rounded-xl shadow-lg transition-all">
+                        주민 서명 연대 서약하기 ✍️
+                    </button>
+                    <button onclick="startGame()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg transition-all">
+                        한 번 더 플레이 🎮
+                    </button>
+                </div>
+            `;
+        }
+
+        // 라이브러리 및 아이콘 초기화
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

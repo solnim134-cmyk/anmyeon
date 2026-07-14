@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태안에서 살며, 사랑하며 | 태안 장기 체류 프로젝트</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome (for Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Noto Sans KR, Gowun Batang) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        serif: ['Gowun Batang', 'serif'],
+                    },
+                    colors: {
+                        taeanDeep: '#03045E',   /* 깊고 풍부한 심해 네이비 */
+                        taeanBlue: '#0077B6',   /* 청량하고 푸른 서해 바다 */
+                        taeanTeal: '#00B4D8',   /* 에메랄드빛 해변 물결 */
+                        taeanFoam: '#90E0EF',   /* 고운 백사장 파도 거품 */
+                        taeanOrange: '#FB8500', /* 서해안 낙조의 황금 오렌지 */
+                        taeanSand: '#FFFDF9',   /* 고운 백사장의 따스한 아이보리 */
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Custom Wave Graphic Separator Classes */
+        .wave-transition {
+            fill: #FFFDF9;
+        }
+        .wave-transition-dark {
+            fill: #0f172a; /* Slate 900 */
+        }
+        /* Smooth Custom Floating Animations */
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+        .float-bubble {
+            animation: float-gentle 6s ease-in-out infinite;
+        }
+        /* Glassmorphism utility */
+        .glass-marine {
+            background: rgba(2, 48, 71, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-sand {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(2, 48, 71, 0.05);
+        }
+        /* Range input aesthetic polish */
+        input[type="range"]::-webkit-slider-thumb {
+            background: #FB8500;
+            border: 2px solid #FFFDF9;
+            box-shadow: 0 4px 10px rgba(251, 133, 0, 0.3);
+            border-radius: 9999px;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-taeanSand overflow-x-hidden antialiased">
+
+    <!-- Sound Controller Floating Widget & Navigation Bar -->
+    <div class="fixed bottom-6 left-6 z-[90] pointer-events-auto">
+        <button id="sound-toggle-btn" onclick="toggleAmbientSound()" class="flex items-center gap-2 bg-taeanDeep/90 text-white font-medium px-4 py-3 rounded-full text-xs shadow-2xl border border-white/20 transition-all hover:bg-taeanBlue transform hover:scale-105">
+            <i class="fa-solid fa-volume-xmark mr-1 text-taeanFoam"></i>
+            <span>파도 소리 켜기</span>
+        </button>
+    </div>
+
+    <nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-taeanDeep/90 backdrop-blur-md border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center text-white">
+        <a href="#" class="flex items-center gap-2 group">
+            <span class="font-serif text-xl md:text-2xl font-bold tracking-widest text-taeanFoam transition-colors group-hover:text-white">태안, <span class="text-white">바다림</span></span>
+        </a>
+        <div class="hidden lg:flex items-center gap-10 text-xs md:text-sm font-medium tracking-wider">
+            <a href="#about" class="hover:text-taeanFoam transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-taeanFoam hover:after:w-full after:transition-all">프로젝트 소개</a>
+            <a href="#style" class="hover:text-taeanFoam transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-taeanFoam hover:after:w-full after:transition-all">체류 스타일</a>
+            <a href="#ai-planner" class="hover:text-taeanFoam transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-taeanFoam hover:after:w-full after:transition-all">✨ AI 라이프 플래너</a>
+            <a href="#test" class="hover:text-taeanFoam transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-taeanFoam hover:after:w-full after:transition-all">나의 메이트 찾기</a>
+            <a href="#calculator" class="hover:text-taeanFoam transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-taeanFoam hover:after:w-full after:transition-all">혜택 계산기</a>
+        </div>
+        <div>
+            <button onclick="openModal('registerModal')" class="bg-taeanOrange hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-full text-xs shadow-lg shadow-taeanOrange/30 transition-all transform hover:scale-105 tracking-wider">
+                <i class="fa-solid fa-address-card mr-2"></i>디지털 주민증 발급
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section (바다 느낌 물씬 풍기는 오프닝) -->
+    <section class="relative min-h-screen bg-gradient-to-b from-[#02111E] via-taeanDeep to-taeanBlue flex flex-col justify-center items-center text-center px-6 pt-24 overflow-hidden">
+        
+        <!-- Subtle Wave SVG Pattern Overlay -->
+        <div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+        
+        <!-- Simulated bubbles float -->
+        <div class="absolute inset-0 pointer-events-none opacity-30">
+            <div class="absolute top-[20%] left-[15%] w-16 h-16 bg-taeanTeal rounded-full filter blur-2xl float-bubble"></div>
+            <div class="absolute top-[60%] right-[10%] w-24 h-24 bg-taeanFoam rounded-full filter blur-3xl float-bubble" style="animation-delay: 3s;"></div>
+            <div class="absolute top-[40%] left-[45%] w-12 h-12 bg-white rounded-full filter blur-xl float-bubble" style="animation-delay: 1.5s;"></div>
+        </div>
+
+        <div class="relative z-10 max-w-4xl mx-auto text-white space-y-8 my-auto">
+            <span class="inline-block bg-white/10 backdrop-blur-md text-taeanFoam px-5 py-2 rounded-full text-xs md:text-sm font-semibold tracking-[0.25em] mb-2 border border-white/10 shadow-inner">
+                TAEAN LONG-TERM TRAVEL PROJECT
+            </span>
+            <h1 class="font-serif text-5xl md:text-7xl font-bold leading-[1.15] mb-4 drop-shadow-lg tracking-wide">
+                도시의 소음을 끄고,<br>
+                <span class="text-taeanFoam relative inline-block">
+                    태안의 파도 소리
+                </span>를 켜세요
+            </h1>
+            <p class="text-base md:text-xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed tracking-wide">
+                수도권에서 2시간, 가장 완벽한 서해 바다를 품은 태안.<br>
+                스치듯 지나가는 일차원적인 관광이 아닌, 깊이 숨 쉬고 머무르는 삶을 제안합니다.<br>
+                우리의 일렁이는 파도는 늘 당신을 기다리고 있습니다.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-5 justify-center items-center pt-4">
+                <a href="#about" class="w-full sm:w-auto bg-white text-taeanDeep hover:bg-taeanSand font-bold px-10 py-5 rounded-2xl shadow-2xl transition-all transform hover:-translate-y-1 text-center tracking-wider text-sm">
+                    자세히 알아보기
+                </a>
+                <a href="#ai-planner" class="w-full sm:w-auto bg-taeanOrange hover:bg-orange-600 text-white font-bold px-10 py-5 rounded-2xl shadow-2xl transition-all transform hover:-translate-y-1 text-center tracking-wider text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI 로컬 라이프 설계받기
+                </a>
+            </div>
+        </div>
+
+        <!-- Custom SVG Wave Transition at Section Bottom -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-[0]">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="relative block w-full h-[60px] md:h-[120px] wave-transition">
+                <path d="M0,0 C150,90 350,120 600,60 C850,0 1050,30 1200,90 L1200,120 L0,120 Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Section: About (태안 소멸의 위기와 극복을 위한 비전) -->
+    <section id="about" class="py-28 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div class="lg:col-span-5 space-y-8">
+                <span class="text-taeanBlue font-semibold tracking-[0.2em] text-xs uppercase block">WHY TAEAN?</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-bold text-taeanDeep leading-tight tracking-wide">
+                    인구 6만의 소도시 태안,<br>
+                    하지만 매년 <span class="text-taeanBlue border-b-4 border-taeanFoam">천만 명</span>이 찾는 바다.
+                </h2>
+                <div class="space-y-4 text-slate-600 leading-relaxed text-sm md:text-base">
+                    <p>
+                        태안은 현재 급격한 고령화와 지속적인 청년 인구 유출로 인해 <strong>'지방 소멸 위험 지역'</strong>으로 지정되어 있습니다. 매년 수많은 인파가 해수욕장과 수목원을 스쳐 지나가지만, 태안이 지속되기 위해서는 단 하루가 아닌 <strong>더 깊고 오랜 시간 머무르는 생활인구</strong>가 절실합니다.
+                    </p>
+                    <p>
+                        태안 바다림은 도시의 바쁜 일상에서 탈출하여 온전한 회복이 필요한 여러분과 태안의 고요한 공간을 유기적으로 연결하려 합니다. 머무는 시간이 길어질수록, 당신의 삶에는 사색과 여유가, 태안에는 따뜻한 활력이 깃듭니다.
+                    </p>
+                </div>
+                <div class="pt-6 grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="text-3xl font-extrabold text-taeanDeep">100+</div>
+                        <div class="text-xs text-slate-500 mt-2 font-medium">체류형 파트너</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="text-3xl font-extrabold text-taeanBlue">28개</div>
+                        <div class="text-xs text-slate-500 mt-2 font-medium">청정 해수욕장</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="text-3xl font-extrabold text-taeanOrange">최대 50%</div>
+                        <div class="text-xs text-slate-500 mt-2 font-medium">체류비 정착지원</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-br from-[#02111E] to-taeanDeep p-8 rounded-3xl text-white shadow-2xl transform translate-y-0 md:translate-y-8 hover:translate-y-2 transition-all duration-300">
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6 border border-white/10">
+                            <i class="fa-solid fa-compass text-2xl text-taeanFoam"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 tracking-wide">관계인구로의 전환</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed font-light">
+                            주소지를 완전히 옮기지 않아도 좋습니다. 일 년에 한 달 동안 태안의 주민으로서 로컬의 가치를 함께 지키며 자연을 누려 보세요.
+                        </p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 hover:-translate-y-2 transition-all duration-300">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-6 border border-slate-100">
+                            <i class="fa-solid fa-house-chimney text-2xl text-taeanBlue"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-taeanDeep mb-3 tracking-wide">로컬 유휴 공간의 재탄생</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed font-light">
+                            방치되었던 어촌 숙소, 폐교, 노후 농가를 현대적 정주형 숙소와 스마트 워케이션 아지트로 정교하게 리모델링합니다.
+                        </p>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 hover:-translate-y-2 transition-all duration-300">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-6 border border-slate-100">
+                            <i class="fa-solid fa-umbrella-beach text-2xl text-taeanOrange"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-taeanDeep mb-3 tracking-wide">환경을 수호하는 생태관광</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed font-light">
+                            환경을 훼손하는 상업적 소비 여행 대신, 해변 정화(비치코밍) 및 갯벌 수질 복원에 주민들과 동참하는 선진적인 체류 문화를 정립합니다.
+                        </p>
+                    </div>
+                    <div class="bg-gradient-to-tr from-taeanOrange to-amber-500 p-8 rounded-3xl text-white shadow-2xl transform translate-y-0 md:translate-y-8 hover:translate-y-4 transition-all duration-300">
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6 border border-white/10">
+                            <i class="fa-solid fa-hands-holding-child text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 tracking-wide">차별화된 어촌계 비즈니스</h3>
+                        <p class="text-xs text-orange-50 leading-relaxed font-light">
+                            감태 가공, 독살 체험 등 독창적인 어촌계 비즈니스를 청년 노마드들의 기획력과 결합시켜 지속 가능성을 대폭 확장합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Style of Staying (태안 체류 스타일 3가지 제안) -->
+    <section id="style" class="bg-gradient-to-b from-slate-50 to-taeanSand py-28 px-6 md:px-12 border-t border-slate-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-20 space-y-4">
+                <span class="text-taeanOrange font-semibold tracking-[0.2em] text-xs uppercase block">CHOOSE YOUR LIFE STYLE</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-bold text-taeanDeep tracking-wide">나를 비우고 태안을 채우는 하루</h2>
+                <p class="text-slate-500 leading-relaxed text-sm md:text-base">도시의 복잡한 주기를 잠시 멈추고 태안 바다림이 마련한 맞춤형 생활 주기를 발견해 보세요.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <!-- Style 1: 워케이션 -->
+                <div class="bg-white rounded-[2rem] overflow-hidden shadow-xl border border-slate-100 flex flex-col h-full transform hover:-translate-y-3 hover:shadow-2xl transition-all duration-300">
+                    <div class="h-72 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <span class="absolute top-6 left-6 bg-taeanBlue text-white text-xs font-bold px-4 py-2 rounded-full tracking-wider">WORKATION</span>
+                        <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold font-serif tracking-wide">파도 소리 오피스</h3>
+                    </div>
+                    <div class="p-8 flex-grow flex flex-col justify-between space-y-8">
+                        <div class="space-y-6">
+                            <p class="text-slate-600 text-sm leading-relaxed font-light">
+                                오전엔 만리포가 내려다보이는 파노라마 공유 오피스에서 밀도 있게 협업을 진행하고, 오후엔 맨발로 차가운 백사장을 밟으며 영감을 정제합니다. 
+                            </p>
+                            <div class="h-px bg-slate-100"></div>
+                            <ul class="space-y-3 text-xs text-slate-500 font-medium">
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-wifi text-taeanBlue text-base w-5"></i> 초고속 네트워킹 공유 사무실 무료</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-mug-hot text-taeanBlue text-base w-5"></i> 매일 로컬 수제 드립커피 바우처</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-umbrella-beach text-taeanBlue text-base w-5"></i> 바다 서핑 하프데이 렌탈권 50%</li>
+                            </ul>
+                        </div>
+                        <button onclick="openModal('workationDetail')" class="w-full bg-taeanDeep hover:bg-taeanBlue text-white font-bold py-4 rounded-xl transition-all tracking-wider text-xs">상세 일정 및 거점 숙소 보기</button>
+                    </div>
+                </div>
+
+                <!-- Style 2: 힐링/쉼 -->
+                <div class="bg-white rounded-[2rem] overflow-hidden shadow-xl border border-slate-100 flex flex-col h-full transform hover:-translate-y-3 hover:shadow-2xl transition-all duration-300">
+                    <div class="h-72 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <span class="absolute top-6 left-6 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full tracking-wider">HEALING</span>
+                        <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold font-serif tracking-wide">솔향기 슬로우 웰니스</h3>
+                    </div>
+                    <div class="p-8 flex-grow flex flex-col justify-between space-y-8">
+                        <div class="space-y-6">
+                            <p class="text-slate-600 text-sm leading-relaxed font-light">
+                                피톤치드가 가득한 울창한 태안 솔향기길을 천천히 도보 명상하고, 타오르는 낙조를 마주하며 깊은 번아웃을 완전히 씻어내는 내면 웰니스 프로그램입니다.
+                            </p>
+                            <div class="h-px bg-slate-100"></div>
+                            <ul class="space-y-3 text-xs text-slate-500 font-medium">
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-tree text-emerald-600 text-base w-5"></i> 소나무 숲길 샌드 테라피 가이드</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-spa text-emerald-600 text-base w-5"></i> 천연 해수 스파 센터 무료 입장패스</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-utensils text-emerald-600 text-base w-5"></i> 유기농 텃밭 제철 꾸러미 무료 배송</li>
+                            </ul>
+                        </div>
+                        <button onclick="openModal('healingDetail')" class="w-full bg-taeanDeep hover:bg-taeanBlue text-white font-bold py-4 rounded-xl transition-all tracking-wider text-xs">상세 일정 및 거점 숙소 보기</button>
+                    </div>
+                </div>
+
+                <!-- Style 3: 로컬 어촌 라이프 -->
+                <div class="bg-white rounded-[2rem] overflow-hidden shadow-xl border border-slate-100 flex flex-col h-full transform hover:-translate-y-3 hover:shadow-2xl transition-all duration-300">
+                    <div class="h-72 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <span class="absolute top-6 left-6 bg-taeanOrange text-white text-xs font-bold px-4 py-2 rounded-full tracking-wider">LOCAL CHIC</span>
+                        <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold font-serif tracking-wide">어부의 흐름으로 살기</h3>
+                    </div>
+                    <div class="p-8 flex-grow flex flex-col justify-between space-y-8">
+                        <div class="space-y-6">
+                            <p class="text-slate-600 text-sm leading-relaxed font-light">
+                                어부들과 밀물과 썰물의 주기에 몸을 맡겨 보세요. 전통 독살 방식으로 서해바다의 물고기를 낚고, 싱싱한 해산물로 정을 나누는 리얼 이웃 살이 체험입니다.
+                            </p>
+                            <div class="h-px bg-slate-100"></div>
+                            <ul class="space-y-3 text-xs text-slate-500 font-medium">
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-fish text-taeanOrange text-base w-5"></i> 어촌계 전통 독살 및 바다 갯벌 무료</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-kitchen-set text-taeanOrange text-base w-5"></i> 공유 부엌 활용 소셜 쿠킹 파티 초대</li>
+                                <li class="flex items-center gap-3"><i class="fa-solid fa-gift text-taeanOrange text-base w-5"></i> 마을 장기 체류 전용 임대 자전거 렌탈</li>
+                            </ul>
+                        </div>
+                        <button onclick="openModal('localDetail')" class="w-full bg-taeanDeep hover:bg-taeanBlue text-white font-bold py-4 rounded-xl transition-all tracking-wider text-xs">상세 일정 및 거점 숙소 보기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEW SECTION: ✨ AI 실시간 로컬 라이프 플래너 -->
+    <section id="ai-planner" class="py-28 px-6 md:px-12 bg-slate-950 text-white relative overflow-hidden border-t border-white/5">
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-taeanBlue/20 rounded-full filter blur-3xl pointer-events-none opacity-45"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-taeanOrange/10 rounded-full filter blur-3xl pointer-events-none opacity-30"></div>
+        
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="text-center mb-20 space-y-4">
+                <span class="bg-taeanBlue/20 text-taeanTeal px-5 py-2 rounded-full text-xs font-semibold tracking-[0.25em] uppercase border border-taeanBlue/30 shadow-inner">
+                    Gemini 2.5 AI Engine Realtime Plan
+                </span>
+                <h2 class="font-serif text-3xl md:text-5xl font-bold tracking-wide">나만의 바다 일상을 AI로 정교하게 설계하기</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+                    꿈꾸는 태안에서의 이상적인 한 달을 묘사해 보세요. 최첨단 인공지능이 즉석에서 정주형 주거지, 4주 맞춤 가이드, 숨겨진 로컬 명소를 기획해 드립니다.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                <!-- Left: Prompt Inputs -->
+                <div class="lg:col-span-5 bg-white/5 backdrop-blur-xl rounded-[2rem] p-6 md:p-8 border border-white/10 space-y-8">
+                    <div class="space-y-3">
+                        <h3 class="font-bold text-lg text-white tracking-wide"><i class="fa-regular fa-paper-plane mr-2 text-taeanTeal"></i>나만의 일상 꿈꾸기</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed font-light">태안에서 누구와 어떤 분위기로 시간을 보내고 싶으신가요? 취미, 강아지 여부, 워케이션 니즈 등을 솔직하게 적어 보세요.</p>
+                        <textarea id="ai-user-prompt" placeholder="예: 키우는 리트리버와 함께 안면도 소나무 숲에서 지내며 리모트 작업을 하고 싶어요. 저녁에는 서해 바다의 파도를 바라보며 커피를 한 잔 마시는 조용하고 편안한 공간이면 좋겠습니다." class="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-taeanTeal focus:ring-1 focus:ring-taeanTeal resize-none leading-relaxed placeholder:text-slate-500"></textarea>
+                    </div>
+
+                    <!-- Preset Options -->
+                    <div class="space-y-3">
+                        <span class="block text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-list-check mr-1"></i> 추천 템플릿</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="fillPresetPrompt('designer')" class="bg-white/5 hover:bg-white/15 border border-white/15 text-xs px-4 py-2.5 rounded-xl transition-all duration-200">💻 주중 서핑 주말 디자인 작업</button>
+                            <button onclick="fillPresetPrompt('dog')" class="bg-white/5 hover:bg-white/15 border border-white/15 text-xs px-4 py-2.5 rounded-xl transition-all duration-200">🐕 반려견과 차분한 바다 은둔 생활</button>
+                            <button onclick="fillPresetPrompt('kids')" class="bg-white/5 hover:bg-white/15 border border-white/15 text-xs px-4 py-2.5 rounded-xl transition-all duration-200">🐚 아이와 함께 갯벌 한 달 살기</button>
+                            <button onclick="fillPresetPrompt('burnout')" class="bg-white/5 hover:bg-white/15 border border-white/15 text-xs px-4 py-2.5 rounded-xl transition-all duration-200">🌲 솔향기 맡으며 명상과 온천 치유</button>
+                        </div>
+                    </div>
+
+                    <button id="ai-generate-btn" onclick="generateAiPlan()" class="w-full bg-taeanOrange hover:bg-orange-600 text-white font-bold py-5 rounded-2xl shadow-xl shadow-taeanOrange/20 transition-all flex items-center justify-center gap-2 transform hover:scale-[1.02] tracking-wider text-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>맞춤 태안 플랜 실시간 설계하기</span>
+                    </button>
+                </div>
+
+                <!-- Right: AI Result Output -->
+                <div class="lg:col-span-7 h-full flex flex-col justify-between">
+                    <!-- Default State -->
+                    <div id="ai-plan-placeholder" class="bg-white/5 rounded-[2rem] p-12 border border-white/5 flex flex-col items-center justify-center text-center h-[560px] space-y-4">
+                        <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-taeanTeal text-4xl mb-2 animate-pulse">
+                            <i class="fa-solid fa-compass-drafting"></i>
+                        </div>
+                        <h3 class="font-bold text-xl text-slate-200 tracking-wide">대기 중인 계획표가 존재하지 않습니다</h3>
+                        <p class="text-xs text-slate-500 max-w-sm leading-relaxed font-light">
+                            왼쪽 설계판에 태안에서 상상하는 라이프스타일을 간략히 서술한 뒤, 생성하기 버튼을 누르면 AI 맞춤 분석 데이터가 여기에 생성됩니다.
+                        </p>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="ai-plan-loading" class="hidden bg-white/5 rounded-[2rem] p-12 border border-white/5 flex flex-col items-center justify-center text-center h-[560px] space-y-6">
+                        <div class="relative w-28 h-28">
+                            <div class="absolute inset-0 rounded-full border-4 border-taeanTeal/20"></div>
+                            <div class="absolute inset-0 rounded-full border-4 border-t-taeanOrange animate-spin"></div>
+                            <div class="absolute inset-0 flex items-center justify-center text-3xl text-taeanTeal">
+                                <i class="fa-solid fa-water"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="font-bold text-lg text-white">태안 로컬 유휴공간 DB 연산 중...</h3>
+                            <p class="text-xs text-slate-400 max-w-sm leading-relaxed font-light">
+                                어촌 마을 정주율, 비치코밍 협약 시설 정보 및 소나무숲 치유센터 예약 일정을 가공하여 최적의 동선을 구축하는 중입니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Result State -->
+                    <div id="ai-plan-result" class="hidden ai-border bg-slate-900 rounded-[2rem] p-8 space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/10 pb-6">
+                            <div>
+                                <span class="text-xs text-taeanTeal font-bold uppercase tracking-widest"><i class="fa-solid fa-map-pin mr-1"></i> 추천 정착 지역</span>
+                                <h3 id="ai-res-area" class="font-serif text-3xl font-bold text-white mt-1.5 tracking-wide">태안 안면도 밧개마을</h3>
+                            </div>
+                            <span id="ai-res-concept" class="bg-taeanOrange/20 border border-taeanOrange/40 text-taeanOrange px-4 py-2 rounded-full text-xs font-semibold self-start sm:self-auto tracking-wider">반려견과 사색 라이프</span>
+                        </div>
+
+                        <!-- 1 Month Roadmap -->
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-sm text-slate-300 tracking-wider"><i class="fa-solid fa-calendar-days mr-2 text-taeanTeal"></i> 4주 맞춤 로드맵</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="ai-res-roadmap">
+                                <!-- Appended dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Secret Spots -->
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-sm text-slate-300 tracking-wider"><i class="fa-solid fa-magnifying-glass-location mr-2 text-taeanTeal"></i> 나만을 위한 비밀 수팟</h4>
+                            <ul class="space-y-2 text-xs text-slate-400 font-light" id="ai-res-secrets">
+                                <!-- Appended dynamically -->
+                            </ul>
+                        </div>
+
+                        <!-- AI Mate Message -->
+                        <div class="bg-white/5 p-5 rounded-2xl border border-white/5 space-y-2">
+                            <h4 class="font-bold text-xs text-taeanTeal tracking-widest"><i class="fa-solid fa-comments mr-2"></i> 로컬 이웃의 환영 편지</h4>
+                            <p id="ai-res-message" class="text-xs text-slate-300 leading-relaxed italic font-light"></p>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-4 border-t border-white/5">
+                            <button onclick="copyAiPlan()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium px-5 py-3 rounded-xl text-xs transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-copy"></i> 복사하기
+                            </button>
+                            <button onclick="openModal('registerModal')" class="bg-taeanOrange hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all transform hover:scale-105 tracking-wider">
+                                이 계획으로 거주 연계 신청 ✨
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Interative Test (나만의 태안 메이트 찾기) -->
+    <section id="test" class="py-28 px-6 md:px-12 bg-taeanDeep text-white relative overflow-hidden">
+        <!-- background dynamic element -->
+        <div class="absolute -top-48 -left-48 w-[500px] h-[500px] bg-taeanBlue/20 rounded-full filter blur-3xl opacity-40"></div>
+        <div class="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-taeanOrange/10 rounded-full filter blur-3xl opacity-30"></div>
+
+        <div class="max-w-3xl mx-auto relative z-10">
+            <div class="text-center mb-16 space-y-4">
+                <span class="text-taeanFoam font-semibold tracking-[0.25em] text-xs uppercase block">INTERACTIVE FINDER</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-bold tracking-wide">나의 호흡과 완벽히 공명하는 태안 바다는?</h2>
+                <p class="text-slate-300 max-w-xl mx-auto text-sm leading-relaxed">간단한 4가지 질문을 통해, 당신의 마음에 가장 평화를 줄 수 있는 태안의 해수욕장과 연계 장기 거처를 세밀하게 진단해 드릴게요.</p>
+            </div>
+
+            <!-- Quiz Box Container -->
+            <div class="bg-white/10 backdrop-blur-xl rounded-[2rem] p-8 md:p-10 border border-white/10 shadow-2xl">
+                <!-- Step 1 -->
+                <div id="quiz-step-1" class="quiz-step space-y-6">
+                    <div class="flex justify-between text-xs text-taeanFoam font-bold tracking-wider uppercase">
+                        <span>Q1. 아침에 눈을 뜨고 맞이하고 싶은 태안의 정경은?</span>
+                        <span>1 / 4</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                        <div class="bg-taeanFoam h-full w-1/4 transition-all duration-300"></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 pt-4">
+                        <button onclick="nextQuestion(1, 'A')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">끝없이 펼쳐지는 이국적인 해안 사구와 태초의 고요</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="nextQuestion(1, 'B')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">울창한 안면도 소나무 숲 사이로 붉게 일렁이는 낙조의 바다</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="nextQuestion(1, 'C')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">서퍼들이 자유롭게 파도를 타며 웃음소리가 번지는 활기찬 해변</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div id="quiz-step-2" class="quiz-step hidden space-y-6">
+                    <div class="flex justify-between text-xs text-taeanFoam font-bold tracking-wider uppercase">
+                        <span>Q2. 태안에 체류하는 동안 당신을 집중시킬 주된 행위는?</span>
+                        <span>2 / 4</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                        <div class="bg-taeanFoam h-full w-2/4 transition-all duration-300"></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 pt-4">
+                        <button onclick="nextQuestion(2, 'A')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">파도가 보이는 한적한 카페나 갯벌 의자에서 책을 읽으며 고독 즐기기</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="nextQuestion(2, 'B')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">바다 소리를 화이트 노이즈 삼아 미뤄둔 예술 작업이나 원격 코딩하기</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="nextQuestion(2, 'C')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">동네 이웃들과 갯벌 조개를 한 대야 가득 캐거나 독살 가두리 체험하기</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div id="quiz-step-3" class="quiz-step hidden space-y-6">
+                    <div class="flex justify-between text-xs text-taeanFoam font-bold tracking-wider uppercase">
+                        <span>Q3. 당신의 일상을 환기해 줄 최적의 태안 체류 주기란?</span>
+                        <span>3 / 4</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                        <div class="bg-taeanFoam h-full w-3/4 transition-all duration-300"></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 pt-4">
+                        <button onclick="nextQuestion(3, 'A')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">목요일 저녁부터 일요일 오후까지, 주말 마실 형 잦은 리프레시</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="nextQuestion(3, 'B')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">약 일주일 정도 한적한 해변 독채에서 업무와 쉼을 치밀하게 병행</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="nextQuestion(3, 'C')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">완전한 한 달 이상, 어촌 이웃의 얼굴과 배 시간을 완벽하게 익히는 반정착</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div id="quiz-step-4" class="quiz-step hidden space-y-6">
+                    <div class="flex justify-between text-xs text-taeanFoam font-bold tracking-wider uppercase">
+                        <span>Q4. 태안 로컬 어부님이 차려주시는 완벽한 저녁 밥상이란?</span>
+                        <span>4 / 4</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                        <div class="bg-taeanFoam h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 pt-4">
+                        <button onclick="calculateResult('A')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">어쩌다 차려진 뜨끈하고 시원하고 투박한 향토요리 '게국지' 한 뚝배기</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="calculateResult('B')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">로컬 감태 소스를 두르고 오동통한 전복을 얹은 감태 파스타와 화이트와인</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                        <button onclick="calculateResult('C')" class="w-full text-left bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 rounded-2xl p-5 transition-all flex justify-between items-center group">
+                            <span class="text-sm font-light">부두 끝 선창 천막 아래서 갓 올린 도미회 한 접시와 얼큰 매운탕</span>
+                            <i class="fa-solid fa-chevron-right text-white/30 group-hover:text-white transition-all transform group-hover:translate-x-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Result Area (Initially Hidden) -->
+                <div id="quiz-result" class="quiz-step hidden space-y-8 text-center py-6">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-taeanFoam/20 border border-taeanFoam text-taeanFoam text-5xl mb-2 animate-bounce">
+                        <i id="result-icon" class="fa-solid fa-water"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-taeanOrange font-bold text-xs tracking-[0.2em] uppercase">MATCHING COMPLETED!</span>
+                        <h3 id="result-title" class="font-serif text-3xl md:text-4xl font-bold tracking-wide">안면도 솔향기 은둔자</h3>
+                    </div>
+                    <p id="result-desc" class="text-slate-300 max-w-xl mx-auto text-sm md:text-base leading-relaxed font-light">
+                        당신은 자연 깊숙한 곳에서 조용히 내면의 목소리에 귀를 기울이는 시간이 절실하군요. 고요한 송림 해변과 사막 같은 해안 사구가 펼쳐진 태안의 북부 해변이 당신의 완벽한 아지트가 되어줄 겁니다.
+                    </p>
+                    
+                    <div class="bg-white/5 p-5 rounded-3xl border border-white/10 max-w-md mx-auto text-left space-y-1">
+                        <h4 class="font-bold text-taeanFoam text-xs tracking-wider uppercase"><i class="fa-solid fa-house-circle-check mr-1.5"></i> 추천 체류 베이스</h4>
+                        <p id="result-recommendation" class="text-sm text-slate-200 font-light">태안 신두리 사구 뒤편의 '바람 소리 펜션' 혹은 이원면의 '독채 황토 민박'</p>
+                    </div>
+
+                    <div class="flex gap-4 justify-center pt-4">
+                        <button onclick="restartQuiz()" class="bg-white/10 hover:bg-white/20 text-white font-medium px-8 py-4 rounded-2xl text-xs transition-colors tracking-wide">
+                            테스트 다시 하기
+                        </button>
+                        <button onclick="openModal('registerModal')" class="bg-taeanOrange hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-2xl text-xs transition-all transform hover:scale-105 tracking-wider">
+                            체류 상담 & 주민증 받기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Benefits Calculator (지원금 및 혜택 시뮬레이터) -->
+    <section id="calculator" class="py-28 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="bg-white rounded-[2.5rem] p-8 md:p-14 shadow-2xl shadow-slate-200/50 border border-slate-100 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            
+            <div class="lg:col-span-6 space-y-8">
+                <span class="text-taeanBlue font-semibold tracking-[0.2em] text-xs uppercase block">BENEFIT ESTIMATOR</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-bold text-taeanDeep leading-tight tracking-wide">
+                    오래 머무를수록<br>
+                    <span class="text-taeanOrange border-b-4 border-taeanFoam/40">두터워지는</span> 로컬 지원 혜택
+                </h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed font-light">
+                    태안군은 지자체 소멸 기금과 로컬 어촌 협동 자금을 융합하여 장기 체류 관광객들을 적극 격려합니다. 희망 체류 기간을 슬라이더로 조절하여 혜택의 경제적 가치를 즉석에서 계산해 보세요.
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 text-xs md:text-sm text-slate-600 font-medium">
+                        <div class="w-10 h-10 rounded-2xl bg-taeanTeal/10 text-taeanBlue flex items-center justify-center font-extrabold text-base border border-taeanTeal/20">1</div>
+                        <span>10일 초과 정주 시 로컬 정착 가옥 요금 기본 20% 특별 감면</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs md:text-sm text-slate-600 font-medium">
+                        <div class="w-10 h-10 rounded-2xl bg-taeanTeal/10 text-taeanBlue flex items-center justify-center font-extrabold text-base border border-taeanTeal/20">2</div>
+                        <span>20일 초과 정주 시 바다 보트 렌탈 및 수목원 통합 연간 패스권 부여</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs md:text-sm text-slate-600 font-medium">
+                        <div class="w-10 h-10 rounded-2xl bg-taeanTeal/10 text-taeanBlue flex items-center justify-center font-extrabold text-base border border-taeanTeal/20">3</div>
+                        <span>30일 풀코스 한 달 살기 진행 시 총 가옥 정산금의 50% 통급 환급 정산</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Slider Box -->
+            <div class="lg:col-span-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
+                <h3 class="font-bold text-taeanDeep text-lg mb-8 tracking-wide"><i class="fa-solid fa-calculator mr-2 text-taeanOrange"></i>장기 체류 플랜 연산기</h3>
+                
+                <div class="space-y-8">
+                    <div class="space-y-4">
+                        <div class="flex justify-between text-sm font-bold text-slate-700">
+                            <span>목표 체류 일수</span>
+                            <span class="text-taeanOrange text-lg" id="slider-days-label">15일</span>
+                        </div>
+                        <input type="range" id="days-slider" min="1" max="30" value="15" oninput="updateCalculation()" class="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-taeanOrange">
+                        <div class="flex justify-between text-[11px] text-slate-400 font-bold tracking-wider">
+                            <span>단기 힐링</span>
+                            <span>보름 살이</span>
+                            <span>한 달 살기 (30일)</span>
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-slate-200/60"></div>
+
+                    <!-- Calculated Outputs -->
+                    <div class="space-y-5 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 font-light">지자체 정주 주거 지원비율</span>
+                            <span class="font-bold text-slate-800" id="calc-discount">20% 지원</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 font-light">매칭 지급 지역사랑상품권</span>
+                            <span class="font-bold text-slate-800" id="calc-voucher">30,000원</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 font-light">해당 일수 연계 지원 패키지</span>
+                            <span class="font-extrabold text-taeanBlue text-xs px-3.5 py-1.5 bg-taeanBlue/10 rounded-full tracking-wider" id="calc-package">보름살이 응원팩</span>
+                        </div>
+                        
+                        <div class="h-px bg-slate-200/60"></div>
+
+                        <div class="flex justify-between items-center py-4 bg-taeanDeep text-white px-6 rounded-2xl shadow-xl">
+                            <span class="text-xs text-slate-300 font-medium tracking-wide">총 체류비 기금 절감 효과</span>
+                            <span class="text-2xl font-black text-taeanFoam" id="calc-total">약 180,000원</span>
+                        </div>
+                    </div>
+
+                    <button onclick="openModal('registerModal')" class="w-full bg-taeanOrange hover:bg-orange-600 text-white font-bold py-5 rounded-2xl shadow-xl shadow-taeanOrange/30 transition-all tracking-wider text-xs">
+                        해당 감면 혜택 안고 체류 신청하기
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer / Bottom Campaign Info -->
+    <footer class="bg-slate-900 text-slate-400 py-20 px-6 md:px-12 border-t border-white/5 relative">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-xs md:text-sm leading-relaxed">
+            <div class="space-y-5">
+                <span class="font-serif text-2xl font-bold text-white tracking-widest block">태안, 바다림</span>
+                <p class="text-xs text-slate-500 leading-relaxed font-light">
+                    태안 바다림은 태안군 인구활력과 협의체, 어촌 마을 공동체, 외지 청년 크리에이터 네트워크가 자발적으로 결성한 정주형 생활인구 정착 생태계 구축 캠페인입니다.
+                </p>
+                <div class="flex gap-4 text-base pt-2">
+                    <a href="#" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors"><i class="fa-brands fa-facebook"></i></a>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-bold tracking-widest text-xs uppercase">함께 살리는 태안</h4>
+                <ul class="space-y-2.5 text-xs font-light">
+                    <li><a href="#" class="hover:text-white transition-colors">고향사랑기부제 온라인 접수</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">태안 폐가 리노베이션 기금</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">해안 쓰레기 마일리지 기여제</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">마을 어촌계 자매결연 프로그램</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-bold tracking-widest text-xs uppercase">체류 행정 정보</h4>
+                <ul class="space-y-2.5 text-xs font-light">
+                    <li><a href="#" class="hover:text-white transition-colors">숙박 보조금 환급 행정 기준</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">태안 공유 거점 오피스 맵</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">체류 자격 심사 요건 자가진단</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">정착 청년 이주 정착 자금 개요</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-bold tracking-widest text-xs uppercase">태안군 헬프 데스크</h4>
+                <p class="text-xs text-slate-500 leading-relaxed font-light">본 정주 지원 프로젝트는 충청남도 태안군 지방소멸대응특별기금의 지원을 통해 투명하게 집행됩니다.</p>
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center space-y-1">
+                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Taean Gov Office</span>
+                    <span class="block text-sm font-bold text-taeanTeal">041-670-2XXX</span>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto h-px bg-white/5 my-12"></div>
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-slate-600 font-medium">
+            <span>© 2026 TAEAN BADARIM. All Rights Reserved.</span>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-white transition-colors">개인정보처리방침</a>
+                <a href="#" class="hover:text-white transition-colors">이용약관</a>
+                <a href="#" class="hover:text-white transition-colors">기부금 공시정보</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: Digital Registration (명예 주민증 신청) -->
+    <div id="registerModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <!-- Ocean Header -->
+            <div class="animated-gradient text-white p-8 relative">
+                <button onclick="closeModal('registerModal')" class="absolute top-6 right-6 text-white/70 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <span class="text-[10px] bg-white/20 px-3.5 py-1.5 rounded-full uppercase tracking-widest font-bold">Digital Citizen Card</span>
+                <h3 class="font-serif text-3xl font-bold mt-3 tracking-wide">태안 디지털 주민등록</h3>
+                <p class="text-xs text-slate-200 mt-2 font-light leading-relaxed">태안 바다림의 디지털 명예 주민이 되시면 제휴 로컬 거점 감면권 및 시즌별 소식지를 이메일로 받아보실 수 있습니다.</p>
+            </div>
+            <!-- Form Body -->
+            <form onsubmit="handleRegistration(event)" class="p-8 space-y-5">
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">성명</label>
+                    <input type="text" id="reg-name" required placeholder="홍길동" class="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:outline-none focus:border-taeanBlue focus:ring-1 focus:ring-taeanBlue bg-slate-50">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">휴대전화</label>
+                        <input type="tel" required placeholder="010-0000-0000" class="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:outline-none focus:border-taeanBlue focus:ring-1 focus:ring-taeanBlue bg-slate-50">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">이메일</label>
+                        <input type="email" required placeholder="hello@taean.com" class="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:outline-none focus:border-taeanBlue focus:ring-1 focus:ring-taeanBlue bg-slate-50">
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">가장 중시하는 라이프 밸류</label>
+                    <select class="w-full border border-slate-200 rounded-xl p-3.5 text-sm bg-slate-50 focus:outline-none focus:border-taeanBlue focus:ring-1 focus:ring-taeanBlue">
+                        <option>서핑 라이프 및 역동적인 해안 스포츠</option>
+                        <option>소나무 숲 산책로 산책 및 고요한 명상</option>
+                        <option>실제 어촌계 할머님들과의 정겨운 만찬</option>
+                        <option>해넘이 바다를 바라보는 감성 워케이션</option>
+                    </select>
+                </div>
+                <div class="flex items-start gap-2.5 pt-2">
+                    <input type="checkbox" required id="privacy" class="mt-1 accent-taeanOrange">
+                    <label for="privacy" class="text-[11px] text-slate-500 leading-normal font-light">개인정보 수집 및 관계인구 데이터 활용 동의서(바우처 정산 및 소식지 송신에 준함)에 승인합니다.</label>
+                </div>
+                <button type="submit" class="w-full bg-taeanOrange hover:bg-orange-600 text-white font-bold py-4.5 rounded-xl shadow-lg mt-4 transition-all text-xs tracking-wider uppercase">
+                    주민등록 발급 및 메일 수령하기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALS: Details for Styles of staying -->
+    <div id="workationDetail" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full p-8 shadow-2xl relative">
+            <button onclick="closeModal('workationDetail')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-serif text-2xl font-bold text-taeanDeep mb-4 tracking-wide">파도 소리 오피스 상세 정보</h3>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6 font-light">
+                노트북만 가방에 넣어 가볍게 출근하는 새로운 형태의 바다 지향성 업무 일상. 만리포 오션뷰 전용 스마트 허브 공유 오피스를 24시간 제한 없이 쾌적하게 사용하실 수 있습니다.
+            </p>
+            <div class="space-y-4 mb-6">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+                    <strong class="text-taeanBlue block mb-1 tracking-wider uppercase">📍 추천 가옥 형태</strong>
+                    낙조 전망 바다림 스마트 레지던스 또는 감성 복층 펜션 셰어하우스
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+                    <strong class="text-taeanBlue block mb-1 tracking-wider uppercase">💻 상시 업무 인프라</strong>
+                    듀얼 모니터 즉각 렌탈, 공용 고사양 복합기, 집중 화상 미팅 전용 방음 부스 제공
+                </div>
+            </div>
+            <button onclick="closeModal('workationDetail'); openModal('registerModal');" class="w-full bg-taeanDeep hover:bg-taeanBlue text-white py-4 rounded-xl font-bold transition-all text-xs tracking-wider">이 거주 가이드로 상세 청약하기</button>
+        </div>
+    </div>
+
+    <div id="healingDetail" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full p-8 shadow-2xl relative">
+            <button onclick="closeModal('healingDetail')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-serif text-2xl font-bold text-taeanDeep mb-4 tracking-wide">솔향기 슬로우 웰니스 상세 정보</h3>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6 font-light">
+                음이온이 넘쳐나는 울창한 솔나무 숲에서 지치고 지쳐 부러진 마음의 중심을 단단히 굳히는 회복 일과입니다. 불필요한 스마트폰 알람을 잠재우고 내면을 보듬어 보세요.
+            </p>
+            <div class="space-y-4 mb-6">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+                    <strong class="text-emerald-600 block mb-1 tracking-wider uppercase">📍 추천 가옥 형태</strong>
+                    울창한 숲에 둘러싸인 황토 단독 흙집 스테이 또는 기와 처마 한옥 스테이
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+                    <strong class="text-emerald-600 block mb-1 tracking-wider uppercase">🧘 제공 테라피 프로그램</strong>
+                    이른 아침 모래사장 요가 강습 주 2회 무료 제공, 천연 정호 해수탕 프리패스
+                </div>
+            </div>
+            <button onclick="closeModal('healingDetail'); openModal('registerModal');" class="w-full bg-taeanDeep hover:bg-taeanBlue text-white py-4 rounded-xl font-bold transition-all text-xs tracking-wider">이 거주 가이드로 상세 청약하기</button>
+        </div>
+    </div>
+
+    <div id="localDetail" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full p-8 shadow-2xl relative">
+            <button onclick="closeModal('localDetail')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-serif text-2xl font-bold text-taeanDeep mb-4 tracking-wide">어부의 흐름으로 살기 상세 정보</h3>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6 font-light">
+                시간이 정한 시계가 아닌 자연 조수간만의 차에 맞춰 온몸으로 자연과 융화되어 마을의 명예 청년 회원으로 살아가 봅니다. 끈끈하고 유쾌한 진짜 생활인구의 기쁨입니다.
+            </p>
+            <div class="space-y-4 mb-6">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+                    <strong class="text-taeanOrange block mb-1 tracking-wider uppercase">📍 추천 가옥 형태</strong>
+                    어촌계 공동 운영 마을 쉐어하우스 패밀리룸 및 소박한 어촌 가옥 독채
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+                    <strong class="text-taeanOrange block mb-1 tracking-wider uppercase">🦀 상시 무료 체험 장비</strong>
+                    최고급 고무장화, 개조 조개 호미, 야간 집어등 서치 및 낚싯대 세트 전면 무상 대여
+                </div>
+            </div>
+            <button onclick="closeModal('localDetail'); openModal('registerModal');" class="w-full bg-taeanDeep hover:bg-taeanBlue text-white py-4 rounded-xl font-bold transition-all text-xs tracking-wider">이 거주 가이드로 상세 청약하기</button>
+        </div>
+    </div>
+
+    <!-- JavaScript For Interactivity -->
+    <script>
+        // PROCEDURAL AMBIENT OCEAN WAVES SYNTHESIZER
+        let audioCtx = null;
+        let waveNode = null;
+        let filterNode = null;
+        let lfoNode = null;
+        let isPlayingAmbient = false;
+
+        function toggleAmbientSound() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (isPlayingAmbient) {
+                // stop the waves sound generator
+                if (waveNode) {
+                    try { waveNode.stop(); } catch(e){}
+                    waveNode = null;
+                }
+                isPlayingAmbient = false;
+                document.getElementById('sound-toggle-btn').innerHTML = '<i class="fa-solid fa-volume-xmark mr-2 text-slate-400"></i>파도 소리 켜기';
+                document.getElementById('sound-toggle-btn').classList.remove('bg-taeanBlue');
+                document.getElementById('sound-toggle-btn').classList.add('bg-taeanDeep/90');
+            } else {
+                // start generating noise simulating ocean waves
+                const bufferSize = 2 * audioCtx.sampleRate;
+                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1; // white noise spectrum
+                }
+                
+                waveNode = audioCtx.createBufferSource();
+                waveNode.buffer = noiseBuffer;
+                waveNode.loop = true;
+
+                // filtering for softer, marine dynamic sound
+                filterNode = audioCtx.createBiquadFilter();
+                filterNode.type = 'lowpass';
+                filterNode.Q.value = 1.2;
+
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.12; // soft background volume
+
+                // LFO to slowly sweep cut-off frequency up/down to replicate wave wash
+                const lfo = audioCtx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.value = 0.13; // 1 wave ~ 7.5 seconds duration
+
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.value = 350; // frequency variation depth
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(filterNode.frequency);
+
+                // Set filter frequency base
+                filterNode.frequency.value = 450;
+
+                waveNode.connect(filterNode);
+                filterNode.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                lfo.start();
+                waveNode.start();
+                isPlayingAmbient = true;
+                
+                document.getElementById('sound-toggle-btn').innerHTML = '<i class="fa-solid fa-volume-high animate-bounce mr-2 text-taeanFoam"></i>파도 소리 끄기';
+                document.getElementById('sound-toggle-btn').classList.remove('bg-taeanDeep/90');
+                document.getElementById('sound-toggle-btn').classList.add('bg-taeanBlue');
+            }
+        }
+
+        // Custom Modal Control
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Custom Temporary Notification (Instead of standard browser alert)
+        function showNotification(message) {
+            const alertBox = document.getElementById('customAlert');
+            document.getElementById('alertText').innerText = message;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Handle Registration Form Submission
+        function handleRegistration(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value || '모험가';
+            closeModal('registerModal');
+            showNotification(`축하합니다, ${name}님! 태안 명예 주민등록 사전 접수가 완료되었습니다. 혜택 안내장이 기입해주신 메일로 성공적으로 전송되었습니다.`);
+        }
+
+        // --- GEMINI API INTEGRATION FOR ✨ AI REALTIME LOCAL LIFE PLANNER ---
+        
+        // Preset Prompt Loader
+        function fillPresetPrompt(type) {
+            const textarea = document.getElementById('ai-user-prompt');
+            if (type === 'designer') {
+                textarea.value = "디자이너로서 주중에는 고요하게 파도 소리를 들으며 원격 작업을 진행하고, 금요일과 주말에는 젊은 에너지가 넘치는 서핑 강습을 듣고 싶어요. 저녁에는 서퍼들의 커뮤니티나 분위기 좋은 오션뷰 펍에서 어울릴 수 있는 트렌디한 스타일의 거주지와 생활 플랜을 짜주세요.";
+            } else if (type === 'dog') {
+                textarea.value = "키우는 골든리트리버 한 마리와 함께 가볍게 은둔하는 삶을 지향합니다. 사람이 너무 북적이지 않는 비밀 해변이 바로 앞에 있고 소나무 숲길 산책로가 연결되어 반려견과 안전하게 매일 뛰놀 수 있는 시골 주택 기반의 장기 숙소와 어촌 라이프를 계획해주세요.";
+            } else if (type === 'kids') {
+                textarea.value = "초등학생 자녀 2명과 한 달간 자연 학습을 테마로 태안에 머물고자 합니다. 물때에 맞춰 매일 갯벌에 나가 조개나 게를 잡고, 저녁에는 밤하늘 별자리를 관측하며 전통적인 어촌 마을 주민들의 삶을 제대로 체험해 보고 싶습니다. 안전하고 정겨운 패밀리 코스를 원해요.";
+            } else if (type === 'burnout') {
+                textarea.value = "극심한 업무 스트레스로 번아웃 상태입니다. 스마트폰을 잠시 끄고 숲의 소리에 귀를 기울이며 솔향기길을 걷거나 전통적인 노천 온천, 바다 명상을 하며 나를 돌볼 수 있는 조용하고 단아한 사색형 힐링 플랜과 전통 한옥 혹은 웰니스 스테이를 추천해주세요.";
+            }
+        }
+
+        // Retry & Exponential Backoff Wrapper for Gemini API calling
+        async function callGeminiApi(payload) {
+            const apiKey = ""; // Set dynamically by environment
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    
+                    if (response.status === 429 || (response.status >= 500 && response.status < 600)) {
+                        // wait for exponential delay
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (error) {
+                    if (i === 4) throw error;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Exponential Backoff
+            }
+            throw new Error("모든 요청 시도가 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        }
+
+        // Main AI Generation Orchestration
+        async function generateAiPlan() {
+            const userPrompt = document.getElementById('ai-user-prompt').value.trim();
+            if (!userPrompt) {
+                showNotification("태안에서 보낼 이상적인 일상을 입력해 주셔야 AI 플래너가 작동합니다!");
+                return;
+            }
+
+            // UI Switch to Loading
+            document.getElementById('ai-plan-placeholder').classList.add('hidden');
+            document.getElementById('ai-plan-result').classList.add('hidden');
+            document.getElementById('ai-plan-loading').classList.remove('hidden');
+            
+            // System prompt specifying the JSON response contract
+            const systemPrompt = `You are the ultimate expert on Taean-gun local tourism, regional revitalisation and the Taean 'Badarim' long-term stay project. 
+            Analyze the user's dream stay description and respond with a highly personalized, creative, and specific 1-month stay plan in Taean-gun.
+            Your output MUST be a valid JSON object matching this schema exactly. No other text, no code blocks except the JSON itself. All response fields must be written in Korean.
+            
+            Schema:
+            {
+              "stayArea": "Specific Taean village name (e.g., 안면도 고남마을, 원북면 신두리마을, 소원면 파도리 등) and brief description",
+              "concept": "A catchy 2-4 word theme of their stay (e.g., 서핑&노마드 라이프)",
+              "roadmap": [
+                "Week 1 focus and core activities",
+                "Week 2 focus and core activities",
+                "Week 3 focus and core activities",
+                "Week 4 focus and core activities"
+              ],
+              "secretSpots": [
+                "Secret local destination 1 with specific local secret (must be real Taean landmarks/hidden spots)",
+                "Secret local destination 2 with specific local secret",
+                "Secret local destination 3 with specific local secret"
+              ],
+              "mateMessage": "A warm, welcoming message written in local Chungcheongdo dialect ('~했슈', '~해유' style) inviting them to Taean as if from a friendly neighbor."
+            }`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            stayArea: { type: "STRING" },
+                            concept: { type: "STRING" },
+                            roadmap: {
+                                type: "ARRAY",
+                                items: { type: "STRING" }
+                            },
+                            secretSpots: {
+                                type: "ARRAY",
+                                items: { type: "STRING" }
+                            },
+                            mateMessage: { type: "STRING" }
+                        },
+                        required: ["stayArea", "concept", "roadmap", "secretSpots", "mateMessage"]
+                    }
+                }
+            };
+
+            try {
+                const data = await callGeminiApi(payload);
+                
+                // Parse the response
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!resultText) {
+                    throw new Error("결과를 성공적으로 추출하지 못했습니다.");
+                }
+
+                const parsed = JSON.parse(resultText);
+
+                // Populate UI Elements with structured data
+                document.getElementById('ai-res-area').innerText = parsed.stayArea;
+                document.getElementById('ai-res-concept').innerText = `✨ ${parsed.concept}`;
+                
+                // Clear and Populate Roadmap
+                const roadmapContainer = document.getElementById('ai-res-roadmap');
+                roadmapContainer.innerHTML = '';
+                parsed.roadmap.forEach((weekPlan, index) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white/5 p-4 rounded-2xl border border-white/5";
+                    card.innerHTML = `
+                        <div class="text-xs font-bold text-taeanOrange mb-1">WEEK 0${index + 1}</div>
+                        <p class="text-xs text-slate-200 leading-relaxed font-light">${weekPlan}</p>
+                    `;
+                    roadmapContainer.appendChild(card);
+                });
+
+                // Clear and Populate Secret Spots
+                const secretsContainer = document.getElementById('ai-res-secrets');
+                secretsContainer.innerHTML = '';
+                parsed.secretSpots.forEach(spot => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-start gap-2.5 text-xs text-slate-400 font-light";
+                    li.innerHTML = `
+                        <span class="text-taeanTeal mt-0.5"><i class="fa-solid fa-map-pin"></i></span>
+                        <span>${spot}</span>
+                    `;
+                    secretsContainer.appendChild(li);
+                });
+
+                // Populate Mate Message
+                document.getElementById('ai-res-message').innerText = `"${parsed.mateMessage}"`;
+
+                // Switch UI to Result State
+                document.getElementById('ai-plan-loading').classList.add('hidden');
+                document.getElementById('ai-plan-result').classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('ai-plan-loading').classList.add('hidden');
+                document.getElementById('ai-plan-placeholder').classList.remove('hidden');
+                showNotification("AI 플래너 구성 중 네트워크가 불안정하여 오류가 발생했습니다. 다시 한번 시도해 주세요.");
+            }
+        }
+
+        // Custom function to copy plan text to clipboard safely
+        function copyAiPlan() {
+            const area = document.getElementById('ai-res-area').innerText;
+            const concept = document.getElementById('ai-res-concept').innerText;
+            const message = document.getElementById('ai-res-message').innerText;
+            
+            const textToCopy = `[태안 바다림 AI 실시간 로컬 라이프 설계안]\n\n추천 정착지: ${area}\n테마: ${concept}\n\nAI 로컬 메이트 환영 메시지:\n${message}\n\n*본 계획은 태안 바다림 공식 사이트에서 매칭되었습니다.`;
+            
+            // Standard fallback due to iframe restrictions
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            showNotification("AI 맞춤형 설계 내용이 클립보드에 성공적으로 복사되었습니다!");
+        }
+
+        // Interactive Finder (Quiz) Variables
+        let quizAnswers = {
+            1: '',
+            2: '',
+            3: '',
+            4: ''
+        };
+
+        function nextQuestion(currentStep, choice) {
+            quizAnswers[currentStep] = choice;
+            document.getElementById(`quiz-step-${currentStep}`).classList.add('hidden');
+            document.getElementById(`quiz-step-${currentStep + 1}`).classList.remove('hidden');
+        }
+
+        function calculateResult(finalChoice) {
+            quizAnswers[4] = finalChoice;
+            document.getElementById('quiz-step-4').classList.add('hidden');
+            
+            // Logic to calculate result based on most prominent answers
+            const countA = [quizAnswers[1], quizAnswers[2], quizAnswers[3], quizAnswers[4]].filter(x => x === 'A').length;
+            const countB = [quizAnswers[1], quizAnswers[2], quizAnswers[3], quizAnswers[4]].filter(x => x === 'B').length;
+            const countC = [quizAnswers[1], quizAnswers[2], quizAnswers[3], quizAnswers[4]].filter(x => x === 'C').length;
+
+            let resultTitle = "";
+            let resultDesc = "";
+            let resultRecom = "";
+            let resultIcon = "";
+
+            if (countB >= countA && countB >= countC) {
+                resultIcon = "fa-laptop-code";
+                resultTitle = "만리포 해넘이 워커홀릭 (워케이션형)";
+                resultDesc = "당신은 세련된 삶과 일의 균형을 중시하는 프로 일잘러입니다. 주말마다 서핑과 바다 산책을 통해 일의 활력을 얻을 수 있는 만리포 해수욕장 인근의 감성적인 쉐어 오피스와 현대식 레지던스가 안성맞춤입니다.";
+                resultRecom = "만리포 해수욕장 3분 거리 '워케이션 하우스 오베이그'";
+            } else if (countC >= countA && countC >= countB) {
+                resultIcon = "fa-shrimp";
+                resultTitle = "바람아래 어촌계 신규 부원 (로컬 생활 체험형)";
+                resultDesc = "당신은 정겹고 따뜻한 이웃과의 연대를 사랑하는 열정적인 모험가입니다. 매일 물때가 바뀌듯 다채롭고 소박한 어촌 마을의 어른들과 도란도란 이야기를 나누며 살아갈 수 있는 남부 어촌계의 임대 하우스가 완벽하게 맞습니다.";
+                resultRecom = "태안 남면 어촌계 공용 셰어 하우스 '파도나무'";
+            } else {
+                resultIcon = "fa-tree";
+                resultTitle = "신두리 송림의 고독한 사색가 (힐링형)";
+                resultDesc = "당신은 현재 극심한 스트레스 속에서 자기를 돌아볼 평화가 절실한 상태입니다. 파도 소리조차 아스라하게 들리는 신두리 해안 사구 뒤편의 조용하고 은적한 솔향기 숲 스테이에서 몸과 영혼을 함께 위로해 주길 제안합니다.";
+                resultRecom = "태안 이원면 솔향기길 '한옥 스테이 다향목'";
+            }
+
+            document.getElementById('result-icon').className = `fa-solid ${resultIcon}`;
+            document.getElementById('result-title').innerText = resultTitle;
+            document.getElementById('result-desc').innerText = resultDesc;
+            document.getElementById('result-recommendation').innerHTML = `<strong class="text-taeanTeal block mb-1">📍 추천 체류 베이스</strong> ${resultRecom}`;
+            
+            document.getElementById('quiz-result').classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-step-1').classList.remove('hidden');
+            quizAnswers = { 1: '', 2: '', 3: '', 4: '' };
+        }
+
+        // Benefits Calculation (Real-time slider logic)
+        function updateCalculation() {
+            const days = parseInt(document.getElementById('days-slider').value);
+            document.getElementById('slider-days-label').innerText = `${days}일`;
+
+            let discount = "지원 없음";
+            let voucher = "0원";
+            let pkg = "단기 여행팩";
+            let totalSaving = 0;
+
+            if (days >= 1 && days < 10) {
+                discount = "체류 일수 기준 미달";
+                voucher = `${days * 3000}원 상당 매칭`;
+                pkg = "가벼운 태안 나들이팩";
+                totalSaving = days * 5000;
+            } else if (days >= 10 && days < 20) {
+                discount = "전체 숙박비의 20% 지원";
+                voucher = "30,000원 지급";
+                pkg = "태안 보름살이 서포트팩";
+                totalSaving = (days * 12000) + 30000;
+            } else if (days >= 20 && days < 30) {
+                discount = "전체 숙박비의 35% 지원";
+                voucher = "70,000원 지급";
+                pkg = "로컬 어촌계 메이트팩";
+                totalSaving = (days * 18000) + 70000;
+            } else if (days === 30) {
+                discount = "숙박 요금 50% 통환급";
+                voucher = "150,000원 파격 지급";
+                pkg = "완벽한 태안 한달살이 마스터팩";
+                totalSaving = 650000;
+            }
+
+            document.getElementById('calc-discount').innerText = discount;
+            document.getElementById('calc-voucher').innerText = voucher;
+            document.getElementById('calc-package').innerText = pkg;
+            document.getElementById('calc-total').innerText = `약 ${totalSaving.toLocaleString()}원`;
+        }
+
+        // Set initial state of calculation slider
+        window.onload = function() {
+            updateCalculation();
+        }
+    </script>
+</body>
+</html>

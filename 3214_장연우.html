@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다시, 우리 동네: 온기를 채우다</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#FDFBF7',  /* 따뜻한 베이지 */
+                            warm: '#F5EBE0',   /* 부드러운 모래색 */
+                            earth: '#D5BDAF',  /* 정겨운 흙빛 */
+                            green: '#4F6F52',  /* 싱그러운 초록 */
+                            darkgreen: '#3A4D39',
+                            orange: '#E07A5F'  /* 따뜻한 온기 오렌지 */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts (Noto Sans KR & Gowun Batang) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .serif-font {
+            font-family: 'Gowun Batang', serif;
+        }
+    </style>
+</head>
+<body class="bg-brand-light text-stone-800 flex flex-col min-h-screen">
+
+    <!-- 네비게이션 바 -->
+    <nav class="sticky top-0 z-50 bg-brand-light/90 backdrop-blur-md border-b border-brand-warm py-4 px-6 md:px-12 flex justify-between items-center">
+        <a href="#" class="flex items-center space-x-2">
+            <span class="text-brand-green font-bold text-xl tracking-wider serif-font">다시, 우리 동네</span>
+        </a>
+        <div class="hidden md:flex space-x-8 text-sm font-medium text-stone-600">
+            <a href="#about" class="hover:text-brand-green transition">캠페인 소개</a>
+            <a href="#action" class="hover:text-brand-green transition">참여 방법</a>
+            <a href="#map" class="hover:text-brand-green transition">우리 동네 온기 지도</a>
+            <a href="#mediakit" class="hover:text-brand-green transition">홍보 자료실</a>
+        </div>
+        <a href="#map" class="bg-brand-green hover:bg-brand-darkgreen text-white px-4 py-2 rounded-full text-xs font-semibold transition shadow-md">
+            온기 채우러 가기
+        </a>
+    </nav>
+
+    <!-- 히어로 섹션 -->
+    <header class="relative bg-gradient-to-b from-brand-warm to-brand-light py-20 px-6 md:px-12 text-center flex flex-col items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#4f6f52_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        
+        <div class="relative z-10 max-w-3xl">
+            <span class="inline-block bg-brand-green/10 text-brand-green px-4 py-1.5 rounded-full text-xs font-semibold mb-6 uppercase tracking-wider">
+                지역 소멸 극복 연대 캠페인
+            </span>
+            <h1 class="text-3xl md:text-5xl font-bold leading-snug md:leading-tight text-stone-900 serif-font mb-6">
+                지도가 작아지지 않도록,<br>
+                <span class="text-brand-green underline decoration-brand-orange/40 decoration-4 underline-offset-4">우리 동네의 이름</span>을 불러주세요.
+            </h1>
+            <p class="text-base md:text-lg text-stone-600 mb-10 leading-relaxed max-w-2xl mx-auto">
+                늘 그 자리에 있을 것 같았던 정겨운 동네들이 하나둘 비어가고 있습니다.<br>
+                거창한 의무가 아니어도 괜찮습니다. 주말 여행 한 번, 작은 관심 하나가 우리 동네를 다시 숨 쉬게 만듭니다.
+            </p>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
+                <a href="#action" class="bg-brand-green hover:bg-brand-darkgreen text-white px-8 py-3.5 rounded-xl font-medium transition shadow-lg hover:shadow-xl text-sm">
+                    캠페인 동참하기
+                </a>
+                <a href="#mediakit" class="bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 px-8 py-3.5 rounded-xl font-medium transition text-sm">
+                    홍보 자료 복사하기
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 캠페인 소개 (3R Strategy) -->
+    <section id="about" class="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold serif-font mb-4">어떻게 동네를 지킬 수 있을까요?</h2>
+            <p class="text-stone-500 max-w-lg mx-auto text-sm">3R 전략을 통해 우리의 작은 온기가 모여 지역에 거대한 변화의 물결을 일으킵니다.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div class="bg-white p-8 rounded-2xl border border-brand-warm shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900 mb-3">Re-discover (재발견)</h3>
+                    <p class="text-stone-600 leading-relaxed text-sm">
+                        알려지지 않은 지역 고유의 맛, 평화로운 골목길의 풍경, 그곳만의 독특한 문화 등 숨겨진 가치를 찾아내 세상에 널리 알립니다.
+                    </p>
+                </div>
+                <span class="text-brand-orange text-xs font-semibold mt-6 tracking-wide">#로컬의_가치발견</span>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white p-8 rounded-2xl border border-brand-warm shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900 mb-3">Re-visit (재방문)</h3>
+                    <p class="text-stone-600 leading-relaxed text-sm">
+                        일회성 관광에 머무르지 않고 주말 휴양지나 워케이션 공간으로 활용하며 마음을 기댈 수 있는 나만의 '제2의 아지트'로 만듭니다.
+                    </p>
+                </div>
+                <span class="text-brand-green text-xs font-semibold mt-6 tracking-wide">#주말은_정기방문</span>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white p-8 rounded-2xl border border-brand-warm shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900 mb-3">Re-vital (상생)</h3>
+                    <p class="text-stone-600 leading-relaxed text-sm">
+                        그 지역의 로컬 푸드를 구매하고 고향사랑기부제를 활용하는 등 소박하지만 단단한 경제적 연대를 이루어 지역에 직접 숨결을 불어넣습니다.
+                    </p>
+                </div>
+                <span class="text-rose-500 text-xs font-semibold mt-6 tracking-wide">#고향사랑_직접지원</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 실천 프로그램 안내 (3 Steps) -->
+    <section id="action" class="bg-brand-warm/40 py-20 px-6 md:px-12">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl font-bold serif-font mb-4">누구나 함께하는 3가지 실천 방법</h2>
+                <p class="text-stone-500 text-sm">지도를 넓히고 마을을 채우는 따뜻한 상생 플랜</p>
+            </div>
+
+            <div class="space-y-12">
+                <!-- Step 1 -->
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-brand-warm flex flex-col md:flex-row items-start md:items-center gap-6">
+                    <span class="bg-brand-green text-white text-lg font-bold w-12 h-12 rounded-xl flex items-center justify-center shrink-0">1</span>
+                    <div class="flex-grow">
+                        <span class="text-brand-orange text-xs font-bold uppercase tracking-wider">RE-VISIT PROJECT</span>
+                        <h4 class="text-lg md:text-xl font-bold text-stone-900 mt-1 mb-2">주말 여행지는 '소멸 위기 지역'으로!</h4>
+                        <p class="text-stone-600 text-sm leading-relaxed">
+                            우리가 주말마다 들르는 붐비는 핫플레이스 대신 한적하고 여유 가득한 소멸 위기 지역으로 떠나보세요. 여유로운 힐링뿐만 아니라 소상공인과 골목상권에 깊은 온기가 됩니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-brand-warm flex flex-col md:flex-row items-start md:items-center gap-6">
+                    <span class="bg-brand-green text-white text-lg font-bold w-12 h-12 rounded-xl flex items-center justify-center shrink-0">2</span>
+                    <div class="flex-grow">
+                        <span class="text-brand-orange text-xs font-bold uppercase tracking-wider">RE-VITAL INCENTIVE</span>
+                        <h4 class="text-lg md:text-xl font-bold text-stone-900 mt-1 mb-2">'고향사랑기부제' 참여하고 지역 지키기</h4>
+                        <p class="text-stone-600 text-sm leading-relaxed">
+                            지정된 지자체에 기부하면 10만 원까지 전액 세액공제 혜택을 받고, 기부액의 30%를 맛있는 지역 농산물 및 특산 답례품으로 돌려받을 수 있습니다. 내 마음의 고향에 직접 힘을 보태주세요.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-brand-warm flex flex-col md:flex-row items-start md:items-center gap-6">
+                    <span class="bg-brand-green text-white text-lg font-bold w-12 h-12 rounded-xl flex items-center justify-center shrink-0">3</span>
+                    <div class="flex-grow">
+                        <span class="text-brand-orange text-xs font-bold uppercase tracking-wider">RE-DISCOVER CHALLENGE</span>
+                        <h4 class="text-lg md:text-xl font-bold text-stone-900 mt-1 mb-2">숨어있는 명소를 발견하면 #다시우리동네 공유</h4>
+                        <p class="text-stone-600 text-sm leading-relaxed">
+                            골목 어귀 맛있는 빵집, 고즈넉한 논밭 뷰 카페, 아름다운 간이역 등 나만 알고 있기 아쉬운 매력을 SNS에 챌린지 해시태그를 달아 세상에 퍼트려주세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 인터랙티브 '우리 동네 온기 지도' -->
+    <section id="map" class="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold serif-font mb-4">온기 전달 게시판</h2>
+            <p class="text-stone-500 text-sm max-w-lg mx-auto">사라져가는 우리 동네들에게 '온기'를 불어넣어 응원해주세요. 클릭 한 번으로 가상의 에너지를 충전합니다.</p>
+        </div>
+
+        <!-- 온기 모금 현황 카드 목록 -->
+        <div class="grid md:grid-cols-4 gap-6">
+            <!-- 고창 -->
+            <div class="bg-white rounded-2xl border border-brand-warm p-6 text-center hover:scale-[1.02] transition duration-300 shadow-sm relative overflow-hidden" id="card-gochang">
+                <div class="absolute top-2 right-2 bg-brand-green/10 text-brand-green text-[10px] font-bold px-2.5 py-1 rounded-full">전라북도</div>
+                <div class="text-4xl my-4">🌾</div>
+                <h4 class="text-lg font-bold text-stone-900 serif-font">고창군</h4>
+                <p class="text-xs text-stone-500 mt-1 mb-4">청보리밭과 고인돌의 정취</p>
+                <div class="bg-stone-50 py-3 px-4 rounded-xl mb-4">
+                    <p class="text-[10px] text-stone-400 uppercase tracking-widest">누적 전송된 온기</p>
+                    <p class="text-xl font-bold text-brand-orange mt-0.5" id="count-gochang">1,248℃</p>
+                </div>
+                <button onclick="sendWarmth('gochang')" class="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-medium py-2 rounded-xl text-xs tracking-wider transition active:scale-95 flex items-center justify-center space-x-1">
+                    <span>❤️ 온기 보내기</span>
+                </button>
+            </div>
+
+            <!-- 의성 -->
+            <div class="bg-white rounded-2xl border border-brand-warm p-6 text-center hover:scale-[1.02] transition duration-300 shadow-sm relative overflow-hidden" id="card-uiseong">
+                <div class="absolute top-2 right-2 bg-brand-green/10 text-brand-green text-[10px] font-bold px-2.5 py-1 rounded-full">경상북도</div>
+                <div class="text-4xl my-4">🧄</div>
+                <h4 class="text-lg font-bold text-stone-900 serif-font">의성군</h4>
+                <p class="text-xs text-stone-500 mt-1 mb-4">붉은 산수유꽃과 마늘의 고장</p>
+                <div class="bg-stone-50 py-3 px-4 rounded-xl mb-4">
+                    <p class="text-[10px] text-stone-400 uppercase tracking-widest">누적 전송된 온기</p>
+                    <p class="text-xl font-bold text-brand-orange mt-0.5" id="count-uiseong">942℃</p>
+                </div>
+                <button onclick="sendWarmth('uiseong')" class="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-medium py-2 rounded-xl text-xs tracking-wider transition active:scale-95 flex items-center justify-center space-x-1">
+                    <span>❤️ 온기 보내기</span>
+                </button>
+            </div>
+
+            <!-- 횡성 -->
+            <div class="bg-white rounded-2xl border border-brand-warm p-6 text-center hover:scale-[1.02] transition duration-300 shadow-sm relative overflow-hidden" id="card-hoengseong">
+                <div class="absolute top-2 right-2 bg-brand-green/10 text-brand-green text-[10px] font-bold px-2.5 py-1 rounded-full">강원도</div>
+                <div class="text-4xl my-4">🌲</div>
+                <h4 class="text-lg font-bold text-stone-900 serif-font">횡성군</h4>
+                <p class="text-xs text-stone-500 mt-1 mb-4">청정 숲과 깊고 푸른 하늘</p>
+                <div class="bg-stone-50 py-3 px-4 rounded-xl mb-4">
+                    <p class="text-[10px] text-stone-400 uppercase tracking-widest">누적 전송된 온기</p>
+                    <p class="text-xl font-bold text-brand-orange mt-0.5" id="count-hoengseong">1,506℃</p>
+                </div>
+                <button onclick="sendWarmth('hoengseong')" class="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-medium py-2 rounded-xl text-xs tracking-wider transition active:scale-95 flex items-center justify-center space-x-1">
+                    <span>❤️ 온기 보내기</span>
+                </button>
+            </div>
+
+            <!-- 남해 -->
+            <div class="bg-white rounded-2xl border border-brand-warm p-6 text-center hover:scale-[1.02] transition duration-300 shadow-sm relative overflow-hidden" id="card-namhae">
+                <div class="absolute top-2 right-2 bg-brand-green/10 text-brand-green text-[10px] font-bold px-2.5 py-1 rounded-full">경상남도</div>
+                <div class="text-4xl my-4">🌊</div>
+                <h4 class="text-lg font-bold text-stone-900 serif-font">남해군</h4>
+                <p class="text-xs text-stone-500 mt-1 mb-4">푸른 다랭이마을과 숨쉬는 바다</p>
+                <div class="bg-stone-50 py-3 px-4 rounded-xl mb-4">
+                    <p class="text-[10px] text-stone-400 uppercase tracking-widest">누적 전송된 온기</p>
+                    <p class="text-xl font-bold text-brand-orange mt-0.5" id="count-namhae">2,104℃</p>
+                </div>
+                <button onclick="sendWarmth('namhae')" class="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-medium py-2 rounded-xl text-xs tracking-wider transition active:scale-95 flex items-center justify-center space-x-1">
+                    <span>❤️ 온기 보내기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 커스텀 모달 / 토스트 피드백 -->
+        <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-stone-900 text-white px-6 py-3 rounded-full text-xs shadow-2xl transition-all duration-300 opacity-0 pointer-events-none flex items-center space-x-2">
+            <span>💡</span>
+            <span id="toast-message">온기가 성공적으로 주입되었습니다!</span>
+        </div>
+    </section>
+
+    <!-- 홍보 자료실 (Media Kit Tab) -->
+    <section id="mediakit" class="bg-stone-100 py-20 px-6 md:px-12">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-2xl md:text-3xl font-bold serif-font mb-4">캠페인 미디어 키트</h2>
+                <p class="text-stone-500 text-sm">주변에 상생의 의미를 널리 알릴 수 있도록 포스터 문구, SNS 내용, 보도자료를 즉시 복사해 사용하세요.</p>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="flex border-b border-stone-200 mb-8 bg-white p-1 rounded-xl">
+                <button onclick="switchTab('poster')" id="tab-poster" class="flex-1 text-center py-3 text-xs md:text-sm font-semibold rounded-lg transition-all duration-300 bg-brand-green text-white">
+                    🖼️ 포스터 문구
+                </button>
+                <button onclick="switchTab('sns')" id="tab-sns" class="flex-1 text-center py-3 text-xs md:text-sm font-semibold rounded-lg transition-all duration-300 text-stone-600 hover:text-brand-green">
+                    📱 SNS 콘텐츠
+                </button>
+                <button onclick="switchTab('press')" id="tab-press" class="flex-1 text-center py-3 text-xs md:text-sm font-semibold rounded-lg transition-all duration-300 text-stone-600 hover:text-brand-green">
+                    📰 보도자료 초안
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-stone-200 shadow-sm relative">
+                <!-- Poster Tab Content -->
+                <div id="content-poster" class="space-y-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-md">시안 A - 감성형</span>
+                            <button onclick="copyToClipboard('poster-a-text')" class="text-xs text-brand-green hover:underline flex items-center space-x-1">
+                                <span>복사하기</span>
+                            </button>
+                        </div>
+                        <div id="poster-a-text" class="bg-stone-50 p-4 rounded-xl text-stone-700 text-xs md:text-sm leading-relaxed whitespace-pre-line">
+                            <strong>"우리가 잊고 지낸 동네의 온기, 그곳에는 아직 사람이 살고 있습니다."</strong>
+
+                            늘 그 자리에 있을 것만 같던 우리 동네들이 하나둘 비어가고 있습니다.
+                            이번 주말에는 화려한 도심을 벗어나, 조용하지만 따뜻한 골목길과 정겨운 인사가 있는 그곳으로 발걸음을 옮겨보는 건 어떨까요?
+                            당신의 발걸음 한 걸음이 사라져가는 우리 동네를 지키는 가장 큰 힘이 됩니다.
+                        </div>
+                    </div>
+
+                    <div class="border-t border-stone-100 pt-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-brand-green bg-brand-green/10 px-2.5 py-1 rounded-md">시안 B - 직관형</span>
+                            <button onclick="copyToClipboard('poster-b-text')" class="text-xs text-brand-green hover:underline flex items-center space-x-1">
+                                <span>복사하기</span>
+                            </button>
+                        </div>
+                        <div id="poster-b-text" class="bg-stone-50 p-4 rounded-xl text-stone-700 text-xs md:text-sm leading-relaxed whitespace-pre-line">
+                            <strong>"사라지는 동네를 살리는 가장 쉬운 방법, 주말에 놀러 가기!"</strong>
+
+                            맛있는 로컬 푸드를 먹고, 한적한 시골 풍경을 걷고, 예쁜 로컬 카페에서 커피 한 잔 마시기.
+                            거창한 기부나 이주가 아니어도 괜찮습니다.
+                            여러분의 즐거운 여행이 소멸해가는 지역을 다시 살아나게 만듭니다.
+                            지금, 지도를 열고 새로운 동네 이름을 검색해보세요.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SNS Tab Content (Hidden by default) -->
+                <div id="content-sns" class="hidden space-y-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-stone-700">해시태그 및 카드뉴스 구성안</span>
+                        <button onclick="copyToClipboard('sns-text')" class="text-xs text-brand-green hover:underline flex items-center space-x-1">
+                            <span>복사하기</span>
+                        </button>
+                    </div>
+                    <div id="sns-text" class="bg-stone-50 p-4 rounded-xl text-stone-700 text-xs md:text-sm leading-relaxed whitespace-pre-line font-mono">
+                        #다시우리동네 #로컬존중 #소멸위기지역 #국내여행지추천 #고향사랑 #상생캠페인
+
+                        [카드뉴스 내용 요약]
+                        P1: 혹시 이 지역들의 공통점을 아시나요? (풍경 이미지)
+                        P2: 인구 감소로 지도에서 사라질 위기에 처한 기초 지자체들입니다.
+                        P3: 지도가 이대로 작아지게 둘 순 없으니, 우리가 실천할 수 있는 3가지!
+                        P4: 1. 주말 여행은 소멸 위기 지역으로 가기
+                        P5: 2. 세액공제와 풍성한 답례품을 받는 고향사랑기부제 동참하기
+                        P6: 3. 숨겨진 핫플을 발견하면 #다시우리동네 공유하기
+                        P7: 이번 주말, 당신의 발걸음을 우리 동네로 옮겨주세요!
+                    </div>
+                </div>
+
+                <!-- Press Tab Content (Hidden by default) -->
+                <div id="content-press" class="hidden space-y-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-stone-700">배포 보도자료 초안</span>
+                        <button onclick="copyToClipboard('press-text')" class="text-xs text-brand-green hover:underline flex items-center space-x-1">
+                            <span>복사하기</span>
+                        </button>
+                    </div>
+                    <div id="press-text" class="bg-stone-50 p-4 rounded-xl text-stone-700 text-xs md:text-sm leading-relaxed whitespace-pre-line text-justify">
+                        <strong>[보도자료] 사라져가는 우리 동네를 살리는 발걸음, '다시, 우리 동네' 캠페인 개최</strong>
+
+                        * 소멸 위기 지역 활성화를 위한 대중 참여형 상생 캠페인 본격 시동
+                        * 로컬 여행 장려, 고향사랑기부 활성화 등 실질적 상생 프로그램 진행
+
+                        최근 지역 소멸 문제가 국가적 화두로 떠오른 가운데, 소멸 위기 지역에 활력을 불어넣기 위한 대중 참여형 캠페인 '다시, 우리 동네: 온기를 채우다'가 본격적으로 막을 올린다.
+
+                        이번 캠페인은 급격한 인구 감소로 위기를 겪고 있는 전국 지자체들을 알리고, 대중의 지속적인 관심과 방문을 유도하기 위해 기획되었다. 단순히 인구 감소의 심각성을 경고하기보다, 지역의 숨은 매력을 재발견하고 지속적으로 가보게 만드는 일에 의의가 있다.
+
+                        캠페인 관계자는 "지방의 소멸은 국가 전체의 활력 저하로 이어진다"며 "주말 방문, 지역 상품 구매 등 일상 속 작은 실천이 모이면 큰 변화를 만들 수 있으니 많은 참여를 부탁드린다"고 전했다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer class="bg-stone-900 text-stone-400 py-12 px-6 md:px-12 border-t border-stone-800 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-center md:text-left">
+                <span class="text-white font-bold text-lg serif-font tracking-wide">다시, 우리 동네</span>
+                <p class="text-xs text-stone-500 mt-2">지도가 작아지지 않도록 마음의 가치를 이어갑니다.</p>
+            </div>
+            <div class="flex space-x-6 text-xs text-stone-500">
+                <a href="#" class="hover:text-white transition">이용약관</a>
+                <a href="#" class="hover:text-white transition">개인정보처리방침</a>
+                <a href="#" class="hover:text-white transition">문의하기</a>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto text-center md:text-left text-[10px] text-stone-600 mt-8 border-t border-stone-800/80 pt-6">
+            © 2026 '다시, 우리 동네' 상생 연대 캠페인 위원회. All Rights Reserved.
+        </div>
+    </footer>
+
+    <!-- JavaScript 로직 -->
+    <script>
+        // 온기 보내기 카운트 상태값 (기본값 설정)
+        const warmthCounts = {
+            gochang: 1248,
+            uiseong: 942,
+            hoengseong: 1506,
+            namhae: 2104
+        };
+
+        // 온기 증가 함수
+        function sendWarmth(region) {
+            warmthCounts[region] += 1;
+            
+            // UI 업데이트
+            const countEl = document.getElementById(`count-${region}`);
+            if (countEl) {
+                countEl.innerText = `${warmthCounts[region].toLocaleString()}℃`;
+            }
+
+            // 카드 온기 강조 애니메이션 효과
+            const cardEl = document.getElementById(`card-${region}`);
+            if (cardEl) {
+                cardEl.classList.add('ring-2', 'ring-brand-orange', 'scale-105');
+                setTimeout(() => {
+                    cardEl.classList.remove('ring-2', 'ring-brand-orange', 'scale-105');
+                }, 300);
+            }
+
+            // 해당 지역명 가져오기
+            const regionNames = {
+                gochang: '🌾 고창군',
+                uiseong: '🧄 의성군',
+                hoengseong: '🌲 횡성군',
+                namhae: '🌊 남해군'
+            };
+
+            showToast(`${regionNames[region]}에 소중한 온기를 1℃ 보냈습니다!`);
+        }
+
+        // 토스트 알림 함수
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            
+            toastMsg.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // 탭 전환 기능
+        function switchTab(tabName) {
+            const tabs = ['poster', 'sns', 'press'];
+            
+            tabs.forEach(tab => {
+                const button = document.getElementById(`tab-${tab}`);
+                const content = document.getElementById(`content-${tab}`);
+                
+                if (tab === tabName) {
+                    // 활성화 상태
+                    button.classList.add('bg-brand-green', 'text-white');
+                    button.classList.remove('text-stone-600', 'hover:text-brand-green');
+                    content.classList.remove('hidden');
+                } else {
+                    // 비활성화 상태
+                    button.classList.remove('bg-brand-green', 'text-white');
+                    button.classList.add('text-stone-600', 'hover:text-brand-green');
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        // 클립보드 복사 함수 (execCommand 브라우저 호환 안전 대체)
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const textToCopy = element.innerText;
+
+            // 보이지 않는 textarea 생성 및 선택 후 복사
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed'; // 화면 밖 배치
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('클립보드에 문구가 성공적으로 복사되었습니다.');
+                } else {
+                    showToast('복사에 실패했습니다. 직접 복사해 주세요.');
+                }
+            } catch (err) {
+                showToast('복사를 지원하지 않는 환경입니다.');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+    </script>
+</body>
+</html>

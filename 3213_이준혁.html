@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뻥! (Ppeong!) - 교통정리 아케이드</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans KR, Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', 'Poppins', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* 캔버스 터치 최적화 */
+    canvas {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+  <!-- 헤더 영역 -->
+  <header class="bg-slate-900 border-b border-slate-800 py-3 px-4 shadow-md sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl font-black text-amber-500 tracking-wider">뻥!</span>
+        <span class="bg-amber-500/10 text-amber-400 text-xs px-2 py-0.5 rounded-full font-bold border border-amber-500/20">교통정리 아케이드</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <p class="text-[10px] text-slate-400 font-medium">최고 기록</p>
+          <p class="text-sm font-bold text-slate-200" id="highScoreText">0</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 게임 영역 -->
+  <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-4xl mx-auto w-full gap-4">
+    
+    <!-- 게임 상단 정보 패널 -->
+    <div class="w-full grid grid-cols-3 gap-3">
+      <!-- 점수 패널 -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col items-center justify-center shadow-lg">
+        <span class="text-xs text-slate-400 font-bold mb-1">SCORE</span>
+        <span class="text-2xl font-black text-emerald-400 tracking-tight" id="scoreVal">0</span>
+      </div>
+
+      <!-- 소음도 (도시 스트레스) -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col items-center justify-center shadow-lg col-span-1">
+        <span class="text-xs text-slate-400 font-bold mb-1">도시 소음 (HORN)</span>
+        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden mt-1 relative">
+          <div id="noiseBar" class="bg-gradient-to-r from-yellow-500 to-red-600 h-full w-0 transition-all duration-300"></div>
+        </div>
+        <span class="text-[10px] text-red-400 font-bold mt-1" id="noisePercent">0%</span>
+      </div>
+
+      <!-- 레벨 / 스킬 패널 -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-col items-center justify-center shadow-lg">
+        <span class="text-xs text-slate-400 font-bold mb-1">STAGE</span>
+        <span class="text-xl font-black text-blue-400" id="stageVal">1</span>
+      </div>
+    </div>
+
+    <!-- 게임 캔버스 컨테이너 -->
+    <div class="relative w-full aspect-square max-w-[550px] bg-slate-900 rounded-3xl overflow-hidden border-4 border-slate-800 shadow-2xl">
+      <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+      <!-- 화면 정중앙 오버레이 메세지 (체증 경보 등) -->
+      <div id="toastMessage" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-600/95 text-white font-bold px-4 py-2 rounded-full border-2 border-red-400 shadow-lg text-sm transition-all duration-300 scale-0 opacity-0 pointer-events-none flex items-center gap-2">
+        <span>🚨</span> <span id="toastText">길막 차량 발생!</span>
+      </div>
+
+      <!-- 게임 시작 / 대기 화면 -->
+      <div id="startScreen" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-start p-6 text-center transition-all duration-300 overflow-y-auto">
+        <div class="w-16 h-16 bg-amber-500/10 border-2 border-amber-500 rounded-3xl flex items-center justify-center mb-3 mt-4 animate-bounce shrink-0">
+          <span class="text-4xl">🚦</span>
+        </div>
+        <h1 class="text-3xl font-black text-slate-100 tracking-tight mb-1">뻥!<span class="text-amber-500"> 교통 체증</span></h1>
+        <p class="text-xs text-slate-400 mb-4 max-w-xs leading-relaxed">
+          답답한 사거리 도로를 시원하게 뻥! 뚫어보세요.<br>신호등을 조작하고 불법 주차 차량을 단속하세요!
+        </p>
+
+        <!-- 조작 가이드 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-left text-xs text-slate-300 mb-4 w-full max-w-sm space-y-1.5 shrink-0">
+          <div class="flex items-start gap-2">
+            <span class="text-amber-400">🚦</span>
+            <span><strong>신호등 클릭:</strong> 신호를 제어하되, 다른 차선의 진입 차와 <strong>충돌(교통사고)</strong>하지 않게 하세요!</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-red-400">🚨</span>
+            <span><strong>불법 주차(빌런차):</strong> 상습 정체차를 <strong>광클</strong>해서 견인하세요!</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-rose-500">💥</span>
+            <span><strong>충돌 주의:</strong> 교차로 한복판에서 차들이 부딪치면 즉시 아웃!</span>
+          </div>
+        </div>
+
+        <!-- 점수판 (리더보드) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 w-full max-w-sm mb-5 shrink-0 text-left">
+          <h3 class="text-xs font-bold text-amber-400 mb-2 flex items-center gap-1">🏆 명예의 전당 (Top 5 기록)</h3>
+          <div id="startLeaderboard" class="text-[11px] text-slate-400 space-y-1">
+            <!-- 동적 렌더링 -->
+            <p class="text-center text-slate-500 py-1">아직 등록된 기록이 없습니다.</p>
+          </div>
+        </div>
+
+        <button id="startBtn" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base py-3 px-12 rounded-2xl shadow-lg transform active:scale-95 transition-all w-full max-w-xs shrink-0 mb-4">
+          게임 시작하기
+        </button>
+      </div>
+
+      <!-- 게임 일시정지 / 게임오버 화면 -->
+      <div id="gameOverScreen" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-start p-6 text-center transition-all duration-300 hidden overflow-y-auto">
+        <span class="text-5xl mb-2 mt-4" id="gameOverEmoji">💥</span>
+        <h2 class="text-2xl font-black text-red-500 mb-1" id="gameOverTitle">교통사고 발생!</h2>
+        <p class="text-xs text-slate-400 mb-4" id="gameOverDesc">신호 제어 실패로 교차로에서 차량들이 충돌했습니다.</p>
+
+        <!-- 결과 스탯 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 w-full max-w-xs mb-4 grid grid-cols-2 gap-2 shrink-0">
+          <div>
+            <p class="text-[10px] text-slate-400">최종 점수</p>
+            <p class="text-xl font-black text-emerald-400" id="finalScore">0</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400">진행 스테이지</p>
+            <p class="text-xl font-black text-blue-400" id="finalStage">Stage 1</p>
+          </div>
+        </div>
+
+        <!-- 게임오버 화면 리더보드 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 w-full max-w-xs mb-5 text-left shrink-0">
+          <h3 class="text-xs font-bold text-amber-400 mb-1.5 flex items-center gap-1">🏆 갱신된 명예의 전당</h3>
+          <div id="gameOverLeaderboard" class="text-[11px] text-slate-400 space-y-1">
+            <!-- 동적 렌더링 -->
+          </div>
+        </div>
+
+        <button id="restartBtn" class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-base py-3 px-10 rounded-2xl shadow-lg transform active:scale-95 transition-all w-full max-w-xs shrink-0 mb-4">
+          다시 도전하기
+        </button>
+      </div>
+    </div>
+
+    <!-- 스페셜 스킬 가동기 및 가이드 터치 패드 -->
+    <div class="w-full max-w-[550px] bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex justify-between items-center gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🚔</span>
+        <div>
+          <p class="text-xs font-bold text-slate-300">긴급 사이렌 (경찰차)</p>
+          <p class="text-[10px] text-slate-400">게이지 가득 차면 모든 대기 차량 즉시 이동</p>
+        </div>
+      </div>
+      <button id="skillBtn" class="bg-slate-800 text-slate-500 border border-slate-700 font-bold text-xs py-2 px-4 rounded-xl cursor-not-allowed transition-all" disabled>
+        게이지 대기중 (0/5)
+      </button>
+    </div>
+
+  </main>
+
+  <!-- 푸터 / 저작권 정보 -->
+  <footer class="bg-slate-950 text-center py-4 border-t border-slate-900">
+    <p class="text-[11px] text-slate-500">© 2026 뻥! (Ppeong!) 교통 게임. All Rights Reserved.</p>
+  </footer>
+
+  <!-- 게임 로직 JS -->
+  <script>
+    // ----------------------------------------------------
+    // [1] 초기화 및 상태 관리
+    // ----------------------------------------------------
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 캔버스 크기 고정화 (반응형 렌더링용 내부 해상도 고정)
+    const BASE_WIDTH = 600;
+    const BASE_HEIGHT = 600;
+    canvas.width = BASE_WIDTH;
+    canvas.height = BASE_HEIGHT;
+
+    // UI 요소 연동
+    const scoreVal = document.getElementById('scoreVal');
+    const stageVal = document.getElementById('stageVal');
+    const noiseBar = document.getElementById('noiseBar');
+    const noisePercent = document.getElementById('noisePercent');
+    
+    const startScreen = document.getElementById('startScreen');
+    const startBtn = document.getElementById('startBtn');
+    const startLeaderboard = document.getElementById('startLeaderboard');
+
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const gameOverEmoji = document.getElementById('gameOverEmoji');
+    const gameOverTitle = document.getElementById('gameOverTitle');
+    const gameOverDesc = document.getElementById('gameOverDesc');
+    const gameOverLeaderboard = document.getElementById('gameOverLeaderboard');
+    
+    const restartBtn = document.getElementById('restartBtn');
+    const finalScore = document.getElementById('finalScore');
+    const finalStage = document.getElementById('finalStage');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+    const highScoreText = document.getElementById('highScoreText');
+    const skillBtn = document.getElementById('skillBtn');
+
+    // 게임 변수
+    let score = 0;
+    let highScore = parseInt(localStorage.getItem('ppeong_high_score') || '0');
+    highScoreText.textContent = highScore;
+
+    // 점수판(리더보드) 데이터 관리
+    let leaderboard = JSON.parse(localStorage.getItem('ppeong_leaderboard_list') || '[]');
+
+    let stage = 1;
+    let noise = 0; // 0 ~ 100 (소음도 % / 클랙슨 게이지)
+    let isPlaying = false;
+    let spawnTimer = 0;
+    let villainSpawnTimer = 0;
+    let sirenGauge = 0; // 0 ~ 5 (빌런 처치 시 충전)
+
+    // 게임 내부 객체 리스트
+    let cars = [];
+    let particles = [];
+    
+    // 신호등 데이터 (사거리 중앙의 4개 방향 차선 제어)
+    // 0: 북->남 차선, 1: 남->북 차선, 2: 서->동 차선, 3: 동->서 차선
+    const trafficLights = [
+      { id: 0, x: 230, y: 190, r: 15, state: 'RED', angle: 0 },         // 북쪽 신호
+      { id: 1, x: 370, y: 410, r: 15, state: 'RED', angle: Math.PI },   // 남쪽 신호
+      { id: 2, x: 190, y: 370, r: 15, state: 'GREEN', angle: -Math.PI/2 }, // 서쪽 신호
+      { id: 3, x: 410, y: 230, r: 15, state: 'GREEN', angle: Math.PI/2 }  // 동쪽 신호
+    ];
+
+    // 도로 구획 정의 (사거리 디자인의 충돌 방지 및 진행 경로 설정용)
+    const ROADS = {
+      lanes: [
+        { dir: 'N', x: 260, startY: -50, endY: BASE_HEIGHT + 50, dx: 0, dy: 3, lightIndex: 0, stopY: 170 }, // 북에서 남으로
+        { dir: 'S', x: 340, startY: BASE_HEIGHT + 50, endY: -50, dx: 0, dy: -3, lightIndex: 1, stopY: 430 }, // 남에서 북으로
+        { dir: 'W', y: 340, startX: -50, endX: BASE_WIDTH + 50, dx: 3, dy: 0, lightIndex: 2, stopX: 170 }, // 서에서 동으로
+        { dir: 'E', y: 260, startX: BASE_WIDTH + 50, endX: -50, dx: -3, dy: 0, lightIndex: 3, stopX: 430 }  // 동에서 서로
+      ]
+    };
+
+    // 차량 종류 설정 (디자인용 칼라셋 및 성격)
+    const CAR_TYPES = [
+      { color: '#f87171', speedFactor: 1.0, name: '세단' },
+      { color: '#60a5fa', speedFactor: 1.1, name: 'SUV' },
+      { color: '#34d399', speedFactor: 0.9, name: '버스' },
+      { color: '#fbbf24', speedFactor: 1.2, name: '택시' }
+    ];
+
+    // ----------------------------------------------------
+    // [2] 게임 메인 루프 & 렌더러
+    // ----------------------------------------------------
+    function update(dt) {
+      if (!isPlaying) return;
+
+      // 1. 점수 및 레벨업 체크
+      stage = Math.floor(score / 30) + 1;
+      stageVal.textContent = stage;
+
+      // 2. 차량 소환 시스템 (스테이지가 올라갈 수록 빨라짐)
+      spawnTimer += dt;
+      const spawnInterval = Math.max(1000 - (stage * 80), 450); // 최소 0.45초 간격으로 소환
+      if (spawnTimer >= spawnInterval) {
+        spawnCar();
+        spawnTimer = 0;
+      }
+
+      // 3. 빌런 차량 소환 시스템 (불법 주정차 차)
+      villainSpawnTimer += dt;
+      const villainInterval = Math.max(6000 - (stage * 300), 3000);
+      if (villainSpawnTimer >= villainInterval) {
+        spawnVillainCar();
+        villainSpawnTimer = 0;
+      }
+
+      // 4. 차량 업데이트 및 충돌 체크
+      for (let i = cars.length - 1; i >= 0; i--) {
+        const car = cars[i];
+        
+        // 차가 화면을 완전히 벗어나면 안전하게 리스트에서 제거 & 점수 획득
+        if (car.isPassed && isOutOfScreen(car)) {
+          if (!car.isVillain) {
+            addScore(1);
+          }
+          cars.splice(i, 1);
+          continue;
+        }
+
+        car.update(cars);
+      }
+
+      // 5. 서로 다른 차선에서 신호를 받고 통과 중인 차량 간의 충돌 판단 (추가된 핵심 기능)
+      checkInterlaneCollisions();
+
+      // 6. 이펙트 파티클 업데이트
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        if (particles[i].alpha <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      // 7. 전체 스트레스(소음도) 계산
+      calculateGlobalNoise();
+
+      // 8. 경찰 스킬 버튼 상태 갱신
+      updateSkillButton();
+    }
+
+    // 화면 그리기
+    function draw() {
+      // 캔버스 클리어
+      ctx.fillStyle = '#0f172a'; // 슬레이트 색상 베이스
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 도로 인프라(배경) 그리기
+      drawRoads();
+
+      // 차량들 그리기
+      cars.forEach(car => car.draw());
+
+      // 신호등 그리기
+      drawTrafficLights();
+
+      // 파티클 그리기
+      particles.forEach(p => p.draw());
+    }
+
+    function loop(timestamp) {
+      const dt = 16.6; // 60fps 타깃 기준 고정 프레임워크 델타
+      
+      update(dt);
+      draw();
+
+      if (isPlaying) {
+        requestAnimationFrame(loop);
+      }
+    }
+
+    // ----------------------------------------------------
+    // [3] 배경 및 인프라 드로잉
+    // ----------------------------------------------------
+    function drawRoads() {
+      // 십자가 모양 교차로 그리기
+      ctx.fillStyle = '#1e293b'; // 도로 아스팔트 색
+      
+      // 세로 도로
+      ctx.fillRect(210, 0, 180, BASE_HEIGHT);
+      // 가로 도로
+      ctx.fillRect(0, 210, BASE_WIDTH, 180);
+
+      // 차선 중앙 분리 점선 및 지형 디테일
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 10]);
+
+      // 가로 도로 차선 경계
+      ctx.beginPath();
+      ctx.moveTo(0, 300);
+      ctx.lineTo(BASE_WIDTH, 300);
+      ctx.stroke();
+
+      // 세로 도로 차선 경계
+      ctx.beginPath();
+      ctx.moveTo(300, 0);
+      ctx.lineTo(300, BASE_HEIGHT);
+      ctx.stroke();
+
+      ctx.setLineDash([]); // 대시 설정 초기화
+
+      // 인도 코너 보도블럭 효과
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(0, 0, 210, 210);
+      ctx.fillRect(390, 0, 210, 210);
+      ctx.fillRect(0, 390, 210, 210);
+      ctx.fillRect(390, 390, 210, 210);
+
+      // 횡단보도 무늬 그리기
+      ctx.fillStyle = '#475569';
+      // 북측
+      for (let i = 220; i < 380; i += 20) ctx.fillRect(i, 180, 10, 15);
+      // 남측
+      for (let i = 220; i < 380; i += 20) ctx.fillRect(i, 405, 10, 15);
+      // 서측
+      for (let i = 220; i < 380; i += 20) ctx.fillRect(180, i, 15, 10);
+      // 동측
+      for (let i = 220; i < 380; i += 20) ctx.fillRect(405, i, 15, 10);
+
+      // 인도 안쪽 잔디나 정원 등 비주얼 데코
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 200, 200);
+      ctx.fillRect(400, 0, 200, 200);
+      ctx.fillRect(0, 400, 200, 200);
+      ctx.fillRect(400, 400, 200, 200);
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(5, 5, 190, 190);
+      ctx.strokeRect(405, 5, 190, 190);
+      ctx.strokeRect(5, 405, 190, 190);
+      ctx.strokeRect(405, 405, 190, 190);
+    }
+
+    function drawTrafficLights() {
+      trafficLights.forEach(light => {
+        // 본체 원
+        ctx.save();
+        ctx.translate(light.x, light.y);
+        ctx.rotate(light.angle);
+
+        // 지지대 어두운 바
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(-6, -20, 12, 10);
+
+        // 신호 램프 원통
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, light.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 켜진 불빛 렌더링
+        ctx.beginPath();
+        ctx.arc(0, 0, light.r - 4, 0, Math.PI * 2);
+        if (light.state === 'GREEN') {
+          ctx.fillStyle = '#10b981'; // 에메랄드 그린
+          ctx.shadowColor = '#10b981';
+          ctx.shadowBlur = 15;
+        } else {
+          ctx.fillStyle = '#ef4444'; // 레드
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 15;
+        }
+        ctx.fill();
+        ctx.restore();
+        
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    // ----------------------------------------------------
+    // [4] 차량 클래스 (Car Class)
+    // ----------------------------------------------------
+    class Car {
+      constructor(lane, isVillain = false) {
+        this.lane = lane;
+        this.isVillain = isVillain;
+        this.width = 24;
+        this.height = 42;
+        
+        // 방향에 따른 정렬
+        if (lane.dx !== 0) {
+          this.width = 42;
+          this.height = 24;
+        }
+
+        // 초기 속도 및 위치
+        this.type = CAR_TYPES[Math.floor(Math.random() * CAR_TYPES.length)];
+        this.speed = (lane.dx !== 0 ? Math.abs(lane.dx) : Math.abs(lane.dy)) * this.type.speedFactor;
+        
+        this.x = lane.dx !== 0 ? lane.startX : lane.x;
+        this.y = lane.dy !== 0 ? lane.startY : lane.y;
+
+        this.currentSpeed = this.speed;
+        this.isPassed = false; // 정지선을 통과했는지 여부
+        this.anger = 0; // 이 차가 멈춰서 기다린 누적 스트레스 시간
+        this.hornActive = false;
+        this.hornWaveRadius = 0;
+
+        // 불법 주정차 빌런 상태
+        if (isVillain) {
+          this.hp = 3;
+          this.isParked = false;
+          this.parkTarget = 240 + Math.random() * 120;
+        }
+      }
+
+      update(allCars) {
+        // 1. 빌런차 주정차 돌입 판단
+        if (this.isVillain && !this.isPassed && !this.isParked) {
+          let distToPark = 0;
+          if (this.lane.dir === 'N') distToPark = this.y;
+          else if (this.lane.dir === 'S') distToPark = BASE_HEIGHT - this.y;
+          else if (this.lane.dir === 'W') distToPark = this.x;
+          else if (this.lane.dir === 'E') distToPark = BASE_WIDTH - this.x;
+
+          if (distToPark >= this.parkTarget) {
+            this.isParked = true;
+            this.currentSpeed = 0;
+            showToast("🚨 불법 주차 빌런 발생! 탭해서 견인하세요!");
+          }
+        }
+
+        // 2. 신호등 및 앞 차량 대기 로직 적용
+        if (!this.isPassed && !this.isParked) {
+          const checkPassed = this.checkStopLine();
+          
+          if (!checkPassed) {
+            const frontCar = this.getCarInFront(allCars);
+            const light = trafficLights[this.lane.lightIndex];
+
+            let shouldStop = false;
+
+            // 빨간불일 경우 정지 판단
+            if (light.state === 'RED') {
+              if (this.lane.dir === 'N' && this.y + this.height/2 < this.lane.stopY && this.y + this.height/2 + 50 >= this.lane.stopY) shouldStop = true;
+              else if (this.lane.dir === 'S' && this.y - this.height/2 > this.lane.stopY && this.y - this.height/2 - 50 <= this.lane.stopY) shouldStop = true;
+              else if (this.lane.dir === 'W' && this.x + this.width/2 < this.lane.stopX && this.x + this.width/2 + 50 >= this.lane.stopX) shouldStop = true;
+              else if (this.lane.dir === 'E' && this.x - this.width/2 > this.lane.stopX && this.x - this.width/2 - 50 <= this.lane.stopX) shouldStop = true;
+            }
+
+            // 앞에 가로막고 멈춘 차가 있다면 정지
+            if (frontCar) {
+              const safeDistance = 50;
+              let dist = this.getDistance(frontCar);
+              if (dist < safeDistance) {
+                shouldStop = true;
+              }
+            }
+
+            if (shouldStop) {
+              this.currentSpeed = Math.max(0, this.currentSpeed - 0.5);
+              if (this.currentSpeed === 0) {
+                this.anger += 0.5;
+                if (this.anger > 100) {
+                  this.hornActive = true;
+                  this.hornWaveRadius += 0.8;
+                  if (this.hornWaveRadius > 35) this.hornWaveRadius = 0;
+                }
+              }
+            } else {
+              this.currentSpeed = Math.min(this.speed, this.currentSpeed + 0.3);
+              this.anger = Math.max(0, this.anger - 1);
+              this.hornActive = false;
+            }
+          } else {
+            this.isPassed = true;
+            this.currentSpeed = this.speed;
+            this.anger = 0;
+            this.hornActive = false;
+          }
+        } else if (this.isPassed) {
+          this.currentSpeed = this.speed;
+        }
+
+        // 3. 실제 좌표 이동 반영
+        if (this.lane.dx !== 0) {
+          this.x += this.lane.dx > 0 ? this.currentSpeed : -this.currentSpeed;
+        } else {
+          this.y += this.lane.dy > 0 ? this.currentSpeed : -this.currentSpeed;
+        }
+      }
+
+      checkStopLine() {
+        if (this.lane.dir === 'N') return this.y > this.lane.stopY;
+        if (this.lane.dir === 'S') return this.y < this.lane.stopY;
+        if (this.lane.dir === 'W') return this.x > this.lane.stopX;
+        if (this.lane.dir === 'E') return this.x < this.lane.stopX;
+        return false;
+      }
+
+      getCarInFront(allCars) {
+        let frontCar = null;
+        let minDistance = 9999;
+
+        allCars.forEach(other => {
+          if (other === this || other.lane.dir !== this.lane.dir) return;
+
+          let isAhead = false;
+          let distance = 9999;
+
+          if (this.lane.dir === 'N') {
+            isAhead = other.y > this.y;
+            distance = other.y - this.y;
+          } else if (this.lane.dir === 'S') {
+            isAhead = other.y < this.y;
+            distance = this.y - other.y;
+          } else if (this.lane.dir === 'W') {
+            isAhead = other.x > this.x;
+            distance = other.x - this.x;
+          } else if (this.lane.dir === 'E') {
+            isAhead = other.x < this.x;
+            distance = this.x - other.x;
+          }
+
+          if (isAhead && distance < minDistance) {
+            minDistance = distance;
+            frontCar = other;
+          }
+        });
+
+        return frontCar;
+      }
+
+      getDistance(other) {
+        if (this.lane.dx !== 0) {
+          return Math.abs(this.x - other.x);
+        } else {
+          return Math.abs(this.y - other.y);
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        if (this.hornActive) {
+          ctx.strokeStyle = 'rgba(239, 68, 68, ' + (1 - this.hornWaveRadius/35) + ')';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, this.hornWaveRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        if (this.isVillain && this.isParked) {
+          const flash = Math.sin(Date.now() / 100) > 0;
+          if (flash) {
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(-this.width/2 - 4, -this.height/2 - 4, this.width + 8, this.height + 8);
+          }
+          ctx.fillStyle = '#f43f5e';
+          ctx.beginPath();
+          ctx.arc(0, -this.height - 5, 10, 0, Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px Noto Sans KR';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🚨', 0, -this.height - 6);
+          
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(-20, -this.height + 10, 40, 5);
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(-20, -this.height + 10, (this.hp / 3) * 40, 5);
+        }
+
+        ctx.fillStyle = this.isVillain ? '#e11d48' : this.type.color;
+        ctx.beginPath();
+        const r = 5;
+        const w = this.width;
+        const h = this.height;
+        ctx.roundRect(-w/2, -h/2, w, h, r);
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        if (this.lane.dx !== 0) {
+          const dirSign = this.lane.dx > 0 ? 1 : -1;
+          ctx.fillRect(dirSign * 5, -8, 6, 16);
+          ctx.fillRect(-dirSign * 10, -8, 4, 16);
+        } else {
+          const dirSign = this.lane.dy > 0 ? 1 : -1;
+          ctx.fillRect(-8, dirSign * 5, 16, 6);
+          ctx.fillRect(-8, -dirSign * 10, 16, 4);
+        }
+
+        ctx.fillStyle = 'rgba(253, 224, 71, 0.3)';
+        if (this.lane.dx !== 0) {
+          const dirSign = this.lane.dx > 0 ? 1 : -1;
+          ctx.beginPath();
+          ctx.moveTo(dirSign * w/2, -6);
+          ctx.lineTo(dirSign * (w/2 + 40), -18);
+          ctx.lineTo(dirSign * (w/2 + 40), 18);
+          ctx.lineTo(dirSign * w/2, 6);
+          ctx.fill();
+        } else {
+          const dirSign = this.lane.dy > 0 ? 1 : -1;
+          ctx.beginPath();
+          ctx.moveTo(-6, dirSign * h/2);
+          ctx.lineTo(-18, dirSign * (h/2 + 40));
+          ctx.lineTo(18, dirSign * (h/2 + 40));
+          ctx.lineTo(6, dirSign * h/2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // Canvas roundRect 폴리필
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+      };
+    }
+
+    // ----------------------------------------------------
+    // [5] 펑! 파티클 시스템 (클릭 시 폭발 효과)
+    // ----------------------------------------------------
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color || '#fbbf24';
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.radius = Math.random() * 4 + 2;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.015;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class FloatingText {
+      constructor(x, y, text, color) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color || '#f59e0b';
+        this.vy = -1.5;
+        this.alpha = 1;
+        this.decay = 0.02;
+      }
+
+      update() {
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.font = '900 18px Noto Sans KR';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000000';
+        ctx.shadowBlur = 4;
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
+      }
+    }
+
+    // ----------------------------------------------------
+    // [6] 차량 충돌 판정 (추가 구현 요소)
+    // ----------------------------------------------------
+    function checkInterlaneCollisions() {
+      // 차량들간 이중 루프로 교차로 정면/측면 충돌 판정
+      for (let i = 0; i < cars.length; i++) {
+        for (let j = i + 1; j < cars.length; j++) {
+          const carA = cars[i];
+          const carB = cars[j];
+
+          // 서로 다른 방향의 차선 차량끼리만 충돌 가능
+          if (carA.lane.dir !== carB.lane.dir) {
+            // 정지선 이전 대기 차량끼리의 비현실적 충돌 방지 (교차로 사거리 내 부근에 도달했을 때만)
+            if (isInIntersection(carA) && isInIntersection(carB)) {
+              if (isColliding(carA, carB)) {
+                // 교통사고 발생 시각화
+                const crashX = (carA.x + carB.x) / 2;
+                const crashY = (carA.y + carB.y) / 2;
+                
+                createExplosion(crashX, crashY, '#f43f5e', 45);
+                particles.push(new FloatingText(crashX, crashY - 20, '💥 충돌 사고!', '#f43f5e'));
+
+                // 즉각적인 게임오버 처리 (이유: 교통사고)
+                setTimeout(() => {
+                  triggerGameOver('crash');
+                }, 300);
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 차량이 교차로 내부(사거리 핵심 정체구역)에 있는지 확인
+    function isInIntersection(car) {
+      const margin = 20;
+      return (
+        car.x >= 190 - margin && car.x <= 410 + margin &&
+        car.y >= 190 - margin && car.y <= 410 + margin
+      );
+    }
+
+    // AABB (충돌 한계 박스 판정)
+    function isColliding(carA, carB) {
+      // 살짝 느슨하게 판정하여 유저의 긴장감 및 억까 방지 완화 보정
+      const buffer = 4; 
+      const halfWA = carA.width / 2 - buffer;
+      const halfHA = carA.height / 2 - buffer;
+      const halfWB = carB.width / 2 - buffer;
+      const halfHB = carB.height / 2 - buffer;
+
+      return (
+        Math.abs(carA.x - carB.x) < (halfWA + halfWB) &&
+        Math.abs(carA.y - carB.y) < (halfHA + halfHB)
+      );
+    }
+
+    // ----------------------------------------------------
+    // [7] 핵심 게임 컨트롤 & 스폰
+    // ----------------------------------------------------
+    function spawnCar() {
+      const lane = ROADS.lanes[Math.floor(Math.random() * ROADS.lanes.length)];
+      
+      let spaceFree = true;
+      const spawnLimit = 65;
+
+      cars.forEach(car => {
+        if (car.lane.dir === lane.dir && !car.isPassed) {
+          if (lane.dir === 'N' && car.y < spawnLimit) spaceFree = false;
+          if (lane.dir === 'S' && car.y > BASE_HEIGHT - spawnLimit) spaceFree = false;
+          if (lane.dir === 'W' && car.x < spawnLimit) spaceFree = false;
+          if (lane.dir === 'E' && car.x > BASE_WIDTH - spawnLimit) spaceFree = false;
+        }
+      });
+
+      if (spaceFree) {
+        cars.push(new Car(lane, false));
+      }
+    }
+
+    function spawnVillainCar() {
+      const activeVillain = cars.some(car => car.isVillain && !car.isPassed);
+      if (activeVillain) return;
+
+      const lane = ROADS.lanes[Math.floor(Math.random() * ROADS.lanes.length)];
+      cars.push(new Car(lane, true));
+    }
+
+    function isOutOfScreen(car) {
+      const margin = 100;
+      return (
+        car.x < -margin || 
+        car.x > BASE_WIDTH + margin || 
+        car.y < -margin || 
+        car.y > BASE_HEIGHT + margin
+      );
+    }
+
+    function calculateGlobalNoise() {
+      let totalAnger = 0;
+      let waitingCount = 0;
+
+      cars.forEach(car => {
+        if (car.currentSpeed === 0) {
+          waitingCount++;
+          totalAnger += car.isVillain ? 1.5 : 0.8;
+        }
+      });
+
+      if (waitingCount === 0) {
+        noise = Math.max(0, noise - 0.2);
+      } else {
+        noise = Math.min(100, noise + (totalAnger * 0.05));
+      }
+
+      noiseBar.style.width = noise + '%';
+      noisePercent.textContent = Math.round(noise) + '%';
+
+      if (noise > 80) {
+        noiseBar.className = "bg-gradient-to-r from-red-600 to-red-800 h-full w-0 transition-all duration-300";
+      } else if (noise > 50) {
+        noiseBar.className = "bg-gradient-to-r from-amber-500 to-red-500 h-full w-0 transition-all duration-300";
+      } else {
+        noiseBar.className = "bg-gradient-to-r from-emerald-500 to-yellow-500 h-full w-0 transition-all duration-300";
+      }
+
+      if (noise >= 100) {
+        triggerGameOver('noise');
+      }
+    }
+
+    // ----------------------------------------------------
+    // [8] 터치 & 클릭 이벤트 리스너
+    // ----------------------------------------------------
+    canvas.addEventListener('pointerdown', function(e) {
+      if (!isPlaying) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const clickX = ((e.clientX - rect.left) / rect.width) * BASE_WIDTH;
+      const clickY = ((e.clientY - rect.top) / rect.height) * BASE_HEIGHT;
+
+      let lightClicked = false;
+      trafficLights.forEach(light => {
+        const dist = Math.hypot(clickX - light.x, clickY - light.y);
+        if (dist < 32) {
+          light.state = light.state === 'GREEN' ? 'RED' : 'GREEN';
+          createClickSplash(light.x, light.y, light.state === 'GREEN' ? '#10b981' : '#ef4444');
+          lightClicked = true;
+        }
+      });
+
+      if (lightClicked) return;
+
+      let carClicked = false;
+      for (let i = cars.length - 1; i >= 0; i--) {
+        const car = cars[i];
+        
+        const halfW = car.width / 2 + 10;
+        const halfH = car.height / 2 + 10;
+
+        if (clickX >= car.x - halfW && clickX <= car.x + halfW &&
+            clickY >= car.y - halfH && clickY <= car.y + halfH) {
+          
+          carClicked = true;
+
+          if (car.isVillain && car.isParked) {
+            car.hp--;
+            createClickSplash(car.x, car.y, '#f43f5e');
+            particles.push(new FloatingText(car.x, car.y - 15, '비켜! 💥', '#f43f5e'));
+
+            if (car.hp <= 0) {
+              createExplosion(car.x, car.y, '#f43f5e');
+              cars.splice(i, 1);
+              addScore(5);
+              chargeSiren();
+              showToast("🎉 빌런 견인 완료! (+5점)");
+            }
+          } else {
+            if (car.currentSpeed === 0) {
+              car.isPassed = true;
+              car.currentSpeed = car.speed * 1.8;
+              createExplosion(car.x, car.y, '#fbbf24');
+              particles.push(new FloatingText(car.x, car.y - 15, '뻥! 🚀', '#f59e0b'));
+              addScore(1);
+            }
+          }
+          break;
+        }
+      }
+    });
+
+    // ----------------------------------------------------
+    // [9] 점수판 (리더보드) 시스템
+    // ----------------------------------------------------
+    function updateLeaderboard(finalScore, reachedStage) {
+      const now = new Date();
+      const dateString = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      // 새 기록 삽입
+      leaderboard.push({
+        score: finalScore,
+        stage: reachedStage,
+        date: dateString
+      });
+
+      // 점수 높은 순 정렬 및 상위 5개 유지
+      leaderboard.sort((a, b) => b.score - a.score);
+      leaderboard = leaderboard.slice(0, 5);
+
+      localStorage.setItem('ppeong_leaderboard_list', JSON.stringify(leaderboard));
+      renderLeaderboards();
+    }
+
+    function renderLeaderboards() {
+      let html = '';
+      if (leaderboard.length === 0) {
+        html = `<p class="text-center text-slate-500 py-1">아직 등록된 기록이 없습니다.</p>`;
+      } else {
+        leaderboard.forEach((item, index) => {
+          let crown = '';
+          let color = 'text-slate-300';
+          if (index === 0) { crown = '👑 '; color = 'text-amber-400 font-bold'; }
+          else if (index === 1) { color = 'text-slate-200 font-bold'; }
+          else if (index === 2) { color = 'text-amber-600'; }
+
+          html += `
+            <div class="flex justify-between items-center py-1 border-b border-slate-800/50 last:border-0 ${color}">
+              <div class="flex items-center gap-1.5">
+                <span class="w-4 text-[10px] text-slate-500 text-center">${index + 1}</span>
+                <span>${crown}스코어: ${item.score}</span>
+              </div>
+              <div class="text-[10px] text-slate-500">Stage ${item.stage} | ${item.date}</div>
+            </div>
+          `;
+        });
+      }
+      
+      startLeaderboard.innerHTML = html;
+      gameOverLeaderboard.innerHTML = html;
+    }
+
+    // ----------------------------------------------------
+    // [10] 보조 유틸 기능 및 UI 연출
+    // ----------------------------------------------------
+    function addScore(val) {
+      score += val;
+      scoreVal.textContent = score;
+    }
+
+    function chargeSiren() {
+      sirenGauge = Math.min(5, sirenGauge + 1);
+    }
+
+    function updateSkillButton() {
+      if (sirenGauge >= 5) {
+        skillBtn.disabled = false;
+        skillBtn.className = "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs py-2 px-4 rounded-xl cursor-pointer shadow-lg animate-pulse border border-blue-400";
+        skillBtn.textContent = "🚨 사이렌 발동! (클릭)";
+      } else {
+        skillBtn.disabled = true;
+        skillBtn.className = "bg-slate-800 text-slate-500 border border-slate-700 font-bold text-xs py-2 px-4 rounded-xl cursor-not-allowed";
+        skillBtn.textContent = `게이지 대기중 (${sirenGauge}/5)`;
+      }
+    }
+
+    skillBtn.addEventListener('click', function() {
+      if (sirenGauge < 5 || !isPlaying) return;
+
+      createExplosion(BASE_WIDTH/2, BASE_HEIGHT/2, '#3b82f6', 40);
+      particles.push(new FloatingText(BASE_WIDTH/2, BASE_HEIGHT/2 - 50, '🚨 경찰 전원 통제 완료! 🚨', '#60a5fa'));
+
+      cars.forEach(car => {
+        car.isPassed = true;
+        car.currentSpeed = car.speed * 1.8;
+        createClickSplash(car.x, car.y, '#60a5fa');
+      });
+
+      noise = Math.max(0, noise - 50);
+      sirenGauge = 0;
+      showToast("🚔 경찰 지원 가동: 정체 즉각 해소!");
+    });
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      toastText.textContent = msg;
+      toastMessage.className = "absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 text-slate-100 font-bold px-5 py-2.5 rounded-2xl border border-slate-800 shadow-2xl text-xs transition-all duration-300 scale-100 opacity-100 pointer-events-none flex items-center gap-2";
+      
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toastMessage.className = "absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 text-slate-100 font-bold px-5 py-2.5 rounded-2xl border border-slate-800 shadow-2xl text-xs transition-all duration-300 scale-0 opacity-0 pointer-events-none flex items-center gap-2";
+      }, 2500);
+    }
+
+    function createClickSplash(x, y, color) {
+      for (let i = 0; i < 8; i++) {
+        particles.push(new Particle(x, y, color));
+      }
+    }
+
+    function createExplosion(x, y, color, count = 20) {
+      for (let i = 0; i < count; i++) {
+        particles.push(new Particle(x, y, color));
+      }
+    }
+
+    // ----------------------------------------------------
+    // [11] 게임 컨트롤 및 게임오버 처리
+    // ----------------------------------------------------
+    function startGame() {
+      score = 0;
+      stage = 1;
+      noise = 0;
+      sirenGauge = 0;
+      cars = [];
+      particles = [];
+
+      scoreVal.textContent = "0";
+      stageVal.textContent = "1";
+      noiseBar.style.width = '0%';
+      noisePercent.textContent = '0%';
+
+      startScreen.classList.add('hidden');
+      gameOverScreen.classList.add('hidden');
+      
+      isPlaying = true;
+      requestAnimationFrame(loop);
+      showToast("🚦 사거리 정리를 시작합니다! 스타트!");
+    }
+
+    function triggerGameOver(reason) {
+      isPlaying = false;
+      gameOverScreen.classList.remove('hidden');
+      finalScore.textContent = score;
+      finalStage.textContent = "Stage " + stage;
+
+      // 게임오버 원인에 따른 UI 분기
+      if (reason === 'crash') {
+        gameOverEmoji.textContent = '💥';
+        gameOverTitle.textContent = '대형 충돌 사고!';
+        gameOverTitle.className = 'text-2xl font-black text-rose-500 mb-1';
+        gameOverDesc.textContent = '차량들이 원활하지 못한 신호 조작으로 충돌하였습니다.';
+      } else {
+        gameOverEmoji.textContent = '📢';
+        gameOverTitle.textContent = '도시 소음 대폭발!';
+        gameOverTitle.className = 'text-2xl font-black text-amber-500 mb-1';
+        gameOverDesc.textContent = '차들이 너무 오랫동안 정체되어 분노한 시민들의 클랙슨 테러가 폭발했습니다.';
+      }
+
+      // 로컬 명예의 전당 갱신
+      updateLeaderboard(score, stage);
+
+      // 개별 최고기록(하이스코어) 갱신 체크
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('ppeong_high_score', highScore);
+        highScoreText.textContent = highScore;
+        showToast("👑 역대 최고 기록 갱신!");
+      }
+    }
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    // 초기 점수판 불러오기 및 기본 배경 드로잉
+    renderLeaderboards();
+    draw();
+
+  </script>
+</body>
+</html>

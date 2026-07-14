@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타이쿤 태안 (Tycoon Taean) - 행정 참여 시뮬레이션 게임</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f7f4;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .fancy-font {
+            font-family: 'Gamja Flower', cursive;
+        }
+        /* 가상 태안 지도 그리드 및 애니메이션 */
+        .map-grid {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.9; }
+        }
+        .pulse-icon {
+            animation: pulse-slow 2s infinite ease-in-out;
+        }
+        /* 부드러운 전환을 위한 클래스 */
+        .screen-fade {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-pop {
+            animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        /* 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden max-w-md mx-auto bg-slate-50 border-x border-slate-200 shadow-2xl relative">
+
+    <!-- 상단 헤더 / 스탯 관리 영역 -->
+    <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 shadow-md shrink-0 relative z-20">
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-2xl font-bold fancy-font tracking-wide flex items-center gap-1">
+                <i class="fa-solid fa-crown text-amber-300"></i> 타이쿤 태안
+            </h1>
+            <span class="bg-teal-800/85 px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 border border-teal-500/50">
+                <i class="fa-solid fa-user-shield text-yellow-300"></i> 초보 마을 이장
+            </span>
+        </div>
+        
+        <!-- 주민 행복도 & 발전도 게이지 -->
+        <div class="grid grid-cols-2 gap-3 text-xs bg-black/15 p-2 rounded-xl">
+            <div>
+                <div class="flex justify-between mb-1 font-medium text-slate-100">
+                    <span>😊 주민 행복도</span>
+                    <span id="happiness-val" class="font-bold">50%</span>
+                </div>
+                <div class="w-full bg-black/30 rounded-full h-2">
+                    <div id="happiness-bar" class="bg-yellow-400 h-2 rounded-full transition-all duration-500" style="width: 50%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-1 font-medium text-slate-100">
+                    <span>🏗️ 태안 발전도</span>
+                    <span id="development-val" class="font-bold">20%</span>
+                </div>
+                <div class="w-full bg-black/30 rounded-full h-2">
+                    <div id="development-bar" class="bg-cyan-400 h-2 rounded-full transition-all duration-500" style="width: 20%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 보유 재화 및 포인트 정보 -->
+        <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-white/10">
+            <div class="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg">
+                <i class="fa-solid fa-coins text-yellow-300 text-sm"></i>
+                <span class="text-xs text-teal-100 font-medium">태안 코인:</span>
+                <span id="coin-amount" class="font-bold text-yellow-300 text-sm">300</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg">
+                <i class="fa-solid fa-gift text-pink-300 text-sm"></i>
+                <span class="text-xs text-teal-100 font-medium">상품권 보상:</span>
+                <span id="voucher-points" class="font-bold text-pink-300 text-sm">0 P</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="flex-1 overflow-y-auto no-scrollbar relative flex flex-col bg-slate-50">
+
+        <!-- [화면 1] 메인 게임 맵 화면 -->
+        <div id="screen-map" class="flex-1 flex flex-col relative screen-fade">
+            
+            <!-- 태안 지도 배경 및 가상 노드 -->
+            <div class="flex-1 relative bg-blue-50/40 map-grid overflow-hidden flex flex-col justify-between p-4 min-h-[360px]">
+                
+                <!-- 바다 배경 및 섬 장식 -->
+                <div class="absolute inset-0 pointer-events-none opacity-20">
+                    <div class="absolute top-10 left-6 w-16 h-8 bg-emerald-400 rounded-full filter blur-md"></div>
+                    <div class="absolute top-1/2 right-12 w-20 h-10 bg-emerald-400 rounded-full filter blur-sm"></div>
+                    <div class="absolute bottom-16 left-24 w-12 h-6 bg-emerald-400 rounded-full filter blur-md"></div>
+                </div>
+
+                <!-- 실시간 가이드 가판대 -->
+                <div class="bg-white/95 border border-slate-200 p-3 rounded-xl shadow-md z-10 text-xs text-slate-700 flex items-start gap-2.5 backdrop-blur-xs transition-all duration-300">
+                    <div class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-bullhorn text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-teal-800 text-[13px] mb-0.5">📢 오늘의 이장 미션!</p>
+                        <p id="guide-text" class="text-slate-600 leading-relaxed font-medium">민원 마커(⚠️)를 클릭해 10회 공감을 수렴하거나 우측 돌발 퀘스트를 완수하세요!</p>
+                    </div>
+                </div>
+
+                <!-- 가상 태안 랜드마크 마커들 (JS로 통합 렌더링 관리) -->
+                <div id="map-markers-container" class="absolute inset-0 z-0">
+                    <!-- 동적 마커 렌더링 장소 -->
+                </div>
+
+                <!-- 직접 민원 만들기 간이 버튼 -->
+                <div class="z-10 flex justify-center w-full mt-auto mb-2">
+                    <button onclick="openCreateIssueModal()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white font-bold px-5 py-3 rounded-full shadow-lg flex items-center gap-2 text-sm transition-all border border-amber-400/50">
+                        <i class="fa-solid fa-circle-plus text-base text-yellow-100"></i> 내가 겪은 불편 등록하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 하단 실시간 주민 제안 리스트 -->
+            <div class="bg-white border-t border-slate-200/80 p-4 shrink-0 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+                <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-newspaper text-teal-600 text-sm"></i> 실시간 접수된 불편 피드
+                </h3>
+                <div id="issue-feed-container" class="space-y-2.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar">
+                    <!-- JS로 동적 생성됨 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- [화면 2] 상세 민원 물주기(공감) 모달/패널 -->
+        <div id="panel-water" class="hidden absolute inset-0 bg-black/50 backdrop-blur-xs flex items-end z-30 transition-all duration-300">
+            <div class="w-full bg-white rounded-t-3xl p-5 shadow-2xl space-y-4 max-h-[85%] overflow-y-auto no-scrollbar transform translate-y-0 transition-transform duration-300">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="panel-tag" class="text-[10px] bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-extrabold">#교통</span>
+                        <h4 id="panel-title" class="font-bold text-slate-900 text-base">꽃지해수욕장 주차난 심각</h4>
+                    </div>
+                    <button onclick="closePanel('panel-water')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-all">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <p class="text-slate-500 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-map-pin text-rose-500"></i> 발생지: <span id="panel-location" class="text-slate-800 font-bold">태안 안면도</span>
+                        </p>
+                        <p id="panel-user-contribution" class="text-indigo-600 font-bold bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                            내가 보낸 공감: 0 / 2 회
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p id="panel-description" class="text-xs text-slate-700 leading-relaxed font-medium">
+                            여름 휴가철마다 불법 주차 차량으로 통행이 마비되고 있습니다. 추가 주차 공간 확보가 시급해요!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 물 주기 게이지 (공감 게이지) -->
+                <div class="bg-teal-50/70 p-3.5 rounded-xl border border-teal-100 space-y-2">
+                    <div class="flex justify-between text-xs font-bold text-teal-800">
+                        <span>💬 전체 주민 공감 게이지 (토론 활성화 조건)</span>
+                        <span id="water-progress-text" class="text-teal-700">0 / 10 회</span>
+                    </div>
+                    <div class="w-full bg-slate-200/80 rounded-full h-3 overflow-hidden border border-teal-100/30">
+                        <div id="water-progress-bar" class="bg-gradient-to-r from-teal-400 to-emerald-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p class="text-[11px] text-teal-600/90 leading-normal font-medium">
+                        * 주민들의 공감이 <strong>10회</strong> 누적되면 <strong>[토론 광장]</strong>이 활짝 열립니다! (1인당 최대 2회까지 기여 가능)
+                    </p>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="flex gap-3">
+                    <button onclick="closePanel('panel-water')" class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all active:scale-95">
+                        닫기
+                    </button>
+                    <button id="btn-give-water" onclick="giveWater()" class="flex-[2] py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-droplet text-blue-200"></i> 공감 물주기 (-10 코인)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [화면 3] 토론 광장 퀘스트 화면 -->
+        <div id="screen-debate" class="hidden flex-1 flex flex-col bg-slate-50 p-4 space-y-4 screen-fade">
+            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2">
+                <button onclick="goBackToMap()" class="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-200 transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h2 class="font-bold text-slate-800 text-base">💬 태안 정책 토론방</h2>
+                    <p class="text-[11px] text-slate-500">주민들이 가장 공감하는 최우선 대화 광장</p>
+                </div>
+            </div>
+
+            <!-- 토론 주제 요약 카드 -->
+            <div class="bg-gradient-to-br from-indigo-950 to-slate-900 text-white p-4 rounded-2xl shadow-md space-y-2">
+                <span id="debate-tag" class="bg-indigo-500/30 text-indigo-300 text-[10px] px-2 py-0.5 rounded border border-indigo-400/30 font-bold">#교통</span>
+                <h3 id="debate-title" class="text-sm font-extrabold">안면도 꽃지 주차 대책 수립</h3>
+                <p id="debate-desc" class="text-[11px] text-slate-300 leading-normal">
+                    "여름 휴가철 불법 주차 차량으로 통행이 마비되고 있습니다. 관광객 유치도 중요하지만 주민들의 주거환경권을 보장할 해결책이 시급합니다."
+                </p>
+            </div>
+
+            <!-- 실시간 찬반 투표 비율 현황 -->
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs space-y-2.5">
+                <h4 class="text-xs font-bold text-slate-700 flex justify-between">
+                    <span>📊 주민 찬반 투표 결과</span>
+                    <span id="vote-ratio-text" class="text-indigo-600 font-extrabold">찬성 65% / 반대 35%</span>
+                </h4>
+                <div class="w-full flex h-3.5 rounded-full overflow-hidden bg-slate-100">
+                    <div id="vote-agree-bar" class="bg-emerald-500 transition-all duration-500" style="width: 65%"></div>
+                    <div id="vote-disagree-bar" class="bg-rose-500 transition-all duration-500" style="width: 35%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-500">
+                    <span class="flex items-center gap-1 font-medium"><span class="w-2 h-2 rounded bg-emerald-500 inline-block"></span> 찬성(인프라 구축)</span>
+                    <span class="flex items-center gap-1 font-medium"><span class="w-2 h-2 rounded bg-rose-500 inline-block"></span> 반대(환경 보존)</span>
+                </div>
+            </div>
+
+            <!-- 실시간 댓글 대화창 -->
+            <div class="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex flex-col justify-between overflow-hidden min-h-[180px]">
+                <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2.5 pr-1 no-scrollbar text-xs">
+                    <!-- 가상 인물 대화 동적 생성 -->
+                </div>
+
+                <!-- 찬반 투표 및 한줄 의견 -->
+                <div class="border-t border-slate-100 pt-2.5 space-y-2 bg-white">
+                    <div class="flex gap-2">
+                        <button id="btn-vote-agree" onclick="userVote(true)" class="flex-1 py-2 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-700 font-bold border border-emerald-300 rounded-lg text-[11px] transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-thumbs-up text-[10px]"></i> 찬성해요!
+                        </button>
+                        <button id="btn-vote-disagree" onclick="userVote(false)" class="flex-1 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 font-bold border border-rose-300 rounded-lg text-[11px] transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-thumbs-down text-[10px]"></i> 반대해요!
+                        </button>
+                    </div>
+
+                    <!-- 유저 의견 직접 작성 -->
+                    <div class="flex gap-1.5">
+                        <input id="user-opinion-input" type="text" placeholder="토론에 기여할 내 한줄 의견을 써주세요" class="flex-1 border border-slate-200 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:border-teal-500 transition-colors">
+                        <button onclick="postUserOpinion()" class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold px-3 py-2 rounded-lg text-xs flex items-center justify-center shrink-0 transition-all">
+                            올리기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 안건 다듬기 탭 이동 유도 영역 -->
+            <button onclick="goToAgendaBuilder()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 active:scale-95">
+                <i class="fa-solid fa-scroll text-sm"></i> 토론 내용 수렴하여 상소문 작성 ➔
+            </button>
+        </div>
+
+        <!-- [화면 4] 안건 빌더 (정식 상소문 작성 단계) -->
+        <div id="screen-builder" class="hidden flex-1 flex flex-col bg-slate-50 p-4 space-y-4 screen-fade">
+            <div class="flex items-center gap-2 border-b border-slate-200/80 pb-2">
+                <button onclick="goBackToDebate()" class="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-200 transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h2 class="font-bold text-slate-800 text-base">📜 황금 상소문 작성기</h2>
+                    <p class="text-[11px] text-slate-500">주민들의 목소리를 정식 안건 양식으로 다듬기</p>
+                </div>
+            </div>
+
+            <!-- 상소문 작성 단계 가이드 바 -->
+            <div class="grid grid-cols-3 gap-1.5 text-[10px] font-bold text-center">
+                <div id="step-1" class="bg-amber-500 text-white py-1 rounded-md transition-colors">1. 제안 배경</div>
+                <div id="step-2" class="bg-slate-200 text-slate-600 py-1 rounded-md transition-colors">2. 해결 방안</div>
+                <div id="step-3" class="bg-slate-200 text-slate-600 py-1 rounded-md transition-colors">3. 기대 효과</div>
+            </div>
+
+            <!-- 빌더 폼 컨테이너 -->
+            <div class="flex-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                
+                <!-- 1단계: 제안 배경 -->
+                <div id="form-step-1" class="space-y-3 flex-1 flex flex-col justify-center screen-fade">
+                    <div class="text-center space-y-1">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-3xl"></i>
+                        <h4 class="font-bold text-slate-800 text-xs">태안군민이 겪고 있는 불편은? (제안 배경)</h4>
+                        <p class="text-[10px] text-slate-500">동네 순찰 및 토론에서 가장 많이 나온 문제를 요약하세요.</p>
+                    </div>
+                    <textarea id="builder-bg" rows="4" class="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 leading-relaxed transition-all" placeholder="불편함 현황을 작성해 주세요."></textarea>
+                </div>
+
+                <!-- 2단계: 해결 방안 -->
+                <div id="form-step-2" class="hidden space-y-3 flex-1 flex flex-col justify-center screen-fade">
+                    <div class="text-center space-y-1">
+                        <i class="fa-solid fa-lightbulb text-amber-500 text-3xl"></i>
+                        <h4 class="font-bold text-slate-800 text-xs">태안군청이 어떻게 해결하면 좋을까요? (해결 방안)</h4>
+                        <p class="text-[10px] text-slate-500">토론에서 합의된 실현 가능한 대안을 적어주세요.</p>
+                    </div>
+                    <textarea id="builder-solution" rows="4" class="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 leading-relaxed transition-all" placeholder="대안 및 해결책을 작성해 주세요."></textarea>
+                </div>
+
+                <!-- 3단계: 기대 효과 -->
+                <div id="form-step-3" class="hidden space-y-3 flex-1 flex flex-col justify-center screen-fade">
+                    <div class="text-center space-y-1">
+                        <i class="fa-solid fa-chart-line text-amber-500 text-3xl"></i>
+                        <h4 class="font-bold text-slate-800 text-xs">해결 시 우리 마을의 긍정적인 변화는? (기대 효과)</h4>
+                        <p class="text-[10px] text-slate-500">안건이 실행되었을 때 주민 및 관광객에게 생길 이익</p>
+                    </div>
+                    <textarea id="builder-effect" rows="4" class="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 leading-relaxed transition-all" placeholder="기대 효과를 작성해 주세요."></textarea>
+                </div>
+
+                <!-- 네비게이션 액션 버튼 -->
+                <div class="flex gap-2 border-t border-slate-100 pt-3 mt-3">
+                    <button id="btn-prev-step" onclick="prevStep()" class="hidden flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all active:scale-95">
+                        이전 단계
+                    </button>
+                    <button id="btn-next-step" onclick="nextStep()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-all shadow-md active:scale-95">
+                        다음 단계 ➔
+                    </button>
+                    <button id="btn-finish-builder" onclick="finishBuilder()" class="hidden flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95">
+                        상소문 완성 <i class="fa-solid fa-feather"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [화면 5] 최종 서명 및 전송 화면 -->
+        <div id="screen-submit" class="hidden flex-1 flex flex-col bg-amber-50/50 p-4 space-y-4 screen-fade">
+            <div class="text-center py-1">
+                <h2 class="fancy-font text-2xl font-bold text-amber-950 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-scroll text-amber-700 animate-pulse"></i> 완성된 태안 상소문
+                </h2>
+                <p class="text-xs text-amber-800">이 상소문에 서명하여 군청으로 전달해주세요!</p>
+            </div>
+
+            <!-- 고풍스러운 전통 상소문 프리뷰 디자인 -->
+            <div class="flex-1 bg-amber-100/60 border-2 border-amber-800/20 rounded-2xl p-5 shadow-inner space-y-4 relative overflow-y-auto no-scrollbar font-serif">
+                <!-- 상소문 배경 문양 장식 -->
+                <div class="absolute inset-y-0 right-4 w-0.5 bg-amber-800/10"></div>
+                <div class="absolute inset-y-0 left-4 w-0.5 bg-amber-800/10"></div>
+
+                <div class="text-center pb-2 border-b border-amber-800/20">
+                    <h3 id="preview-title" class="text-sm font-extrabold text-amber-900 tracking-wider">주차 대책 수립 건의서</h3>
+                    <p class="text-[10px] text-amber-800 font-sans mt-0.5">발의 장소: <span id="preview-location">태안군 안면읍</span></p>
+                </div>
+
+                <div class="space-y-3 text-xs text-amber-950 leading-relaxed text-justify">
+                    <div>
+                        <h4 class="font-bold text-amber-900 mb-0.5">【 제안 배경 】</h4>
+                        <p id="preview-bg" class="pl-1"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-amber-900 mb-0.5">【 해결 방안 】</h4>
+                        <p id="preview-solution" class="pl-1"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-amber-900 mb-0.5">【 기대 효과 】</h4>
+                        <p id="preview-effect" class="pl-1"></p>
+                    </div>
+                </div>
+
+                <!-- 주민 동의 서명란 (스탬프 연출) -->
+                <div class="pt-4 border-t border-amber-800/20 flex flex-col items-center justify-center space-y-2 font-sans">
+                    <div class="flex justify-between w-full text-[10px] font-bold text-amber-800">
+                        <span>🖊️ 태안군민 서명 참여 현황</span>
+                        <span id="signature-ratio-text" class="font-extrabold">현재 5명 동의</span>
+                    </div>
+                    <!-- 진행 게이지 -->
+                    <div class="w-full bg-amber-200/50 rounded-full h-2">
+                        <div id="signature-progress-bar" class="bg-amber-800 h-2 rounded-full transition-all duration-300" style="width: 33%"></div>
+                    </div>
+                    <p class="text-[10px] text-amber-700/80 text-center leading-normal font-medium">
+                        * 주민 15명의 동의(서명)가 완료되면 군청 전송이 가능해집니다!
+                    </p>
+                </div>
+            </div>
+
+            <!-- 서명 도장 찍기 인터랙션 액션 버튼 -->
+            <div class="space-y-2 shrink-0">
+                <button id="btn-sign-stamp" onclick="stampSignature()" class="w-full py-4 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white font-bold rounded-2xl text-base transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 border-b-4 border-red-800">
+                    <i class="fa-solid fa-stamp text-xl animate-bounce"></i> 서명 도장 꾹 누르기!
+                </button>
+                <button id="btn-submit-to-office" disabled onclick="submitToOffice()" class="w-full py-3 bg-slate-300 text-slate-500 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-not-allowed">
+                    <i class="fa-solid fa-paper-plane text-xs"></i> 태안군청으로 안건 제출하기
+                </button>
+            </div>
+        </div>
+
+        <!-- [화면 6] 군청 전달 및 진행상황 트래킹 -->
+        <div id="screen-tracking" class="hidden flex-1 flex flex-col bg-white p-4 space-y-4 screen-fade">
+            <div class="text-center py-2 space-y-1">
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto">
+                    <i class="fa-solid fa-paper-plane text-lg animate-pulse"></i>
+                </div>
+                <h2 class="font-bold text-slate-800 text-base">📫 군청에 성공적으로 전달되었습니다!</h2>
+                <p class="text-[11px] text-slate-500">내가 제안한 안건의 실시간 정밀 처리 상황을 확인하세요.</p>
+            </div>
+
+            <!-- 택배 트래킹 컴포넌트 -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4 flex-1">
+                <h3 class="text-xs font-bold text-slate-700 border-b border-slate-200 pb-2">📦 행정 민원 배송 조회</h3>
+                
+                <div class="relative pl-6 space-y-5">
+                    <!-- 수직 바 선 -->
+                    <div class="absolute left-[7px] top-1.5 bottom-1.5 w-0.5 bg-slate-200"></div>
+
+                    <!-- 트래킹 단계 1 -->
+                    <div class="relative flex gap-3">
+                        <div class="absolute -left-[23px] w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center"></div>
+                        <div>
+                            <p class="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                                접수 완료 <span class="bg-emerald-50 text-[9px] px-1 rounded">성공</span>
+                            </p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">안건 상소문이 군민 15인 동의로 태안군청 대표민원실에 접수되었습니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 트래킹 단계 2 -->
+                    <div class="relative flex gap-3">
+                        <div id="track-step2-node" class="absolute -left-[23px] w-4 h-4 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center"></div>
+                        <div>
+                            <p id="track-step2-title" class="text-xs font-bold text-slate-600">부서 지정 완료</p>
+                            <p id="track-step2-desc" class="text-[10px] text-slate-400 mt-0.5">담당 주관 부서가 배정 중입니다. (기획감사실 또는 건설교통과 등)</p>
+                        </div>
+                    </div>
+
+                    <!-- 트래킹 단계 3 -->
+                    <div class="relative flex gap-3">
+                        <div id="track-step3-node" class="absolute -left-[23px] w-4 h-4 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center"></div>
+                        <div>
+                            <p id="track-step3-title" class="text-xs font-bold text-slate-600">부서 정밀 심의 검토</p>
+                            <p id="track-step3-desc" class="text-[10px] text-slate-400 mt-0.5">실무 부서장이 조례 적법성 및 행정 예산 실행 타당성을 정밀하게 검토합니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 트래킹 단계 4 -->
+                    <div class="relative flex gap-3">
+                        <div id="track-step4-node" class="absolute -left-[23px] w-4 h-4 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center"></div>
+                        <div>
+                            <p id="track-step4-title" class="text-xs font-bold text-slate-600">군청 공식 행정 피드백 답변</p>
+                            <p id="track-step4-desc" class="text-[10px] text-slate-400 mt-0.5">공식 답변서가 군민들에게 송출되고 제안 안건이 의회에 회부됩니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 리워드 수령 피드백 바 -->
+            <div id="box-reward-claim" class="hidden bg-yellow-50 border border-yellow-200 p-3 rounded-xl flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🎁</span>
+                    <div class="text-xs">
+                        <p class="font-bold text-yellow-800">미션 완료! 군청 연계 보상</p>
+                        <p class="text-yellow-600">행복도 +15%, 태안 코인 +200 획득!</p>
+                    </div>
+                </div>
+                <button onclick="claimVoucherReward()" class="bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-white font-bold text-[11px] px-3.5 py-2 rounded-lg shrink-0 transition-all shadow-sm">
+                    보상 수령
+                </button>
+            </div>
+
+            <button onclick="resetGameAndBackToMap()" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-95">
+                <i class="fa-solid fa-arrows-rotate"></i> 다른 민원 보러 지도로 복귀하기
+            </button>
+        </div>
+
+        <!-- [화면 7] 코인 상점 화면 -->
+        <div id="screen-shop" class="hidden flex-1 flex flex-col bg-slate-50 p-4 space-y-4 screen-fade">
+            <div class="border-b border-slate-200 pb-2">
+                <h2 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
+                    <i class="fa-solid fa-store text-emerald-600"></i> 태안 이장 상점
+                </h2>
+                <p class="text-[11px] text-slate-500">열심히 주민 정치를 실천하여 얻은 코인으로 진짜 상품권을 교환해 보세요!</p>
+            </div>
+
+            <!-- 이장 지갑 정보 요약 -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-3.5 rounded-2xl flex justify-between items-center shadow-md">
+                <div class="space-y-0.5">
+                    <p class="text-[10px] text-emerald-100 font-semibold">사용 가능한 지갑 잔액</p>
+                    <p class="text-lg font-black text-yellow-300"><span id="shop-coin-balance">300</span> <span class="text-xs text-white">코인</span></p>
+                </div>
+                <div class="bg-white/10 px-3 py-1.5 rounded-xl border border-white/15 text-center shrink-0">
+                    <p class="text-[10px] text-emerald-100">달성 행복도</p>
+                    <p id="shop-happiness-val" class="text-xs font-bold">50%</p>
+                </div>
+            </div>
+
+            <!-- 상품 목록 영역 -->
+            <div class="flex-1 overflow-y-auto no-scrollbar space-y-3 max-h-[300px] pr-1">
+                <!-- 상품 1 -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs hover:border-emerald-300 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 text-2xl shrink-0">
+                            🏷️
+                        </div>
+                        <div class="space-y-0.5">
+                            <h4 class="font-bold text-xs text-slate-800">태안사랑상품권 (5,000원권)</h4>
+                            <p class="text-[10px] text-slate-500">관내 마트, 식당, 카페에서 상시 사용 가능</p>
+                            <p class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <i class="fa-solid fa-coins text-yellow-500 text-[10px]"></i> 100 코인
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="buyVoucher('태안사랑상품권 (5,000원권)', 100, 'TAG-5000-LOV')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold px-3 py-2 rounded-xl transition-all active:scale-95 shadow-xs">
+                        교환하기
+                    </button>
+                </div>
+
+                <!-- 상품 2 -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs hover:border-emerald-300 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-amber-200 rounded-xl flex items-center justify-center text-amber-700 text-2xl shrink-0">
+                            🎟️
+                        </div>
+                        <div class="space-y-0.5">
+                            <h4 class="font-bold text-xs text-slate-800">태안사랑상품권 (10,000원권)</h4>
+                            <p class="text-[10px] text-slate-500">관내 가맹점 어디서나 즉각 결제 연계</p>
+                            <p class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <i class="fa-solid fa-coins text-yellow-500 text-[10px]"></i> 180 코인
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="buyVoucher('태안사랑상품권 (10,000원권)', 180, 'TAG-10000-LOV')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold px-3 py-2 rounded-xl transition-all active:scale-95 shadow-xs">
+                        교환하기
+                    </button>
+                </div>
+
+                <!-- 상품 3 -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs hover:border-emerald-300 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center text-pink-600 text-2xl shrink-0">
+                            🛒
+                        </div>
+                        <div class="space-y-0.5">
+                            <h4 class="font-bold text-xs text-slate-800">동부전통시장 온누리상품권 (5천원)</h4>
+                            <p class="text-[10px] text-slate-500">태안읍 재래 전통시장에서 결제 혜택</p>
+                            <p class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <i class="fa-solid fa-coins text-yellow-500 text-[10px]"></i> 90 코인
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="buyVoucher('동부전통시장 온누리상품권 (5천원)', 90, 'ONR-5000-EST')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold px-3 py-2 rounded-xl transition-all active:scale-95 shadow-xs">
+                        교환하기
+                    </button>
+                </div>
+
+                <!-- 상품 4 -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs hover:border-emerald-300 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center text-teal-600 text-2xl shrink-0">
+                            ☕
+                        </div>
+                        <div class="space-y-0.5">
+                            <h4 class="font-bold text-xs text-slate-800 font-extrabold">안면도 커피 교환권 (1매)</h4>
+                            <p class="text-[10px] text-slate-500">태안 제휴 해안 오션뷰 카페 아메리카노 교환</p>
+                            <p class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <i class="fa-solid fa-coins text-yellow-500 text-[10px]"></i> 60 코인
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="buyVoucher('안면도 커피 교환권 (1매)', 60, 'CF-ANM-COOP')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold px-3 py-2 rounded-xl transition-all active:scale-95 shadow-xs">
+                        교환하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [화면 8] 만리포 비치코밍 봉사 퀘스트 -->
+        <div id="screen-quest-beach" class="hidden flex-1 flex flex-col bg-sky-50 p-4 space-y-4 screen-fade">
+            <div class="text-center py-2">
+                <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">🧹 자원 봉사 퀘스트</span>
+                <h2 class="text-lg font-black text-slate-800 mt-1">만리포 해안 비치코밍</h2>
+                <p class="text-[11px] text-slate-500">10초 동안 떠다니는 쓰레기(페트병, 그물)를 터치해 수거하세요!</p>
+            </div>
+            <!-- 게임 영역 -->
+            <div class="flex-1 bg-gradient-to-b from-sky-200 to-amber-100 border-2 border-slate-300/40 rounded-2xl relative overflow-hidden shadow-inner min-h-[260px]" id="beach-game-board">
+                <!-- 타이머 및 게이지 -->
+                <div class="absolute top-2 left-2 bg-black/60 text-white text-xs px-2.5 py-1 rounded-lg z-10 font-bold flex gap-3">
+                    <span id="beach-timer">⏱️ 10.0초</span>
+                    <span id="beach-score">🗑️ 수거: 0 / 8</span>
+                </div>
+            </div>
+            <button onclick="goTab('map')" class="py-2.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl active:scale-95 transition-all">포기하고 지도로 돌아가기</button>
+        </div>
+
+        <!-- [화면 9] 신두리 사구 사초 심기 봉사 퀘스트 -->
+        <div id="screen-quest-dune" class="hidden flex-1 flex flex-col bg-yellow-50/50 p-4 space-y-4 screen-fade">
+            <div class="text-center py-2">
+                <span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">🌱 생태 봉사 퀘스트</span>
+                <h2 class="text-lg font-black text-slate-800 mt-1">신두리 해안사구 사초 심기</h2>
+                <p class="text-[11px] text-slate-500">빨갛게 유실되고 있는 침식지점을 터치(클릭)하여 푸른 장벽을 세우세요!</p>
+            </div>
+            <!-- 사초 심기 게임 공간 -->
+            <div class="flex-1 bg-gradient-to-b from-amber-200 to-yellow-100 border-2 border-amber-300/30 rounded-2xl relative overflow-hidden shadow-inner flex flex-col justify-center items-center p-4 min-h-[260px]" id="dune-game-board">
+                <!-- 진행률 표시 -->
+                <div class="w-4/5 bg-white/70 p-3 rounded-xl border border-amber-200 text-center space-y-2 z-10">
+                    <p class="text-xs font-bold text-slate-700">🌱 유실 모래언덕 사초 보완도</p>
+                    <div class="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden">
+                        <div id="dune-progress-bar" class="bg-gradient-to-r from-emerald-400 to-green-500 h-3.5 rounded-full" style="width: 10%"></div>
+                    </div>
+                    <p id="dune-score-text" class="text-[11px] text-slate-500">복원 클릭: 1 / 10회</p>
+                </div>
+                <!-- 터치할 침식 센터 -->
+                <button onclick="tapDuneSoil()" class="w-24 h-24 bg-red-500 hover:bg-red-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white transition-all pulse-icon mt-6 font-bold text-xs select-none">
+                    🌱 심기!
+                </button>
+            </div>
+            <button onclick="goTab('map')" class="py-2.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl active:scale-95 transition-all">포기하고 지도로 돌아가기</button>
+        </div>
+
+        <!-- [화면 10] 태안 알리기 골든벨 홍보 퀘스트 -->
+        <div id="screen-quest-quiz" class="hidden flex-1 flex flex-col bg-emerald-50/30 p-4 space-y-4 screen-fade">
+            <div class="text-center py-2">
+                <span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-bold">📢 문화 홍보 퀘스트</span>
+                <h2 class="text-lg font-black text-slate-800 mt-1">태안 알리기 골든벨 퀴즈</h2>
+                <p class="text-[11px] text-slate-500">태안에 관한 퀴즈를 맞추어 관광 홍보에 기여해 보세요!</p>
+            </div>
+
+            <!-- 퀴즈 박스 -->
+            <div class="flex-1 bg-white border border-slate-200 rounded-2xl p-5 shadow-md flex flex-col justify-between min-h-[260px]">
+                <div>
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3 text-xs">
+                        <span id="quiz-progress-text" class="text-slate-500 font-bold">문제 1 / 3</span>
+                        <span id="quiz-score-text" class="text-teal-600 font-bold">점수: 0 P</span>
+                    </div>
+                    <p id="quiz-question" class="text-sm font-bold text-slate-800 leading-relaxed mb-4">Q. 태안에 위치한 우리나라 유일의 '이것'은 천연기념물로 지정된 최고의 사구 언덕입니다. 무엇일까요?</p>
+                </div>
+                
+                <div class="space-y-2.5">
+                    <button id="quiz-opt-1" onclick="handleQuizAnswer(1)" class="w-full text-left p-3 border border-slate-200 rounded-xl hover:bg-teal-50 hover:border-teal-300 text-xs font-bold text-slate-700 transition-colors active:scale-98">1. 신두리 해안사구</button>
+                    <button id="quiz-opt-2" onclick="handleQuizAnswer(2)" class="w-full text-left p-3 border border-slate-200 rounded-xl hover:bg-teal-50 hover:border-teal-300 text-xs font-bold text-slate-700 transition-colors active:scale-98">2. 안면도 꽃지수목원</button>
+                    <button id="quiz-opt-3" onclick="handleQuizAnswer(3)" class="w-full text-left p-3 border border-slate-200 rounded-xl hover:bg-teal-50 hover:border-teal-300 text-xs font-bold text-slate-700 transition-colors active:scale-98">3. 만리포 서핑벨리</button>
+                </div>
+            </div>
+            <button onclick="goTab('map')" class="py-2.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl active:scale-95 transition-all">포기하고 지도로 돌아가기</button>
+        </div>
+
+    </main>
+
+    <!-- [글로벌 오버레이] 성공 축하 오버레이 (3초 노출 후 자동 지도로 복귀) -->
+    <div id="quest-clear-overlay" class="hidden fixed inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-6 transition-all duration-300">
+        <div class="text-center space-y-4 modal-pop">
+            <!-- 화려한 파티 이모지 연출 -->
+            <div class="text-6xl animate-bounce">🎉✨🌟</div>
+            <h1 class="text-3xl font-extrabold text-white fancy-font tracking-widest animate-pulse">축하합니다!</h1>
+            <p id="clear-overlay-title" class="text-yellow-400 font-bold text-base">만리포 해안 비치코밍 완수</p>
+            
+            <div class="bg-white/15 p-4 rounded-2xl border border-white/20 inline-block max-w-xs space-y-2">
+                <p class="text-slate-300 text-xs">봉사 기여에 따른 보상 획득!</p>
+                <div class="flex justify-around text-yellow-300 font-extrabold text-sm px-4">
+                    <span>🪙 코인: +200</span>
+                    <span>😊 행복도: +15%</span>
+                </div>
+            </div>
+            
+            <p class="text-[11px] text-slate-400">⏱️ <span id="overlay-countdown-text">3</span>초 후 자동으로 태안 지도로 복귀합니다...</p>
+        </div>
+    </div>
+
+    <!-- [공용 모달 1] 신규 민원 제안 등록창 -->
+    <div id="modal-create-issue" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-5 space-y-4 modal-pop">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1">
+                    <i class="fa-solid fa-edit text-teal-600"></i> 내 의견(민원) 등록하기
+                </h3>
+                <button onclick="closeCreateIssueModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3.5 text-xs">
+                <!-- 민원 카테고리 -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">🏷️ 카테고리 선택</label>
+                    <select id="new-issue-category" class="w-full border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-500">
+                        <option value="#교통">교통 / 도로 정비</option>
+                        <option value="#관광">안면도 / 태안 관광</option>
+                        <option value="#복지">소외 계층 / 복지 혜택</option>
+                        <option value="#환경">해양 쓰레기 / 생태 보호</option>
+                    </select>
+                </div>
+
+                <!-- 위치 선택 -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">📍 구체적인 발생 위치</label>
+                    <input id="new-issue-location" type="text" placeholder="예: 안면읍 삼봉해수욕장 입구" class="w-full border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-500">
+                </div>
+
+                <!-- 제목 -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">📝 의견 제목</label>
+                    <input id="new-issue-title" type="text" placeholder="예: 해수욕장 쓰레기 수거 요청" class="w-full border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-500">
+                </div>
+
+                <!-- 내용 -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">💬 내용 상세</label>
+                    <textarea id="new-issue-desc" rows="3" placeholder="예: 쓰레기통 부족으로 성수기 모래사장이 아수라장이 됩니다. 분리수거대 조성이 시급해요." class="w-full border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-teal-500"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeCreateIssueModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition-all">
+                    취소
+                </button>
+                <button onclick="submitNewIssue()" class="flex-[2] py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs transition-all shadow-md">
+                    의견 피드 올리기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [공용 모달 2] 시스템 알림 맞춤 모달 -->
+    <div id="system-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 text-center space-y-4 modal-pop">
+            <div class="text-3xl" id="system-modal-icon">💡</div>
+            <div class="space-y-1">
+                <h4 class="font-bold text-slate-800 text-sm" id="system-modal-title">알림</h4>
+                <p class="text-xs text-slate-500 leading-normal whitespace-pre-line" id="system-modal-message">성공적으로 처리되었습니다.</p>
+            </div>
+            <button onclick="closeSystemModal()" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs transition-all shadow-md">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- [공용 모달 3] 상품권 영수증/바코드 출력 모달 -->
+    <div id="receipt-modal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-6 text-center space-y-5 modal-pop relative overflow-hidden font-mono">
+            <!-- 고풍스러운 영수증 절취선 표현 -->
+            <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-slate-200 via-transparent to-slate-200"></div>
+            
+            <div class="space-y-1">
+                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto">
+                    <i class="fa-solid fa-receipt text-lg"></i>
+                </div>
+                <h3 class="font-bold text-slate-800 text-xs tracking-widest mt-2">TAEAN VOUCHER EXCHANGE</h3>
+                <p class="text-[9px] text-slate-400">발급일시: 2026-07-07 대표 이장단</p>
+            </div>
+
+            <div class="border-y border-dashed border-slate-300 py-3 text-left space-y-2 text-xs font-sans">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">발급상품:</span>
+                    <span id="receipt-item-name" class="font-bold text-slate-800">태안사랑상품권</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">차감코인:</span>
+                    <span id="receipt-item-price" class="font-bold text-slate-800">100 Coins</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">사용처:</span>
+                    <span class="text-emerald-700 font-bold">충남 태안 관내 전역</span>
+                </div>
+            </div>
+
+            <!-- 가상 바코드 구현 -->
+            <div class="space-y-2.5">
+                <div class="bg-slate-100 p-2.5 rounded-lg flex flex-col items-center justify-center">
+                    <div class="w-full h-10 flex items-center justify-around px-2 opacity-80">
+                        <span class="w-1 h-8 bg-slate-900"></span>
+                        <span class="w-0.5 h-8 bg-slate-900"></span>
+                        <span class="w-2 h-8 bg-slate-900"></span>
+                        <span class="w-0.5 h-8 bg-slate-900"></span>
+                        <span class="w-1.5 h-8 bg-slate-900"></span>
+                        <span class="w-0.5 h-8 bg-slate-900"></span>
+                        <span class="w-1 h-8 bg-slate-900"></span>
+                        <span class="w-2 h-8 bg-slate-900"></span>
+                        <span class="w-0.5 h-8 bg-slate-900"></span>
+                    </div>
+                    <p id="receipt-code" class="text-[10px] text-slate-600 font-semibold tracking-widest mt-1 font-sans">TAG-5000-LOV-XXXX</p>
+                </div>
+                <p class="text-[9px] text-amber-600 leading-normal font-sans font-medium">※ 해당 모바일 바코드를 결제처에 제시하여 실제 사용 및 혜택을 수령하세요.</p>
+            </div>
+
+            <button onclick="closeReceiptModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-md font-sans">
+                확인 및 닫기
+            </button>
+        </div>
+    </div>
+
+    <!-- 자바스크립트 엔진 -->
+    <script>
+        // 관청 진행 추적용 타임아웃 캐시 (메모리 누수 원천 차단)
+        let trackingTimeouts = [];
+        let signatureInterval = null;
+        let isStamped = false;
+        let hasVoted = false;
+        let hasClaimedReward = false;
+        let currentBuilderStep = 1;
+        let currentActiveNodeId = 1;
+
+        // 시스템 알림 모달 확인 클릭 시 실행할 콜백 저장소
+        let systemModalCallback = null;
+        // 퀴즈 자동 진행용 타이머 변수
+        let quizAutoTimer = null;
+
+        // 미니게임 점수 & 남은 시간
+        let beachTimerVal = 10;
+        let beachScoreVal = 0;
+        let beachGameInterval = null;
+        let duneScoreVal = 0;
+
+        // 전역 스탯 관리
+        let happiness = 50;
+        let development = 20;
+        let coins = 300;
+        let voucherPoints = 0;
+
+        // 유저 개인의 민원별 공감 횟수 레지스트리 (한 민원당 최대 2회 제한)
+        let userWaterRegistry = {};
+
+        // 퀘스트 관리 상태 (완료된 퀘스트는 완전히 소멸하도록 관리)
+        let activeQuests = {
+            'beach': { active: true, name: '만리포 비치코밍 (봉사)', markerId: 'quest-beach', icon: '🧹', color: 'bg-sky-500' },
+            'dune': { active: true, name: '신두리 사구 사초 심기 (봉사)', markerId: 'quest-dune', icon: '🌱', color: 'bg-amber-500' },
+            'quiz': { active: true, name: '태안 알리기 골든벨 (홍보)', markerId: 'quest-quiz', icon: '📢', color: 'bg-emerald-500' }
+        };
+
+        // 가상 시나리오 데이터셋 (공감 10회 도달 시 토론 활성화)
+        const initialIssues = {
+            1: {
+                id: 1,
+                tag: "#관광",
+                title: "안면도 꽃지 주차 문제",
+                location: "태안 안면읍 꽃지 해안로",
+                desc: "여름 휴가철마다 해수욕장 주차 공간이 가득 차 불법 길거리 차량 정차가 매우 심각합니다. 인근 안전 사고 위험 및 보행 주민 안전권 확보 대책 수립이 필요합니다.",
+                waterCount: 4, // 초기 상태 제공
+                maxWater: 10,
+                agreeRatio: 65,
+                debates: [
+                    { user: "태안지킴이", text: "성수기 임시 외곽 주차장과 무료 셔틀버스 운행이 아주 합리적인 대안인 듯 합니다." },
+                    { user: "안면청년", text: "성수기 불법 주정차 강력한 무인 단속 카메라 추가 설치가 필요합니다." },
+                    { user: "민원왕", text: "주차타워 건설은 해양 생태계를 해칠 위험이 있으므로 단순 확장보다 지혜가 필요해요." }
+                ],
+                builderBg: "태안 고남면 일대 및 안면도 꽃지 해수욕장 진입 도로의 극심한 정체 및 불법 주차로 긴급 소방로 차단 및 일상 교통 정체 피해 극심함.",
+                builderSolution: "공영 비포장 임시 주차장 부지 임차 및 성수기 테마파크식 15분 간격 왕복 전기 미니 셔틀버스 연계 도입 건의.",
+                builderEffect: "도로 불법 주정차 90% 이상 근절 및 안전 보행권 확보, 탄소 배출 절감형 친환경 관광 벨트 연동."
+            },
+            2: {
+                id: 2,
+                tag: "#환경",
+                title: "신재생에너지 단지 해양 보호",
+                location: "태안 원북면 방갈리",
+                desc: "신재생 설비 인근 해안 쓰레기 밀림 현상이 보기에 안 좋습니다. 해양환경정화선 투입 및 감시 보강이 요구됩니다.",
+                waterCount: 6,
+                maxWater: 10,
+                agreeRatio: 80,
+                debates: [
+                    { user: "태안그린", text: "주민 해양 정화 일자리 사업으로 지정해 상시 정화조를 가동해야 합니다!" },
+                    { user: "태안바람", text: "정화선 투입은 예산이 많이드니 AI 해양 쓰레기 분석 장치 연동이 어떨까요?" }
+                ],
+                builderBg: "방갈리 신재생에너지 인근 만(灣) 조류에 해안 밀려드는 폐어망 및 스티로폼 부표 적체 방치로 어족 자원 고갈 위험 증가.",
+                builderSolution: "주민 자치 협의회 주관 상시 바다 환경 파수꾼 어촌 일자리 연계 창출 및 수거 지원선 정기 배정.",
+                builderEffect: "깨끗한 태안 천혜 청정 이미지 회복 및 지자체 청년/고령자 일자리 복합 상생 솔루션 구축."
+            },
+            3: {
+                id: 3,
+                tag: "#복지",
+                title: "동부전통시장 편의 인프라",
+                location: "태안읍 동부시장 안길",
+                desc: "재래시장 이용 시 카트 보관소와 장바구니 리셉션 대여실이 부족해서 어르신들의 쇼핑이 무척 곤란합니다.",
+                waterCount: 3,
+                maxWater: 10,
+                agreeRatio: 92,
+                debates: [
+                    { user: "동부사랑", text: "시장 전용 스마트 장바구니 무료 대여 및 스마트 캐비넷 확보 시스템이 최우선입니다." },
+                    { user: "원북상인", text: "시장 주변 무장애 유모차 이동 경사로 확보 및 휠체어 대여 서비스도 추가해 주세요!" }
+                ],
+                builderBg: "전통시장 이용 연령층의 대다수가 고령 주민이나, 무장애 동선 보도 블록 단절 및 자율 대여 스마트 보행 보조 기구 부재로 피로감 상승.",
+                builderSolution: "시장 연합 협동조합 운영 무장애 카트 허브 설치 및 노약자 전용 편의 안내 센터 신설 건의.",
+                builderEffect: "젊은 관광 유입층을 포함한 노약자의 무장애 장보기 쇼핑 인프라 극대화로 전통시장 상권 매출 기여 극대화."
+            }
+        };
+
+        // 싱글톤 방식의 AudioContext로 터치 렉 차단
+        let globalAudioCtx = null;
+        function playSound(type) {
+            try {
+                if (!globalAudioCtx) {
+                    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (globalAudioCtx.state === 'suspended') {
+                    globalAudioCtx.resume();
+                }
+                const osc = globalAudioCtx.createOscillator();
+                const gain = globalAudioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(globalAudioCtx.destination);
+
+                if (type === 'tap') {
+                    osc.frequency.setValueAtTime(350, globalAudioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(120, globalAudioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.2, globalAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, globalAudioCtx.currentTime + 0.08);
+                    osc.start(); osc.stop(globalAudioCtx.currentTime + 0.08);
+                } else if (type === 'success') {
+                    // 승리 멜로디 아르페지오 C-E-G-C
+                    const now = globalAudioCtx.currentTime;
+                    const notes = [261.63, 329.63, 392.00, 523.25];
+                    notes.forEach((freq, idx) => {
+                        const o = globalAudioCtx.createOscillator();
+                        const g = globalAudioCtx.createGain();
+                        o.connect(g);
+                        g.connect(globalAudioCtx.destination);
+                        o.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        g.gain.setValueAtTime(0.15, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.25);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.25);
+                    });
+                } else if (type === 'error') {
+                    osc.frequency.setValueAtTime(140, globalAudioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(70, globalAudioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.3, globalAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, globalAudioCtx.currentTime + 0.2);
+                    osc.start(); osc.stop(globalAudioCtx.currentTime + 0.2);
+                }
+            } catch (e) {
+                console.log('Audio init failed: ', e);
+            }
+        }
+
+        // 초기 화면 설정 로드
+        window.onload = function() {
+            updateStatsUI();
+            renderMapMarkers();
+            renderFeedList();
+        }
+
+        // 전체 스탯 전역 반영 및 UI 동기화
+        function updateStatsUI() {
+            document.getElementById('happiness-val').innerText = `${happiness}%`;
+            document.getElementById('happiness-bar').style.width = `${happiness}%`;
+            
+            document.getElementById('development-val').innerText = `${development}%`;
+            document.getElementById('development-bar').style.width = `${development}%`;
+            
+            document.getElementById('coin-amount').innerText = coins;
+            document.getElementById('voucher-points').innerText = `${voucherPoints} P`;
+
+            // 상점용 잔액 전역 연동
+            document.getElementById('shop-coin-balance').innerText = coins;
+            document.getElementById('shop-happiness-val').innerText = `${happiness}%`;
+        }
+
+        // 지도 마커 통합 렌더링 함수
+        function renderMapMarkers() {
+            const container = document.getElementById('map-markers-container');
+            container.innerHTML = ""; // 초기화
+
+            // 1. 민원 마커들 렌더링
+            const nodePositions = {
+                1: { top: 28, left: 22, name: '안면도 꽃지' },
+                2: { top: 52, left: 62, name: '원북 발전소' },
+                3: { top: 68, left: 42, name: '태안 동부시장' }
+            };
+
+            Object.values(initialIssues).forEach(issue => {
+                const pos = nodePositions[issue.id];
+                if (!pos) return;
+
+                const markerDiv = document.createElement('div');
+                markerDiv.className = "absolute transition-all duration-300";
+                markerDiv.style.top = `${pos.top}%`;
+                markerDiv.style.left = `${pos.left}%`;
+
+                // 물주기 완성여부에 따른 아이콘 변화
+                const iconHtml = (issue.waterCount >= issue.maxWater) 
+                    ? `<div class="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white pulse-icon"><i class="fa-solid fa-comments text-xs"></i></div>`
+                    : `<div class="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white pulse-icon"><i class="fa-solid fa-triangle-exclamation text-xs"></i></div>`;
+
+                markerDiv.innerHTML = `
+                    <button onclick="interactNode(${issue.id})" class="relative flex flex-col items-center group active:scale-95 transition-transform">
+                        ${iconHtml}
+                        <span class="mt-1 bg-slate-900/80 text-[10px] text-white px-2 py-0.5 rounded-full backdrop-blur-xs font-semibold">${pos.name}</span>
+                    </button>
+                `;
+                container.appendChild(markerDiv);
+            });
+
+            // 2. 활성화된 돌발 퀘스트 마커들 렌더링
+            const questPositions = {
+                'beach': { top: 16, left: 50 },
+                'dune': { top: 44, left: 18 },
+                'quiz': { top: 35, left: 78 }
+            };
+
+            Object.keys(activeQuests).forEach(key => {
+                const quest = activeQuests[key];
+                if (!quest.active) return; // 이미 성공한 퀘스트는 노출하지 않음!
+
+                const pos = questPositions[key];
+                if (!pos) return;
+
+                const markerDiv = document.createElement('div');
+                markerDiv.className = "absolute transition-all duration-300";
+                markerDiv.style.top = `${pos.top}%`;
+                markerDiv.style.left = `${pos.left}%`;
+
+                markerDiv.innerHTML = `
+                    <button onclick="startQuestGame('${key}')" class="relative flex flex-col items-center group active:scale-95 transition-transform">
+                        <div class="w-10 h-10 ${quest.color} rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white pulse-icon text-sm">
+                            ${quest.icon}
+                        </div>
+                        <span class="mt-1 bg-indigo-900/90 text-[10px] text-yellow-300 px-2 py-0.5 rounded-full font-bold shadow-sm">${quest.name.split(' ')[0]}</span>
+                    </button>
+                `;
+                container.appendChild(markerDiv);
+            });
+        }
+
+        // 가스텀 팝업 모달 관리자
+        function triggerSystemModal(title, message, icon = '💡', callback = null) {
+            document.getElementById('system-modal-title').innerText = title;
+            document.getElementById('system-modal-message').innerText = message;
+            document.getElementById('system-modal-icon').innerText = icon;
+            document.getElementById('system-modal').classList.remove('hidden');
+            systemModalCallback = callback;
+        }
+
+        function closeSystemModal() {
+            // 수동 클릭 시 자동 다음단계 타이머가 남아있다면 제거
+            if (quizAutoTimer) {
+                clearTimeout(quizAutoTimer);
+                quizAutoTimer = null;
+            }
+            document.getElementById('system-modal').classList.add('hidden');
+            if (systemModalCallback) {
+                const cb = systemModalCallback;
+                systemModalCallback = null; // 콜백 실행 전 초기화하여 꼬임 방지
+                cb();
+            }
+        }
+
+        // 특정 노드 인터랙션 실행
+        function interactNode(id) {
+            playSound('tap');
+            currentActiveNodeId = id;
+            showWaterPanel();
+        }
+
+        // 상세 의견 물주기(공감) 모달 띄우기
+        function showWaterPanel() {
+            const data = initialIssues[currentActiveNodeId];
+            const myContribution = userWaterRegistry[currentActiveNodeId] || 0;
+
+            document.getElementById('panel-tag').innerText = data.tag;
+            document.getElementById('panel-title').innerText = data.title;
+            document.getElementById('panel-location').innerText = data.location;
+            document.getElementById('panel-description').innerText = data.desc;
+            document.getElementById('panel-user-contribution').innerText = `내가 보낸 공감: ${myContribution} / 2 회`;
+
+            // 물주기 프로그레스바 설정
+            const progressRatio = (data.waterCount / data.maxWater) * 100;
+            document.getElementById('water-progress-text').innerText = `${data.waterCount} / ${data.maxWater} 회`;
+            document.getElementById('water-progress-bar').style.width = `${progressRatio}%`;
+
+            // 만약 이미 다 채워진 노드라면 즉시 토론방 갈 수 있도록 연출
+            const btnWater = document.getElementById('btn-give-water');
+            if (data.waterCount >= data.maxWater) {
+                btnWater.innerHTML = `<i class="fa-solid fa-comments"></i> 즉시 토론방 열기!`;
+                btnWater.onclick = () => {
+                    closePanel('panel-water');
+                    startDebateQuest();
+                };
+            } else {
+                btnWater.innerHTML = `<i class="fa-solid fa-droplet text-blue-200"></i> 공감 물주기 (-10 코인)`;
+                btnWater.onclick = () => giveWater();
+            }
+
+            document.getElementById('panel-water').classList.remove('hidden');
+        }
+
+        // 물주기(공감) 실행 (1인당 최대 2회 제한 및 총 10회 토론 조건 반영)
+        function giveWater() {
+            const data = initialIssues[currentActiveNodeId];
+            const myContribution = userWaterRegistry[currentActiveNodeId] || 0;
+
+            // 1인당 최대 2회 기여한도 제한
+            if (myContribution >= 2) {
+                playSound('error');
+                triggerSystemModal(
+                    "공감 참여 완료", 
+                    "한 사람당 의제별로 최대 2번만 공감할 수 있습니다! 이제 다른 태안 주민들의 동참을 기다려주세요.", 
+                    "🚫"
+                );
+                return;
+            }
+
+            if (coins < 10) {
+                playSound('error');
+                triggerSystemModal("코인 부족", "공감하기에는 최소 10개의 태안 코인이 필요합니다! 상단 스탯 혹은 상점을 확인해 주세요.", "❌");
+                return;
+            }
+
+            // 재화 감소 및 공감도 추가
+            playSound('tap');
+            coins -= 10;
+            data.waterCount += 1;
+            userWaterRegistry[currentActiveNodeId] = myContribution + 1;
+            
+            happiness += 4;
+            if (happiness > 100) happiness = 100;
+
+            updateStatsUI();
+            showWaterPanel();
+            renderFeedList();
+            renderMapMarkers(); // 맵 마커 상태(색상) 실시간 반영을 위해 리렌더링
+
+            // 물을 다 줬다면 토론방 퀘스트 해금
+            if (data.waterCount >= data.maxWater) {
+                playSound('success');
+                triggerSystemModal(
+                    "🎉 주민 대공감 달성!", 
+                    `[${data.title}] 의제에 주민 공감 10회가 모여 토론방이 정식 개설되었습니다! 즉시 [토론 광장]으로 입장해 보세요!`, 
+                    "💬"
+                );
+                showWaterPanel();
+            }
+        }
+
+        function closePanel(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // 토론 광장 탭으로 화면 전환 진행
+        function startDebateQuest() {
+            goTab('debate');
+        }
+
+        // 탭 메뉴 핸들러 (실제 뷰 전환 관리 및 비동기 타이머 정비)
+        function goTab(tabId) {
+            playSound('tap');
+
+            // 화면을 이동할 시에는 진행 중이던 타이머/인터벌을 정리하여 꼬임 방지
+            if (beachGameInterval) {
+                clearInterval(beachGameInterval);
+                beachGameInterval = null;
+            }
+            if (quizAutoTimer) {
+                clearTimeout(quizAutoTimer);
+                quizAutoTimer = null;
+            }
+
+            // 모든 탭 컨텐츠 숨기기
+            document.getElementById('screen-map').classList.add('hidden');
+            document.getElementById('screen-debate').classList.add('hidden');
+            document.getElementById('screen-builder').classList.add('hidden');
+            document.getElementById('screen-submit').classList.add('hidden');
+            document.getElementById('screen-tracking').classList.add('hidden');
+            document.getElementById('screen-shop').classList.add('hidden');
+
+            // 퀘스트 전용 화면들도 숨기기
+            document.getElementById('screen-quest-beach').classList.add('hidden');
+            document.getElementById('screen-quest-dune').classList.add('hidden');
+            document.getElementById('screen-quest-quiz').classList.add('hidden');
+
+            // 모든 하단 메뉴 버튼 스타일 비활성화
+            const tabButtons = ['tab-map', 'tab-debate', 'tab-builder', 'tab-tracking', 'tab-shop'];
+            tabButtons.forEach(btnId => {
+                document.getElementById(btnId).classList.remove('text-teal-600');
+                document.getElementById(btnId).classList.add('text-slate-400');
+            });
+
+            // 선택 탭 활성화 분기 처리
+            if (tabId === 'map') {
+                document.getElementById('screen-map').classList.remove('hidden');
+                document.getElementById('tab-map').classList.add('text-teal-600');
+                document.getElementById('tab-map').classList.remove('text-slate-400');
+                renderMapMarkers();
+            } else if (tabId === 'debate') {
+                document.getElementById('screen-debate').classList.remove('hidden');
+                document.getElementById('tab-debate').classList.add('text-teal-600');
+                document.getElementById('tab-debate').classList.remove('text-slate-400');
+                loadDebateRoom();
+            } else if (tabId === 'builder') {
+                document.getElementById('screen-builder').classList.remove('hidden');
+                document.getElementById('tab-builder').classList.add('text-teal-600');
+                document.getElementById('tab-builder').classList.remove('text-slate-400');
+                loadBuilderStep(1);
+            } else if (tabId === 'tracking') {
+                document.getElementById('screen-tracking').classList.remove('hidden');
+                document.getElementById('tab-tracking').classList.add('text-teal-600');
+                document.getElementById('tab-tracking').classList.remove('text-slate-400');
+            } else if (tabId === 'shop') {
+                document.getElementById('screen-shop').classList.remove('hidden');
+                document.getElementById('tab-shop').classList.add('text-teal-600');
+                document.getElementById('tab-shop').classList.remove('text-slate-400');
+                updateStatsUI();
+            }
+        }
+
+        // UI 피드 렌더링
+        function renderFeedList() {
+            const container = document.getElementById('issue-feed-container');
+            container.innerHTML = "";
+
+            Object.values(initialIssues).forEach(issue => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-teal-50/70 hover:border-teal-200 active:scale-[0.99] transition-all cursor-pointer";
+                item.onclick = () => {
+                    currentActiveNodeId = issue.id;
+                    showWaterPanel();
+                };
+
+                const progressPercentage = (issue.waterCount / issue.maxWater) * 100;
+
+                item.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] bg-teal-100 text-teal-800 font-extrabold px-1.5 py-0.2 rounded">${issue.tag}</span>
+                            <span class="font-bold text-xs text-slate-800">${issue.title}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 truncate max-w-[200px] font-medium">${issue.desc}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-[10px] text-teal-600 font-bold flex items-center gap-1 justify-end">
+                            <i class="fa-solid fa-droplet text-[9px] text-blue-400"></i> ${issue.waterCount}/${issue.maxWater} 공감
+                        </div>
+                        <div class="w-14 bg-slate-200 h-1.5 rounded-full mt-1 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-400 to-teal-500 h-1.5" style="width: ${progressPercentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // 토론방 데이터 로드
+        function loadDebateRoom() {
+            const data = initialIssues[currentActiveNodeId];
+            
+            // 물주기 미완성인 상태로 강제 진입 시 가이드
+            if (data.waterCount < data.maxWater) {
+                triggerSystemModal("입장 대기", "주민들의 공감 게이지를 최소 10회(1인당 최대 2회) 채워야 토론방이 해금됩니다!", "🔒");
+                goTab('map');
+                return;
+            }
+
+            hasVoted = false; // 투표 변수 초기화
+            document.getElementById('debate-tag').innerText = data.tag;
+            document.getElementById('debate-title').innerText = data.title;
+            document.getElementById('debate-desc').innerText = `"${data.desc}"`;
+
+            // 찬반 기본 스탯 반영
+            document.getElementById('vote-agree-bar').style.width = `${data.agreeRatio}%`;
+            document.getElementById('vote-disagree-bar').style.width = `${100 - data.agreeRatio}%`;
+            document.getElementById('vote-ratio-text').innerText = `찬성 ${data.agreeRatio}% / 반대 ${100 - data.agreeRatio}%`;
+
+            // 대화 목록 로드
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML = "";
+            data.debates.forEach(chat => {
+                const message = document.createElement('div');
+                message.className = "bg-slate-50 p-2.5 rounded-xl border border-slate-100";
+                message.innerHTML = `<span class="font-bold text-slate-700">${chat.user}</span>: ${chat.text}`;
+                chatBox.appendChild(message);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 가상 찬반 투표 행사
+        function userVote(isAgree) {
+            if (hasVoted) {
+                triggerSystemModal("이미 참여함", "해당 정책 토론에 이미 한 표를 보태셨습니다!", "🗳️");
+                return;
+            }
+
+            const data = initialIssues[currentActiveNodeId];
+            if (isAgree) {
+                data.agreeRatio += 5;
+                if (data.agreeRatio > 100) data.agreeRatio = 100;
+                coins += 30; // 보상 코인 지급
+                playSound('success');
+                triggerSystemModal("찬성 투표 완료", "인프라 해결 방안에 동의하셨습니다. 토론 참여 보상: +30 코인!", "👍");
+            } else {
+                data.agreeRatio -= 5;
+                if (data.agreeRatio < 0) data.agreeRatio = 0;
+                coins += 30;
+                playSound('success');
+                triggerSystemModal("대안 의견 투표 완료", "추가 검토 및 대안적인 방안 모색에 힘을 주셨습니다. 토론 참여 보상: +30 코인!", "💡");
+            }
+
+            hasVoted = true;
+            updateStatsUI();
+            
+            // 비율 갱신
+            document.getElementById('vote-agree-bar').style.width = `${data.agreeRatio}%`;
+            document.getElementById('vote-disagree-bar').style.width = `${100 - data.agreeRatio}%`;
+            document.getElementById('vote-ratio-text').innerText = `찬성 ${data.agreeRatio}% / 반대 ${100 - data.agreeRatio}%`;
+        }
+
+        // 직접 한줄 의견 피드백 달기
+        function postUserOpinion() {
+            const input = document.getElementById('user-opinion-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            playSound('tap');
+            const chatBox = document.getElementById('chat-messages');
+            const message = document.createElement('div');
+            message.className = "bg-teal-50 border border-teal-100 p-2.5 rounded-xl";
+            message.innerHTML = `<span class="font-bold text-teal-700">이장 나(나의캐릭터)</span>: ${text}`;
+            
+            chatBox.appendChild(message);
+            input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 추가 코인 적립
+            coins += 20;
+            updateStatsUI();
+
+            // 가상 주민들의 지지 리액션 생성
+            setTimeout(() => {
+                const reactionMsg = document.createElement('div');
+                reactionMsg.className = "bg-slate-50 p-2.5 rounded-xl border border-slate-100";
+                reactionMsg.innerHTML = `<span class="font-bold text-indigo-700">안면 거주민</span>: 우와, 이장님 의견 정말 날카롭고 멋져요! 꼭 상소문(안건)에 올려주세요!`;
+                chatBox.appendChild(reactionMsg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 800);
+        }
+
+        // 네비게이션 복구 도우미들
+        function goBackToMap() { goTab('map'); }
+        function goBackToDebate() { goTab('debate'); }
+        function goToAgendaBuilder() { goTab('builder'); }
+
+        // 안건 작성 마법사 (Wizard) 제어
+        function loadBuilderStep(step) {
+            currentBuilderStep = step;
+            
+            // 모든 스텝 폼 숨기기
+            document.getElementById('form-step-1').classList.add('hidden');
+            document.getElementById('form-step-2').classList.add('hidden');
+            document.getElementById('form-step-3').classList.add('hidden');
+
+            // 버튼 제어 초기화
+            document.getElementById('btn-prev-step').classList.add('hidden');
+            document.getElementById('btn-next-step').classList.remove('hidden');
+            document.getElementById('btn-finish-builder').classList.add('hidden');
+
+            // 헤더 스텝 가시적 갱신
+            document.getElementById('step-1').className = "bg-slate-200 text-slate-600 py-1 rounded-md";
+            document.getElementById('step-2').className = "bg-slate-200 text-slate-600 py-1 rounded-md";
+            document.getElementById('step-3').className = "bg-slate-200 text-slate-600 py-1 rounded-md";
+
+            // 해당 단계 활성화
+            document.getElementById(`form-step-${step}`).classList.remove('hidden');
+            document.getElementById(`step-${step}`).className = "bg-amber-500 text-white py-1 rounded-md";
+
+            // 이전/다음 단계 버튼 상태 지정
+            if (step > 1) {
+                document.getElementById('btn-prev-step').classList.remove('hidden');
+            }
+            if (step === 3) {
+                document.getElementById('btn-next-step').classList.add('hidden');
+                document.getElementById('btn-finish-builder').classList.remove('hidden');
+            }
+
+            // 기본 데이터 프리필(Pre-fill)
+            const activeData = initialIssues[currentActiveNodeId];
+            if (step === 1 && !document.getElementById('builder-bg').value) {
+                document.getElementById('builder-bg').value = activeData.builderBg;
+            } else if (step === 2 && !document.getElementById('builder-solution').value) {
+                document.getElementById('builder-solution').value = activeData.builderSolution;
+            } else if (step === 3 && !document.getElementById('builder-effect').value) {
+                document.getElementById('builder-effect').value = activeData.builderEffect;
+            }
+        }
+
+        function nextStep() {
+            playSound('tap');
+            if (currentBuilderStep < 3) {
+                loadBuilderStep(currentBuilderStep + 1);
+            }
+        }
+
+        function prevStep() {
+            playSound('tap');
+            if (currentBuilderStep > 1) {
+                loadBuilderStep(currentBuilderStep - 1);
+            }
+        }
+
+        // 안건 작성 마무리 및 상소문 프리뷰로 전달
+        function finishBuilder() {
+            playSound('tap');
+            const title = initialIssues[currentActiveNodeId].title;
+            const location = initialIssues[currentActiveNodeId].location;
+            const bg = document.getElementById('builder-bg').value.trim();
+            const solution = document.getElementById('builder-solution').value.trim();
+            const effect = document.getElementById('builder-effect').value.trim();
+
+            if (!bg || !solution || !effect) {
+                triggerSystemModal("빈칸 발견", "각 항목에 의견을 작성해주셔야 정식 상소문으로 인정됩니다!", "⚠️");
+                return;
+            }
+
+            // 상소문 정보 맵핑
+            document.getElementById('preview-title').innerText = `${title} 해결 상소문`;
+            document.getElementById('preview-location').innerText = location;
+            document.getElementById('preview-bg').innerText = bg;
+            document.getElementById('preview-solution').innerText = solution;
+            document.getElementById('preview-effect').innerText = effect;
+
+            // 상태값 복원
+            isStamped = false;
+            document.getElementById('signature-ratio-text').innerText = `현재 5명 동의`;
+            document.getElementById('signature-progress-bar').style.width = `33%`;
+            
+            document.getElementById('btn-sign-stamp').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('btn-sign-stamp').innerHTML = `<i class="fa-solid fa-stamp text-xl animate-bounce"></i> 서명 도장 꾹 누르기!`;
+
+            document.getElementById('btn-submit-to-office').disabled = true;
+            document.getElementById('btn-submit-to-office').className = "w-full py-3 bg-slate-300 text-slate-500 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-not-allowed";
+
+            // 상소문 서명 화면으로 스위칭
+            document.getElementById('screen-builder').classList.add('hidden');
+            document.getElementById('screen-submit').classList.remove('hidden');
+        }
+
+        // 서명 날인 찍기
+        function stampSignature() {
+            if (isStamped) return;
+
+            isStamped = true;
+            playSound('tap');
+
+            // 도장 찍기 완료 효과
+            document.getElementById('btn-sign-stamp').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('btn-sign-stamp').innerHTML = `<i class="fa-solid fa-circle-check text-xl"></i> 내 서명 날인 완료`;
+
+            // 서명자 게이지가 차차 오르는 시뮬레이션
+            let count = 5;
+            signatureInterval = setInterval(() => {
+                count++;
+                const ratio = Math.min((count / 15) * 100, 100);
+                document.getElementById('signature-ratio-text').innerText = `현재 ${count}명 동의`;
+                document.getElementById('signature-progress-bar').style.width = `${ratio}%`;
+
+                if (count >= 15) {
+                    clearInterval(signatureInterval);
+                    playSound('success');
+                    // 전송 잠금 장치 해제
+                    const btnSubmit = document.getElementById('btn-submit-to-office');
+                    btnSubmit.disabled = false;
+                    btnSubmit.className = "w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-md cursor-pointer";
+                    
+                    triggerSystemModal("서명 전원 합의!", "태안 주민 15명의 동의 서명이 모두 모였습니다! 군청 전송 버튼이 활성화되었습니다.", "🗳️");
+                }
+            }, 100);
+        }
+
+        // 군청에 정식 최종 제출하기
+        function submitToOffice() {
+            playSound('tap');
+            document.getElementById('screen-submit').classList.add('hidden');
+            document.getElementById('screen-tracking').classList.remove('hidden');
+
+            hasClaimedReward = false;
+            document.getElementById('box-reward-claim').classList.add('hidden');
+
+            // 트래킹 단계 노드 기본 상태화
+            resetTrackingNodes();
+
+            // 단계적 행정 처리 배송 현황 시뮬레이션 가동 (중간에 취소될 시 청소를 위해 배열에 적재)
+            trackingTimeouts.push(setTimeout(() => {
+                const node2 = document.getElementById('track-step2-node');
+                if(node2) {
+                    node2.classList.remove('bg-slate-300');
+                    node2.classList.add('bg-emerald-500');
+                    document.getElementById('track-step2-title').className = "text-xs font-bold text-emerald-600";
+                    document.getElementById('track-step2-desc').className = "text-[10px] text-slate-600 mt-0.5";
+                    document.getElementById('track-step2-desc').innerText = "안건 성격에 맞게 '태안군청 대표 실무 행정위원회'로 주관 부서 배정이 완료되었습니다.";
+                }
+            }, 1500));
+
+            trackingTimeouts.push(setTimeout(() => {
+                const node3 = document.getElementById('track-step3-node');
+                if(node3) {
+                    node3.classList.remove('bg-slate-300');
+                    node3.classList.add('bg-emerald-500');
+                    document.getElementById('track-step3-title').className = "text-xs font-bold text-emerald-600";
+                    document.getElementById('track-step3-desc').className = "text-[10px] text-slate-600 mt-0.5";
+                    document.getElementById('track-step3-desc').innerText = "실무 위원회가 조례 및 예산 편성 검토 결과, 지자체 추진 가능으로 의결하였습니다.";
+                }
+            }, 3500));
+
+            trackingTimeouts.push(setTimeout(() => {
+                const node4 = document.getElementById('track-step4-node');
+                if(node4) {
+                    node4.classList.remove('bg-slate-300');
+                    node4.classList.add('bg-emerald-500');
+                    document.getElementById('track-step4-title').className = "text-xs font-bold text-emerald-600";
+                    document.getElementById('track-step4-desc').className = "text-[10px] text-slate-600 mt-0.5";
+                    document.getElementById('track-step4-desc').innerText = "[태안군청 서면 공식 답변]: 제안해주신 안건의 사업성을 전폭 수용하여 즉각 보완 및 시범 실현에 돌입하겠습니다!";
+                    document.getElementById('box-reward-claim').classList.remove('hidden');
+                }
+            }, 5500));
+        }
+
+        // 트래킹 UI 리셋
+        function resetTrackingNodes() {
+            // 미완성 비동기 타임아웃 초기화
+            trackingTimeouts.forEach(t => clearTimeout(t));
+            trackingTimeouts = [];
+
+            const nodes = ['track-step2-node', 'track-step3-node', 'track-step4-node'];
+            nodes.forEach(n => {
+                const el = document.getElementById(n);
+                if(el) el.className = "absolute -left-[23px] w-4 h-4 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center";
+            });
+
+            document.getElementById('track-step2-title').className = "text-xs font-bold text-slate-600";
+            document.getElementById('track-step2-desc').className = "text-[10px] text-slate-400 mt-0.5";
+            document.getElementById('track-step2-desc').innerText = "담당 주관 부서가 배정 중입니다. (기획감사실 또는 건설교통과 등)";
+
+            document.getElementById('track-step3-title').className = "text-xs font-bold text-slate-600";
+            document.getElementById('track-step3-desc').className = "text-[10px] text-slate-400 mt-0.5";
+            document.getElementById('track-step3-desc').innerText = "실무 부서장이 조례 적법성 및 행정 예산 실행 타당성을 정밀하게 검토합니다.";
+
+            document.getElementById('track-step4-title').className = "text-xs font-bold text-slate-600";
+            document.getElementById('track-step4-desc').className = "text-[10px] text-slate-400 mt-0.5";
+            document.getElementById('track-step4-desc').innerText = "공식 답변서가 군민들에게 송출되고 제안 안건이 의회에 회부됩니다.";
+        }
+
+        // 리워드 포인트 획득 행사
+        function claimVoucherReward() {
+            if (hasClaimedReward) return;
+
+            hasClaimedReward = true;
+            happiness += 15;
+            development += 10;
+            coins += 200; // 태안 코인 200개 지급
+            if (happiness > 100) happiness = 100;
+            if (development > 100) development = 100;
+
+            updateStatsUI();
+            
+            document.getElementById('box-reward-claim').classList.add('hidden');
+            playSound('success');
+
+            // 오버레이 연출 후 지도 복귀
+            showGlobalClearOverlay("태안 군청 안건 채택 보상", 200, 15);
+        }
+
+        // 돌발 퀘스트 시작 핸들러
+        function startQuestGame(questType) {
+            playSound('tap');
+            // 모든 스크린 가리기
+            document.getElementById('screen-map').classList.add('hidden');
+            
+            if (questType === 'beach') {
+                document.getElementById('screen-quest-beach').classList.remove('hidden');
+                startBeachCleanGame();
+            } else if (questType === 'dune') {
+                document.getElementById('screen-quest-dune').classList.remove('hidden');
+                startDunePlantGame();
+            } else if (questType === 'quiz') {
+                document.getElementById('screen-quest-quiz').classList.remove('hidden');
+                startQuizMiniGame();
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 1. 만리포 비치코밍 (봉사 미니게임)
+        // -----------------------------------------------------------------
+        function startBeachCleanGame() {
+            beachTimerVal = 10;
+            beachScoreVal = 0;
+            
+            document.getElementById('beach-timer').innerText = `⏱️ 남은시간: 10.0초`;
+            document.getElementById('beach-score').innerText = `🗑️ 수거: 0 / 8`;
+            
+            // 보드 내부 잔여 쓰레기 청소
+            const board = document.getElementById('beach-game-board');
+            const items = board.querySelectorAll('.garbage-item');
+            items.forEach(item => item.remove());
+
+            // 쓰레기 생성
+            for (let i = 0; i < 10; i++) {
+                spawnGarbage();
+            }
+
+            if (beachGameInterval) clearInterval(beachGameInterval);
+            beachGameInterval = setInterval(() => {
+                beachTimerVal -= 0.1;
+                document.getElementById('beach-timer').innerText = `⏱️ 남은시간: ${Math.max(0, beachTimerVal).toFixed(1)}초`;
+                
+                if (beachTimerVal <= 0) {
+                    clearInterval(beachGameInterval);
+                    endBeachCleanGame(false);
+                }
+            }, 100);
+        }
+
+        function spawnGarbage() {
+            const board = document.getElementById('beach-game-board');
+            const item = document.createElement('div');
+            item.className = "garbage-item absolute w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow border border-slate-200 cursor-pointer active:scale-90 transition-transform text-lg select-none";
+            
+            // 랜덤 쓰레기 아이콘 (페트병, 물고기뼈, 플라스틱 등)
+            const trashIcons = ['🧴', '🥫', '🦴', '🥤', '🎒'];
+            item.innerText = trashIcons[Math.floor(Math.random() * trashIcons.length)];
+
+            // 랜덤 위치 배치 (경계 제한)
+            const boardWidth = board.clientWidth || 320;
+            const boardHeight = board.clientHeight || 240;
+            item.style.left = `${Math.floor(Math.random() * (boardWidth - 50)) + 5}px`;
+            item.style.top = `${Math.floor(Math.random() * (boardHeight - 80)) + 40}px`;
+
+            item.onclick = function() {
+                playSound('tap');
+                item.remove();
+                beachScoreVal++;
+                document.getElementById('beach-score').innerText = `🗑️ 수거: ${beachScoreVal} / 8`;
+                
+                if (beachScoreVal >= 8) {
+                    clearInterval(beachGameInterval);
+                    endBeachCleanGame(true);
+                }
+            };
+
+            board.appendChild(item);
+        }
+
+        function endBeachCleanGame(isSuccess) {
+            if (isSuccess) {
+                playSound('success');
+                // 퀘스트 완료 시 소멸 처리!
+                activeQuests['beach'].active = false;
+                
+                // 보상 증가
+                coins += 150;
+                happiness += 10;
+                if (happiness > 100) happiness = 100;
+                updateStatsUI();
+
+                showGlobalClearOverlay("만리포 해안 비치코밍", 150, 10);
+            } else {
+                playSound('error');
+                triggerSystemModal("시간 초과", "시간 내에 쓰레기 8개를 줍지 못했습니다. 다시 도전해보세요!", "😢", () => {
+                    goTab('map');
+                });
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 2. 신두리 해안사구 사초 심기 (봉사 미니게임)
+        // -----------------------------------------------------------------
+        function startDunePlantGame() {
+            duneScoreVal = 0;
+            document.getElementById('dune-progress-bar').style.width = `10%`;
+            document.getElementById('dune-score-text').innerText = `복원 클릭: 0 / 10회`;
+        }
+
+        function tapDuneSoil() {
+            playSound('tap');
+            duneScoreVal++;
+            const pct = Math.min((duneScoreVal / 10) * 100, 100);
+            document.getElementById('dune-progress-bar').style.width = `${pct}%`;
+            document.getElementById('dune-score-text').innerText = `복원 클릭: ${duneScoreVal} / 10회`;
+
+            if (duneScoreVal >= 10) {
+                playSound('success');
+                activeQuests['dune'].active = false; // 퀘스트 완료 소멸!
+                
+                coins += 120;
+                happiness += 8;
+                if (happiness > 100) happiness = 100;
+                updateStatsUI();
+
+                showGlobalClearOverlay("신두리 사구 사초 심기", 120, 8);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 3. 태안 홍보 골든벨 퀴즈 로직
+        // -----------------------------------------------------------------
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        const quizData = [
+            {
+                q: "Q. 태안에 위치한 우리나라 유일의 '이것'은 천연기념물로 지정된 아시아 최고의 사구 언덕입니다. 무엇일까요?",
+                opts: ["1. 신두리 해안사구", "2. 안면도 갯벌체험공원", "3. 꽃지 백사장 해오름길"],
+                answer: 1,
+                reason: "신두리 해안사구는 빙하기 이후 오랜 세월 바람이 모래를 날려 만든 국내 최고의 모래 언덕 생태지입니다!"
+            },
+            {
+                q: "Q. 아시아 최초로 '세계에서 가장 아름다운 수목원'으로 지정되었으며, 푸른 바다를 품은 희귀 식물의 천국인 이곳은?",
+                opts: ["1. 안면도 꽃지수목원", "2. 천리포 수목원", "3. 몽산포 생태공원"],
+                answer: 2,
+                reason: "천리포 수목원은 바다와 맞닿아 있는 서해안의 보물이자 푸른 생태 숲입니다!"
+            },
+            {
+                q: "Q. 가을마다 드넓은 대지 위 수백만 송이의 꽃들이 조화를 이루어, 세계 5대 튤립제 위상을 떨치는 서해 축제 이름은?",
+                opts: ["1. 태안 세계튤립꽃박람회", "2. 안면도 백사장 대하축제", "3. 태안 모래조각축제"],
+                answer: 1,
+                reason: "태안 세계튤립꽃박람회는 매년 전 세계의 아름다운 튤립을 한데 모아 코리아 플라워파크에서 화려하게 치러집니다!"
+            }
+        ];
+
+        function startQuizMiniGame() {
+            currentQuizIndex = 0;
+            quizScore = 0;
+            showQuizQuestion();
+        }
+
+        function showQuizQuestion() {
+            const currentData = quizData[currentQuizIndex];
+            document.getElementById('quiz-progress-text').innerText = `문제 ${currentQuizIndex + 1} / 3`;
+            document.getElementById('quiz-score-text').innerText = `점수: ${quizScore} P`;
+            document.getElementById('quiz-question').innerText = currentData.q;
+
+            document.getElementById('quiz-opt-1').innerText = currentData.opts[0];
+            document.getElementById('quiz-opt-2').innerText = currentData.opts[1];
+            document.getElementById('quiz-opt-3').innerText = currentData.opts[2];
+        }
+
+        function handleQuizAnswer(selectedOpt) {
+            const currentData = quizData[currentQuizIndex];
+            let isCorrect = (selectedOpt === currentData.answer);
+            
+            if (isCorrect) {
+                playSound('success');
+                quizScore += 100;
+            } else {
+                playSound('error');
+            }
+
+            // [확인] 버튼을 누르거나 타이머 완료 시 실행될 다음 단계 콜백 함수 정의
+            const nextStepCallback = () => {
+                currentQuizIndex++;
+                if (currentQuizIndex < 3) {
+                    showQuizQuestion();
+                } else {
+                    endQuizMiniGame();
+                }
+            };
+
+            if (isCorrect) {
+                triggerSystemModal(
+                    "정답입니다! 🟢", 
+                    `훌륭해요! 정답은 [${currentData.opts[currentData.answer - 1]}] 입니다.\n\n💡 설명: ${currentData.reason}\n\n⏱️ 3초 후 자동으로 다음 문제로 이동합니다.`, 
+                    "🟢", 
+                    nextStepCallback
+                );
+            } else {
+                triggerSystemModal(
+                    "아쉽게도 오답.. ❌", 
+                    `정답은 [${currentData.opts[currentData.answer - 1]}] 이었습니다.\n\n💡 설명: ${currentData.reason}\n\n⏱️ 3초 후 자동으로 다음 문제로 이동합니다.`, 
+                    "❌", 
+                    nextStepCallback
+                );
+            }
+
+            // 3초 후 자동으로 다음으로 넘기도록 타이머 트리거
+            quizAutoTimer = setTimeout(() => {
+                closeSystemModal();
+            }, 3000);
+        }
+
+        function endQuizMiniGame() {
+            if (quizScore >= 200) {
+                playSound('success');
+                activeQuests['quiz'].active = false; // 퀘스트 완료 소멸!
+
+                coins += 180;
+                happiness += 12;
+                if (happiness > 100) happiness = 100;
+                updateStatsUI();
+
+                showGlobalClearOverlay("태안 홍보 골든벨 퀴즈", 180, 12);
+            } else {
+                playSound('error');
+                triggerSystemModal("홍보 미달", "2문제 이상 맞추지 못해 골든벨 도전에 실패했습니다. 태안 정보를 익혀 다시 시도해보세요!", "😢", () => {
+                    goTab('map');
+                });
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 글로벌 공통 축하 모달 연출 및 3초 후 자동 지도로 이동
+        // -----------------------------------------------------------------
+        let clearOverlayTimer = null;
+        function showGlobalClearOverlay(questName, coinReward, happinessReward) {
+            // 사운드 재생
+            playSound('success');
+
+            const overlay = document.getElementById('quest-clear-overlay');
+            document.getElementById('clear-overlay-title').innerText = `${questName} 완수!`;
+            overlay.classList.remove('hidden');
+
+            let secondsLeft = 3;
+            document.getElementById('overlay-countdown-text').innerText = secondsLeft;
+
+            if (clearOverlayTimer) clearInterval(clearOverlayTimer);
+            clearOverlayTimer = setInterval(() => {
+                secondsLeft--;
+                document.getElementById('overlay-countdown-text').innerText = secondsLeft;
+
+                if (secondsLeft <= 0) {
+                    clearInterval(clearOverlayTimer);
+                    overlay.classList.add('hidden');
+                    goTab('map'); // 지도로 강제 복귀
+                }
+            }, 1000);
+        }
+
+        // 신규 민원 제안 모달 오프너
+        function openCreateIssueModal() {
+            playSound('tap');
+            document.getElementById('modal-create-issue').classList.remove('hidden');
+        }
+
+        function closeCreateIssueModal() {
+            document.getElementById('modal-create-issue').classList.add('hidden');
+        }
+
+        // 커스텀 유저 신규 불편사항 수집 등록
+        function submitNewIssue() {
+            const category = document.getElementById('new-issue-category').value;
+            const location = document.getElementById('new-issue-location').value.trim();
+            const title = document.getElementById('new-issue-title').value.trim();
+            const desc = document.getElementById('new-issue-desc').value.trim();
+
+            if (!location || !title || !desc) {
+                playSound('error');
+                triggerSystemModal("오류", "모든 입력란을 빠짐없이 채워주셔야 지도에 정식 ⚠️ 마커가 생성됩니다.", "❌");
+                return;
+            }
+
+            const newId = Object.keys(initialIssues).length + 1;
+            initialIssues[newId] = {
+                id: newId,
+                tag: category,
+                title: title,
+                location: location,
+                desc: desc,
+                waterCount: 0,
+                maxWater: 10, // 신규 등록도 동일
+                agreeRatio: 50,
+                debates: [
+                    { user: "태안이장", text: "매우 공감하며 현행 주민 안전 위협과 경제 활성화 조치를 위해 지혜를 모읍시다!" }
+                ],
+                builderBg: `태안 ${location} 주변의 ${title} 등의 문제로 긴급 주민 환경 저해 유발 및 장기 방치 리스크가 있습니다.`,
+                builderSolution: `${desc}의 근본 해결을 위한 조례 제정 및 시범 지구 운영 예산 추가 편성을 요구합니다.`,
+                builderEffect: "유사 위험 요소의 연쇄적 선제 해결 및 지자체 안심 주거 보장 인프라 달성."
+            };
+
+            createDynamicMarker(newId, title);
+
+            closeCreateIssueModal();
+            renderFeedList();
+            playSound('success');
+            triggerSystemModal("의견 등록 완료", `[${title}] 의견이 지도의 ⚠️ 마커로 등록되었습니다. 공감 물주기(최대 2회 참여 가능)를 시도해 보세요!`, "✅");
+        }
+
+        // 동적 마커 엘리먼트 렌더러
+        function createDynamicMarker(id, title) {
+            // 마커 위치 분할 배정
+            const randomTop = Math.floor(Math.random() * 40) + 30; // 30%~70%
+            const randomLeft = Math.floor(Math.random() * 50) + 20; // 20%~70%
+
+            // 전역 좌표 정보 기록 (마커 재생성 시 유지를 위해 객체에 바인딩)
+            const mapContainer = document.getElementById('map-markers-container');
+            const markerDiv = document.createElement('div');
+            markerDiv.className = `absolute transition-all duration-300`;
+            markerDiv.style.top = `${randomTop}%`;
+            markerDiv.style.left = `${randomLeft}%`;
+
+            markerDiv.innerHTML = `
+                <button onclick="interactNode(${id})" class="relative flex flex-col items-center group active:scale-95 transition-transform">
+                    <div class="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white pulse-icon">
+                        <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                    </div>
+                    <span class="mt-1 bg-slate-900/80 text-[10px] text-white px-2 py-0.5 rounded-full backdrop-blur-sm font-medium">${title.substring(0, 6)}...</span>
+                </button>
+            `;
+            mapContainer.appendChild(markerDiv);
+        }
+
+        // 리셋 및 지도로 복원
+        function resetGameAndBackToMap() {
+            // 현재 활성화된 안건은 공감 및 투표 상태 리셋
+            const activeData = initialIssues[currentActiveNodeId];
+            if (activeData) {
+                activeData.waterCount = 0;
+                userWaterRegistry[currentActiveNodeId] = 0; // 내 기여도 복구
+            }
+            
+            document.getElementById('builder-bg').value = "";
+            document.getElementById('builder-solution').value = "";
+            document.getElementById('builder-effect').value = "";
+
+            renderFeedList();
+            goTab('map');
+        }
+
+        // [상점 시스템] 코인 상품권 구매 및 영수증 팝업 작동
+        function buyVoucher(name, price, codePrefix) {
+            if (coins < price) {
+                playSound('error');
+                triggerSystemModal("코인 부족", "가지고 계신 태안 코인이 부족합니다. 더 많은 의견 개진과 토론에 동참하여 코인을 충전하세요!", "❌");
+                return;
+            }
+
+            // 차감 및 적립
+            playSound('success');
+            coins -= price;
+            voucherPoints += price * 10;
+            updateStatsUI();
+
+            // 가상 일련번호 코드 생성
+            const uniqueCode = `${codePrefix}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            // 영수증 데이터 주입 및 팝업 작동
+            document.getElementById('receipt-item-name').innerText = name;
+            document.getElementById('receipt-item-price').innerText = `${price} Coins`;
+            document.getElementById('receipt-code').innerText = uniqueCode;
+
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+            triggerSystemModal("교환 성공", "교환해주셔서 감사합니다! 발급된 바코드는 주민 이장 앱 지갑에서 상시 확인 가능합니다.", "🎉");
+        }
+    </script>
+</body>
+</html>
