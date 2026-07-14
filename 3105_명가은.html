@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>그로밋의 전원일기 - 3D 귀농 집 꾸미기, 텃밭 & 낚시</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts (Cute Round Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Jua', sans-serif;
+      background-color: #f5eedc;
+    }
+    .font-dongle {
+      font-family: 'Dongle', sans-serif;
+    }
+    /* 스크롤바 커스텀 */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #8b5a2b;
+      border-radius: 4px;
+    }
+    /* 귀여운 흔들림 효과 */
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    .wiggle-hover:hover {
+      animation: wiggle 0.5s ease-in-out infinite;
+    }
+    /* 3D 뷰포트 컨테이너 스타일 */
+    #canvas3d-container {
+      position: relative;
+      cursor: grab;
+    }
+    #canvas3d-container:active {
+      cursor: grabbing;
+    }
+    /* 낚시 게임 전용 애니메이션 */
+    @keyframes fish-swim {
+      0% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      100% { transform: translateX(-10px); }
+    }
+    .swimming-fish {
+      animation: fish-swim 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-[#fcf8f2] text-gray-800 min-h-screen flex flex-col selection:bg-amber-200">
+
+  <!-- 상단 네비게이션 헤더 -->
+  <header class="bg-[#784d24] text-white py-3 px-6 shadow-md flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <!-- 고증된 그로밋 아이콘 -->
+      <span class="text-3xl bg-amber-100 p-1.5 rounded-full border-2 border-amber-950">🐶</span>
+      <div>
+        <h1 class="text-3xl md:text-4xl font-dongle font-bold tracking-wider leading-none">그로밋의 3D 전원일기</h1>
+        <p class="text-xs text-amber-200 font-sans tracking-wide">3D 공간에서 즐기는 그로밋의 시골집 복원, 친환경 텃밭 & 개울가 낚시</p>
+      </div>
+    </div>
+    
+    <!-- 유저 재화 정보 -->
+    <div class="flex items-center space-x-4">
+      <div class="bg-[#59391a] px-4 py-1.5 rounded-full flex items-center space-x-2 border border-amber-500/30 shadow-inner">
+        <span class="text-xl">💰</span>
+        <span id="gold-amount" class="font-bold text-lg md:text-xl text-yellow-300">150</span>
+        <span class="text-xs text-amber-100">골드</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 게임 메인 컨테이너 -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- 왼쪽: 게임 캠페인 및 상태 창 (4 cols) -->
+    <div class="lg:col-span-4 flex flex-col space-y-6">
+      
+      <!-- 진짜 그로밋 비주얼 반영 상태창 -->
+      <div class="bg-white rounded-3xl p-6 shadow-md border-4 border-[#8b5a2b]/30 relative overflow-hidden">
+        <div class="absolute -top-6 -right-6 w-24 h-24 bg-amber-50 rounded-full opacity-50"></div>
+        
+        <h3 class="text-xl font-bold text-[#8b5a2b] mb-4 flex items-center gap-1">
+          🐾 실시간 그로밋 캠프
+        </h3>
+        
+        <div class="flex items-start space-x-4 mb-4">
+          <!-- 진짜 그로밋을 고증한 고품질 SVG 일러스트 -->
+          <div class="relative w-24 h-24 bg-stone-100 rounded-2xl border-2 border-stone-300 flex items-center justify-center shadow-inner flex-shrink-0">
+            <svg viewBox="0 0 100 100" class="w-20 h-20">
+              <!-- 그로밋의 시그니처 길쭉하고 둥근 크림색 머리통 -->
+              <path d="M 50,15 C 32,15 30,55 32,70 C 32,82 40,88 50,88 C 60,88 68,82 68,70 C 68,55 68,15 50,15 Z" fill="#fcfaf2" stroke="#42301c" stroke-width="3"/>
+              
+              <!-- 그로밋의 볼록 튀어나온 주둥이 아랫부분 -->
+              <ellipse cx="50" cy="74" rx="17" ry="11" fill="#f4f0e1" stroke="#42301c" stroke-width="2.5"/>
+              
+              <!-- 크고 동그란 원형 코 (주둥이 윗부분 중앙) -->
+              <ellipse cx="50" cy="65" rx="9" ry="7" fill="#1e1e1d"/>
+              <!-- 코 하이라이트 -->
+              <circle cx="48" cy="63" r="2" fill="#ffffff"/>
+              
+              <!-- 똘망똘망 가깝게 붙은 눈발 (양 눈이 서로 딱 붙어있는 그로밋 특유의 눈) -->
+              <!-- 왼쪽 눈 -->
+              <ellipse cx="43" cy="42" rx="7" ry="9" fill="#ffffff" stroke="#42301c" stroke-width="2"/>
+              <circle cx="44" cy="43" r="3" fill="#000000"/>
+              <!-- 오른쪽 눈 -->
+              <ellipse cx="57" cy="42" rx="7" ry="9" fill="#ffffff" stroke="#42301c" stroke-width="2"/>
+              <circle cx="56" cy="43" r="3" fill="#000000"/>
+              
+              <!-- 걱정스러운 듯한 눈썹선 -->
+              <path d="M 37,31 C 41,29 45,31 45,31" stroke="#42301c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M 63,31 C 59,29 55,31 55,31" stroke="#42301c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+              <!-- 그로밋의 길고 두툼하며 축 처진 밤색/검정색 귀 -->
+              <!-- 왼쪽 귀 -->
+              <path d="M 31,35 C 10,40 8,72 18,80 C 26,75 29,55 31,45 Z" fill="#4a3319" stroke="#42301c" stroke-width="2.5"/>
+              <!-- 오른쪽 귀 -->
+              <path d="M 69,35 C 90,40 92,72 82,80 C 74,75 71,55 69,45 Z" fill="#4a3319" stroke="#42301c" stroke-width="2.5"/>
+              
+              <!-- 빨간 목줄 -->
+              <path d="M 34,80 C 38,84 62,84 66,80" stroke="#dc2626" stroke-width="4" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div class="absolute -top-2 -left-2 text-2xl transform -rotate-12 select-none">🌾</div>
+          </div>
+          
+          <div class="flex-grow bg-amber-50 rounded-2xl p-3 border border-amber-200 relative">
+            <div class="absolute left-0 top-6 -translate-x-2 -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-amber-50 border-b-8 border-b-transparent"></div>
+            <p id="gromit-speech" class="text-sm font-semibold text-gray-700 leading-snug">
+              멍멍! (마우스 드래그로 3D 시골집을 돌려보세요! 텃밭 탭을 누르면 농사 구역으로 카메라가 이동해요!)
+            </p>
+          </div>
+        </div>
+
+        <!-- 귀농 레벨 & 경험치 게이지 -->
+        <div class="space-y-2 pt-2 border-t border-dashed border-[#e6dcd0]">
+          <div class="flex justify-between items-center text-sm">
+            <span class="font-bold text-gray-600">🏡 청년 귀농 지수</span>
+            <span id="level-text" class="text-[#8b5a2b] font-bold">Lv.1 초보 농부 그로밋</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3.5 overflow-hidden border border-gray-300 shadow-inner">
+            <div id="xp-bar" class="bg-gradient-to-r from-emerald-400 to-green-500 h-full transition-all duration-300" style="width: 20%"></div>
+          </div>
+          <p class="text-xs text-gray-500 text-right">다음 마스터 등급까지 수확 <span id="xp-needed" class="font-bold text-emerald-600">3</span>회 남음</p>
+        </div>
+      </div>
+
+      <!-- 지역 소멸 대응 캠페인 카드 -->
+      <div class="bg-gradient-to-br from-[#fdfbf7] to-amber-50 rounded-3xl p-6 shadow-md border-4 border-emerald-600/20">
+        <h3 class="text-lg font-bold text-emerald-800 mb-3 flex items-center gap-1.5">
+          <i class="fa-solid fa-tree-city"></i> 우리의 고향을 아기자기하게!
+        </h3>
+        <p class="text-xs text-gray-600 leading-relaxed mb-4">
+          방치된 시골의 빈집들이 조금만 손을 거치면 그로밋의 아늑한 주택처럼 아름답게 바뀔 수 있습니다. 
+          직접 농사를 지어 벌어들인 골드로 시골의 고유한 공간 가치를 키워보세요!
+        </p>
+        
+        <div class="bg-white/95 p-3.5 rounded-2xl border border-amber-200/60 space-y-2.5 text-xs text-stone-700">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">📍</span>
+            <span><strong>선택된 지역:</strong> 전남 고흥군 남열리 마중마을</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm">🏚️</span>
+            <span><strong>지자체 보조:</strong> 청년 공가 리모델링 비용 70% 보조</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm">🌾</span>
+            <span><strong>로컬 보상:</strong> 3D 작물 완판 시 정식 엠블럼 수여</span>
+          </div>
+        </div>
+        
+        <button onclick="openCampaignModal()" class="w-full mt-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-xl transition duration-200 shadow flex items-center justify-center gap-2 text-sm wiggle-hover">
+          <i class="fa-solid fa-seedling"></i> 실제 빈집 리모델링 정책 알아보기
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽: 3D 캔버스 렌더러 & 조작 도구판 (8 cols) -->
+    <div class="lg:col-span-8 flex flex-col space-y-6">
+      
+      <!-- 상단 탭 전환기 -->
+      <div class="bg-[#ebd9c5] p-1.5 rounded-2xl flex space-x-2 shadow-inner">
+        <button id="tab-house-btn" onclick="switchTab('house')" class="flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 shadow bg-white text-[#8b5a2b]">
+          <i class="fa-solid fa-paint-roller"></i> 1. 집 리모델링
+        </button>
+        <button id="tab-farm-btn" onclick="switchTab('farm')" class="flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 text-stone-700 hover:bg-white/50">
+          <i class="fa-solid fa-seedling"></i> 2. 3D 텃밭 농사
+        </button>
+        <button id="tab-fishing-btn" onclick="switchTab('fishing')" class="flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 text-stone-700 hover:bg-white/50">
+          <i class="fa-solid fa-fish"></i> 3. 개울가 민물낚시
+        </button>
+      </div>
+
+      <!-- 🎮 실시간 3D 뷰포트 컨테이너 -->
+      <div class="bg-white rounded-3xl p-4 shadow-md border-4 border-[#8b5a2b]/30">
+        <div id="canvas3d-container" class="w-full h-[400px] bg-sky-200 rounded-2xl overflow-hidden shadow-inner relative">
+          
+          <!-- 3D 캔버스 로딩 인디케이터 (수동 시작하기 버튼 추가!) -->
+          <div id="loader3d" class="absolute inset-0 bg-stone-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-white z-40 transition-opacity duration-500">
+            <span class="text-5xl animate-bounce">🐶🔧</span>
+            <span class="mt-3 text-xl font-bold">그로밋의 3D 전원일기 로딩 중</span>
+            <p class="text-stone-300 text-xs mt-1 max-w-xs text-center font-sans leading-relaxed">지자체 및 브라우저 보안에 따라 3D 로딩이 정체될 수 있습니다. 아래 시작 버튼을 눌러 바로 플레이하세요!</p>
+            
+            <button onclick="forceStartGame()" class="mt-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 px-8 rounded-2xl shadow-xl hover:shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 text-base">
+              <i class="fa-solid fa-circle-play text-lg"></i> 그로밋 일기 시작하기
+            </button>
+          </div>
+
+          <!-- 3D 뷰포트 정보 안내 레이블 -->
+          <div class="absolute top-4 left-4 bg-black/50 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-sans pointer-events-none flex items-center gap-1.5 z-10">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span>3D VIEW: 마우스 드래그 회전 & 우클릭 이동 가능</span>
+          </div>
+
+          <!-- 3D 조작 헬퍼 가이드 -->
+          <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur text-stone-700 px-3 py-1.5 rounded-lg text-xs pointer-events-none z-10 border border-amber-200 shadow-sm">
+            💡 <strong>액션 팁:</strong> 마우스 휠로 줌인/아웃을 할 수 있어요!
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 콘텐츠 영역 A: 시골집 리모델링 옵션 -->
+      <div id="content-house" class="bg-white rounded-3xl p-6 shadow-md border-2 border-[#e6dcd0] flex flex-col space-y-6">
+        
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-xl font-bold text-[#8b5a2b] flex items-center gap-1.5">
+              <i class="fa-solid fa-brush"></i> 시골집 외관 꾸미기 및 데코 상점
+            </h4>
+            <span class="text-xs bg-amber-100 text-amber-800 py-1 px-2.5 rounded-full">상점 아이템은 골드로 한 번 구매하면 영구 소장!</span>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- 1. 지붕 형태 (5종) -->
+            <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200">
+              <label class="block text-sm font-bold text-stone-700 mb-2">🏠 3D 지붕 업그레이드</label>
+              <div class="grid grid-cols-2 gap-2" id="roof-shop-container">
+                <!-- JS에서 동적으로 가격/소유 여부를 렌더링 -->
+              </div>
+            </div>
+
+            <!-- 2. 외벽 디자인 (5종) -->
+            <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200">
+              <label class="block text-sm font-bold text-stone-700 mb-2">🎨 3D 외벽 디자인 리폼</label>
+              <div class="grid grid-cols-2 gap-2" id="wall-shop-container">
+                <!-- JS에서 동적 렌더링 -->
+              </div>
+            </div>
+
+            <!-- 3. 현관문 스타일 (5종) -->
+            <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200">
+              <label class="block text-sm font-bold text-stone-700 mb-2">🚪 현관문 디자인 교체</label>
+              <div class="grid grid-cols-2 gap-2" id="door-shop-container">
+                <!-- JS에서 동적 렌더링 -->
+              </div>
+            </div>
+
+            <!-- 4. 마당 소품 조경 (5종) -->
+            <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200">
+              <label class="block text-sm font-bold text-stone-700 mb-2">🌳 조경/마당 가구 배치</label>
+              <div class="grid grid-cols-2 gap-2" id="decor-shop-container">
+                <!-- JS에서 동적 렌더링 -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 콘텐츠 영역 B: 3D 텃밭 가꾸기 옵션 -->
+      <div id="content-farm" class="bg-white rounded-3xl p-6 shadow-md border-2 border-[#e6dcd0] flex flex-col space-y-6 hidden">
+        
+        <!-- 원예 도구함 디자인 -->
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200">
+          <h5 class="font-bold text-amber-900 mb-3 flex items-center gap-1.5">
+            <i class="fa-solid fa-toolbox"></i> 귀농 도구함 (액션을 선택하고 3D 텃밭을 클릭하세요)
+          </h5>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5">
+            
+            <button onclick="selectTool('plow')" id="tool-plow" class="py-2.5 px-2 bg-amber-600 ring-4 ring-amber-300 text-amber-950 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow transition border-2 border-amber-600">
+              <span class="text-xl">⛏️</span>
+              <span class="text-xs">1단계: 땅 고르기</span>
+              <span class="text-[9px] opacity-80">(흙 가꾸기)</span>
+            </button>
+            
+            <button onclick="selectTool('seed-potato')" id="tool-seed-potato" class="py-2.5 px-2 bg-stone-100 text-stone-700 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-sm transition border-2 border-transparent">
+              <span class="text-xl">🥔</span>
+              <span class="text-xs">감자 심기</span>
+              <span class="text-[9px] text-[#8b5a2b]">비용: 10골드</span>
+            </button>
+
+            <button onclick="selectTool('seed-carrot')" id="tool-seed-carrot" class="py-2.5 px-2 bg-stone-100 text-stone-700 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-sm transition border-2 border-transparent">
+              <span class="text-xl">🥕</span>
+              <span class="text-xs">당근 심기</span>
+              <span class="text-[9px] text-[#8b5a2b]">비용: 15골드</span>
+            </button>
+
+            <!-- 신규 작물 고구마 추가 -->
+            <button onclick="selectTool('seed-sweetpotato')" id="tool-seed-sweetpotato" class="py-2.5 px-2 bg-stone-100 text-stone-700 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-sm transition border-2 border-transparent">
+              <span class="text-xl">🍠</span>
+              <span class="text-xs">고구마 심기</span>
+              <span class="text-[9px] text-[#8b5a2b]">비용: 20골드</span>
+            </button>
+
+            <!-- 신규 작물 옥수수 추가 -->
+            <button onclick="selectTool('seed-corn')" id="tool-seed-corn" class="py-2.5 px-2 bg-stone-100 text-stone-700 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-sm transition border-2 border-transparent">
+              <span class="text-xl">🌽</span>
+              <span class="text-xs">옥수수 심기</span>
+              <span class="text-[9px] text-[#8b5a2b]">비용: 25골드</span>
+            </button>
+
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 mt-3">
+            <button onclick="selectTool('water')" id="tool-water" class="py-3 px-2 bg-stone-100 text-stone-700 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-sm transition border-2 border-transparent w-full">
+              <span class="text-2xl">💧</span>
+              <span class="text-sm">물주기 (성장 촉진)</span>
+              <span class="text-[10px] opacity-80">(초고속 재배 및 수분 공급)</span>
+            </button>
+            <div class="bg-white p-2 rounded-xl border border-amber-200 text-xs text-amber-900 flex flex-col justify-center">
+              <span class="font-bold text-red-600">현재 쥐어쥔 도구: <span id="current-tool-text">⛏️ 땅 고르기</span></span>
+              <span>※ 3D 텃밭 흙을 직접 마우스로 선택하면 도구가 발동됩니다!</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 콘텐츠 영역 C: 개울가 민물낚시 미니게임 -->
+      <div id="content-fishing" class="bg-white rounded-3xl p-6 shadow-md border-2 border-[#e6dcd0] flex flex-col space-y-6 hidden">
+        
+        <div class="bg-blue-50 p-5 rounded-2xl border border-blue-200">
+          <div class="flex justify-between items-center mb-4">
+            <h5 class="font-bold text-blue-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-fish"></i> 그로밋의 시골 개울가 민물낚시 터
+            </h5>
+            <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full">미끼 비용: 회당 5 골드</span>
+          </div>
+
+          <!-- 낚시 인터랙션 존 -->
+          <div class="bg-gradient-to-b from-sky-400 to-blue-500 rounded-xl p-6 text-center text-white relative overflow-hidden shadow-inner h-64 flex flex-col justify-between items-center">
+            
+            <!-- 시각 효과용 물고기 애니메이션 -->
+            <div class="absolute top-10 left-10 text-4xl opacity-30 swimming-fish select-none">🐟</div>
+            <div class="absolute bottom-12 right-12 text-3xl opacity-20 swimming-fish select-none" style="animation-delay: 1.5s;">🐠</div>
+
+            <div id="fishing-status-container" class="my-auto flex flex-col items-center">
+              <div id="fishing-avatar" class="text-6xl mb-3">🎣</div>
+              <p id="fishing-msg" class="text-lg font-bold tracking-wide">낚시할 준비가 되었습니다! 아래 버튼을 눌러 캐스팅하세요.</p>
+            </div>
+
+            <!-- 미니게임 릴/타이밍바 콘솔 (대기 시 비활성화) -->
+            <div id="fishing-game-bar" class="w-full max-w-md bg-sky-900/60 p-4 rounded-xl border border-sky-300/40 hidden">
+              <div class="flex justify-between text-xs text-sky-100 mb-1">
+                <span>실패</span>
+                <span class="text-green-300 font-bold">HIT ZONE (녹색 영역에서 클릭!)</span>
+                <span>실패</span>
+              </div>
+              <!-- 게이지 바 디자인 -->
+              <div class="w-full bg-slate-800 h-6 rounded-full relative overflow-hidden border border-slate-600 shadow-inner">
+                <!-- 히트존 영역 (정중앙 30%) -->
+                <div class="absolute left-[35%] w-[30%] bg-green-500 h-full opacity-80 shadow"></div>
+                <!-- 이동식 핀 -->
+                <div id="fishing-pointer" class="absolute left-0 w-3 bg-red-500 h-full shadow-lg transition-all duration-75"></div>
+              </div>
+              <button onclick="strikeFish()" class="w-full mt-3 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition duration-150 transform hover:scale-105">
+                지금 릴 당기기! (REEL!)
+              </button>
+            </div>
+
+            <button id="fishing-start-btn" onclick="startCasting()" class="bg-yellow-400 hover:bg-yellow-500 text-amber-950 font-bold py-3 px-8 rounded-xl shadow transition duration-200 wiggle-hover">
+              🎣 미끼 던지기 (5 골드 소진)
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 보상 판매 & 농수산물 직거래 상점 -->
+      <div class="bg-white rounded-3xl p-6 shadow-md border-2 border-[#e6dcd0]">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-[#8b5a2b] flex items-center gap-1.5">
+            <i class="fa-solid fa-store"></i> 고흥 로컬 푸드 직판 마켓
+          </h3>
+          <span class="text-xs text-emerald-800 font-bold bg-emerald-100 px-3 py-1.5 rounded-full">지방소멸 대응 고흥 청년 수매단 운영</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- 1. 감자 판매 -->
+          <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="text-4xl">🥔</div>
+              <div>
+                <h4 class="font-bold text-gray-800">친환경 감자</h4>
+                <p class="text-xs text-gray-500">보유량: <span id="inv-potato" class="font-bold text-amber-700">0</span>개</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-amber-800 font-bold mb-1">수매가: 40골드</p>
+              <button onclick="sellItem('potato', 40)" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition">
+                일괄 판매
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. 당근 판매 -->
+          <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="text-4xl">🥕</div>
+              <div>
+                <h4 class="font-bold text-gray-800">유기농 고흥 당근</h4>
+                <p class="text-xs text-gray-500">보유량: <span id="inv-carrot" class="font-bold text-amber-700">0</span>개</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-amber-800 font-bold mb-1">수매가: 60골드</p>
+              <button onclick="sellItem('carrot', 60)" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition">
+                일괄 판매
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. 고구마 판매 -->
+          <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="text-4xl">🍠</div>
+              <div>
+                <h4 class="font-bold text-gray-800">해풍 꿀 고구마</h4>
+                <p class="text-xs text-gray-500">보유량: <span id="inv-sweetpotato" class="font-bold text-amber-700">0</span>개</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-amber-800 font-bold mb-1">수매가: 80골드</p>
+              <button onclick="sellItem('sweetpotato', 80)" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition">
+                일괄 판매
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. 옥수수 판매 -->
+          <div class="bg-stone-50 p-4 rounded-2xl border border-stone-200 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="text-4xl">🌽</div>
+              <div>
+                <h4 class="font-bold text-gray-800">찰옥수수</h4>
+                <p class="text-xs text-gray-500">보유량: <span id="inv-corn" class="font-bold text-amber-700">0</span>개</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-amber-800 font-bold mb-1">수매가: 100골드</p>
+              <button onclick="sellItem('corn', 100)" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition">
+                일괄 판매
+              </button>
+            </div>
+          </div>
+
+          <!-- 5. 낚시 수확물 판매 -->
+          <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-200 md:col-span-2 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="text-4xl">🐟</div>
+              <div>
+                <h4 class="font-bold text-blue-900">시골 개울가 민물 생선 모음</h4>
+                <p class="text-xs text-gray-600">
+                  은어: <span id="inv-sweetfish" class="font-bold text-blue-600">0</span>개 | 
+                  붕어: <span id="inv-crucian" class="font-bold text-blue-600">0</span>개 | 
+                  메기: <span id="inv-catfish" class="font-bold text-blue-600">0</span>개 | 
+                  황금잉어: <span id="inv-goldcarp" class="font-bold text-yellow-600">0</span>개
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <button onclick="sellAllFish()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition">
+                물고기 전량 위탁 판매하기
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 하단 푸터 (캠페인 의도 명시) -->
+  <footer class="bg-stone-900 text-stone-400 py-8 px-6 mt-12 text-center border-t-4 border-[#8b5a2b]">
+    <div class="max-w-4xl mx-auto space-y-3">
+      <p class="text-sm font-sans text-stone-300">
+        본 앱은 지방 소멸 문제 해결과 농어촌 활성화를 목표로 하는 <strong>'그로밋' 캐릭터 연계 빈집 살리기 모의 캠페인</strong>입니다.
+      </p>
+      <p class="text-xs text-stone-500 font-sans">
+        Wallace & Gromit © Aardman Animations Ltd. All rights reserved. 3D 기술 지원: Three.js WebGL Renderer.
+      </p>
+    </div>
+  </footer>
+
+  <!-- 알림 메시지 레이어 모달 -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-stone-900 text-white px-6 py-3 rounded-2xl shadow-xl transition-all duration-300 translate-y-20 opacity-0 z-50 font-sans text-sm flex items-center gap-2">
+    <span id="toast-icon">ℹ️</span>
+    <span id="toast-msg">메시지가 표시됩니다.</span>
+  </div>
+
+  <!-- 캠페인 소개 모달 팝업 -->
+  <div id="campaign-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border-4 border-emerald-600 animate-fade-in">
+      <button onclick="closeCampaignModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </button>
+      
+      <div class="text-center space-y-4">
+        <span class="text-5xl">🏘️🌾</span>
+        <h3 class="text-2xl font-bold text-emerald-800">진짜 빈집을 고쳐서 시골로 가자!</h3>
+        <p class="text-xs text-gray-600 leading-relaxed font-sans text-left bg-stone-50 p-4 rounded-2xl">
+          현재 국토교통부와 전라남도 등 각 지방자치단체에서는 농어촌 인구 감소를 극복하기 위해 <strong>'농촌 빈집 재생 프로젝트'</strong>를 실행 중입니다.<br><br>
+          방치된 가옥을 청년 귀농인을 위해 싼값에 분양하거나, 최대 수천만 원 상당의 무상 리모델링 설계비를 보조해 주는 획기적인 방안들이 마련되어 있습니다. 그로밋과 함께 가상 체험을 하신 뒤 고향의 주택 활성화에도 관심을 가져 보세요!
+        </p>
+        
+        <div class="flex gap-2">
+          <button onclick="closeCampaignModal()" class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition">
+            알겠어요! 계속 게임하기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 메인 및 3D 렌더링 스크립트 -->
+  <script>
+    // --- 1. 전역 게임 상태 정의 ---
+    const gameState = {
+      gold: 150,
+      xp: 0,
+      level: 1,
+      inv: {
+        potato: 0,
+        carrot: 0,
+        sweetpotato: 0,
+        corn: 0,
+        crucian: 0,
+        sweetfish: 0,
+        catfish: 0,
+        goldcarp: 0
+      },
+      currentTool: 'plow', // plow, seed-potato, seed-carrot, seed-sweetpotato, seed-corn, water
+      unlocked: {
+        roof: ['red'],
+        wall: ['amber'],
+        door: ['wood'],
+        decor: ['flowers']
+      },
+      plots: [
+        { id: 0, status: 'empty', progress: 0, crop: null, intervalId: null, mesh: null, plantMesh: null },
+        { id: 1, status: 'empty', progress: 0, crop: null, intervalId: null, mesh: null, plantMesh: null },
+        { id: 2, status: 'empty', progress: 0, crop: null, intervalId: null, mesh: null, plantMesh: null },
+        { id: 3, status: 'empty', progress: 0, crop: null, intervalId: null, mesh: null, plantMesh: null }
+      ]
+    };
+
+    // --- 2. 상점 구매용 아이템 카탈로그 (지붕/외벽/문/마당 소품) ---
+    const catalog = {
+      roof: [
+        { id: 'red', name: '레트로 기와', desc: '한국 전통 오리지널 다홍색 기와', price: 0, color: 0xdc2626 },
+        { id: 'orange', name: '오렌지 테라코타', desc: '감각적인 지중해 남부 주택 테라코타', price: 50, color: 0xea580c },
+        { id: 'slate', name: '블랙 슬레이트', desc: '차분하고 현대적인 그레이 슬레이트', price: 80, color: 0x334155 },
+        { id: 'straw', name: '전통 초가지붕', desc: '짚을 고수하여 만든 향토 분위기 테마', price: 100, color: 0xd9b382 },
+        { id: 'blue', name: '블루 메탈지붕', desc: '내구성이 좋고 보기 드문 청량 스카이블루', price: 150, color: 0x0284c7 }
+      ],
+      wall: [
+        { id: 'amber', name: '전통 황토벽', desc: '친환경 건강식 전통 황토 흙 공법 마감', price: 0, color: 0xfffbeb },
+        { id: 'cream', name: '크림 파스텔', desc: '인스타 감성을 수용한 소프트 레몬 크림색', price: 60, color: 0xfef9c3 },
+        { id: 'white', name: '모던 화이트', desc: '깔끔함이 가장 돋보이는 도시형 시멘트 마감', price: 90, color: 0xffffff },
+        { id: 'brick', name: '빈티지 적벽돌', desc: '클래식하면서 오랜 세월 기품있는 적벽돌', price: 120, color: 0xb91c1c },
+        { id: 'log', name: '통나무 로그', desc: '자연 친화적 아늑한 시골 별장 통나무 산장', price: 160, color: 0x78350f }
+      ],
+      door: [
+        { id: 'wood', name: '나무 고재문', desc: '세월이 가득 묻어 더 정겨운 빈티지 나무문', price: 0, color: 0x78350f },
+        { id: 'teal', name: '레트로 민트', desc: '유럽 시골집의 느낌을 그대로 따온 청록 도어', price: 40, color: 0x0d9488 },
+        { id: 'glass', name: '통유리 도어', desc: '내부가 은은하게 보이는 시원한 통유리 디자인', price: 70, color: 0xbae6fd },
+        { id: 'iron', name: '앤틱 블랙철문', desc: '강인하고 안전성 높은 모던 다크 철제 스타일', price: 100, color: 0x1e293b },
+        { id: 'pink', name: '파스텔 핑크문', desc: '사랑스러운 분위기를 풍기는 화사한 핑크', price: 130, color: 0xf472b6 }
+      ],
+      decor: [
+        { id: 'flowers', name: '들꽃 꽃밭', desc: '마당 구석을 향기롭게 해 줄 들꽃 모음', price: 0 },
+        { id: 'bench', name: '원목 의자', desc: '그늘 옆에서 도란도란 쉴 수 있는 목재 의자', price: 30 },
+        { id: 'doghouse', name: '그로밋의 집', desc: '그로밋의 전용 휴식처 최고급 야외 단독 개집', price: 60 },
+        { id: 'pots', name: '전통 장독대', desc: '시골집 마당의 꽃, 장들이 익어가는 전통 옹기', price: 100 },
+        { id: 'campfire', name: '모닥불 캠프', desc: '캠핑 및 불멍 가구, 따뜻한 모닥불 장작', price: 150 }
+      ]
+    };
+
+    // --- 3. Three.js 3D 환경 변수 ---
+    let scene, camera, renderer;
+    let houseWallMesh, houseRoofMesh, houseDoorMesh;
+    let decorGroup;
+    
+    // 카메라 제어 및 인터랙션용 마우스 변수
+    let isMouseDown = false;
+    let isRightMouseDown = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cameraRotation = { theta: Math.PI / 4, phi: Math.PI / 3 }; // 구면 좌표계 회전각
+    let cameraRadius = 25; // 카메라 중심으로부터의 거리
+    let cameraTarget = new THREE.Vector3(0, 1.5, 0); // 기본 카메라 타겟 (집)
+
+    // 마우스 레이캐스팅 (3D 클릭 검출)
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    // 낚시터 미니게임 작동용 환경 상태 변수
+    let fishingState = 'idle'; // idle, waiting, bite
+    let fishingTimer = null;
+    let fishingInterval = null;
+    let fishingPointerPos = 0;
+    let fishingDirection = 1;
+
+    // --- STREAMING_CHUNK: Launching the app onload ---
+    // --- 4. 초기 로딩 및 온로드 시작 ---
+    window.onload = function() {
+      // 3D 씬 이니셜라이징
+      init3D();
+      
+      // UI 리프레시 및 환영 메시지
+      buildShopUI();
+      refreshUI();
+      
+      // 혹시라도 이전에 로딩창이 자동으로 안 꺼졌을 경우에 대비한 타임아웃
+      setTimeout(() => {
+        const loader = document.getElementById('loader3d');
+        if (loader && loader.style.display !== 'none') {
+          console.log("3D Loaded completely. Transitioning screen.");
+          forceStartGame();
+        }
+      }, 1500);
+
+      // 스페이스바 전역 키보드 리스너 등록
+      window.addEventListener('keydown', function(e) {
+        if (e.code === 'Space') {
+          e.preventDefault(); // 스페이스바 누를 시 브라우저 스크롤 현상 방지
+          handleSpacebarAction();
+        }
+      });
+    };
+
+    // 3D 초기화 로직의 강제 안정 수동 탈출 시스템 
+    function forceStartGame() {
+      const loader = document.getElementById('loader3d');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 500);
+      }
+      gromitSay("멍멍! (어서오세요! 3D 전원생활 시골집 리모델링과 개울 낚시를 신나게 즐겨보아요!)");
+      showToast("🎮", "그로밋 전원일기 월드에 들어왔습니다! 마우스 드래그로 구경해 보세요!");
+    }
+
+    // --- STREAMING_CHUNK: Managing spacebar click triggers ---
+    // 스페이스바 액션 컨트롤러 (탭/상황별 단축키 대응)
+    function handleSpacebarAction() {
+      // 1. 캠페인 설명 팝업이 열려있다면 스페이스바로 닫기
+      const campaignModal = document.getElementById('campaign-modal');
+      if (campaignModal && !campaignModal.classList.contains('hidden')) {
+        closeCampaignModal();
+        return;
+      }
+
+      // 2. 낚시터 탭이 활성화되어 있을 때
+      const fishingTabActive = !document.getElementById('content-fishing').classList.contains('hidden');
+      if (fishingTabActive) {
+        if (fishingState === 'idle') {
+          startCasting(); // 미끼 캐스팅
+        } else if (fishingState === 'bite') {
+          strikeFish(); // 타이밍 맞춰 릴 감기
+        }
+        return;
+      }
+
+      // 3. 텃밭 탭이 활성화되어 있을 때 (현재 장착 도구에 알맞은 스마트 스마트 파밍 자동 조작)
+      const farmTabActive = !document.getElementById('content-farm').classList.contains('hidden');
+      if (farmTabActive) {
+        let targetPlotId = -1;
+
+        // 우선순위 1: 다 자라서 수확이 가능한 밭 자동 수색
+        targetPlotId = gameState.plots.findIndex(p => p.status === 'ready');
+
+        // 우선순위 2: 씨앗을 심어야 할 비옥한 흙더미 수색
+        if (targetPlotId === -1 && gameState.currentTool.startsWith('seed')) {
+          targetPlotId = gameState.plots.findIndex(p => p.status === 'plowed');
+        }
+
+        // 우선순위 3: 자라나고 있어서 물을 줘야 할 텃밭 수색
+        if (targetPlotId === -1 && gameState.currentTool === 'water') {
+          targetPlotId = gameState.plots.findIndex(p => p.status === 'seeded');
+        }
+
+        // 우선순위 4: 땅을 골라야 할 개간 전 척박한 밭 수색
+        if (targetPlotId === -1 && gameState.currentTool === 'plow') {
+          targetPlotId = gameState.plots.findIndex(p => p.status === 'empty');
+        }
+
+        // 마땅히 매칭되는 우선순위가 없다면 0번 밭 기본 클릭
+        if (targetPlotId === -1) {
+          targetPlotId = 0;
+        }
+
+        clickPlot(targetPlotId);
+        return;
+      }
+
+      // 4. 리모델링 꾸미기 탭이 활성화되어 있을 때 안내 메시지 제공
+      const houseTabActive = !document.getElementById('content-house').classList.contains('hidden');
+      if (houseTabActive) {
+        gromitSay("멍멍! (텃밭이나 낚시터 탭에서 스페이스바를 누르면 아주 편리하게 농사 짓고 물고기를 낚을 수 있어요!)");
+        showToast("⌨️", "스페이스바로 스마트 파밍과 원격 낚시를 제어해 보세요!");
+      }
+    }
+
+    // --- STREAMING_CHUNK: Setup webgl context and scene graph ---
+    // --- 5. Three.js 기초 설정 및 월드 구축 ---
+    function init3D() {
+      const container = document.getElementById('canvas3d-container');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      try {
+        // 1) 씬 설정
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xbfe3fc); // 하늘색 배경
+        scene.fog = new THREE.FogExp2(0xbfe3fc, 0.02);
+
+        // 2) 카메라 설정
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        updateCameraPosition();
+
+        // 3) 렌더러 설정
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // 4) 조명 추가
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xfffaf0, 0.85);
+        dirLight.position.set(15, 25, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        // 5) 바닥 그라운드 빌드 (시골 잔디밭)
+        const groundGeo = new THREE.PlaneGeometry(60, 60);
+        const groundMat = new THREE.MeshLambertMaterial({ color: 0x76e293 }); // 상큼한 연두색 잔디
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // 🌊 우측에 흐르는 개울가 민물낚시터 강둑 추가!
+        const riverGeo = new THREE.BoxGeometry(60, 0.2, 10);
+        const riverMat = new THREE.MeshLambertMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.8 });
+        const river = new THREE.Mesh(riverGeo, riverMat);
+        river.position.set(0, 0.05, 12); // 앞쪽 수면
+        scene.add(river);
+
+        // 개울 낚시터 선착장 목재 가구 추가
+        const pierGeo = new THREE.BoxGeometry(3, 0.3, 4);
+        const pierMat = new THREE.MeshLambertMaterial({ color: 0x7c2d12 });
+        const pier = new THREE.Mesh(pierGeo, pierMat);
+        pier.position.set(0, 0.2, 8.5);
+        pier.castShadow = true;
+        scene.add(pier);
+
+        // 6) 3D 집 (Gromit's House) 빌드
+        build3DHouse();
+
+        // 7) 3D 텃밭 (Garden Plots) 빌드
+        build3DGarden();
+
+        // 8) 고증된 3D 그로밋 캐릭터 배치
+        build3DGromit();
+
+        // 9) 마우스 인터랙션 이벤트 핸들링 바인딩
+        setupMouseInteractions(container);
+
+        // 10) 애니메이션 루프 가동
+        animate();
+
+        // 윈도우 리사이즈 대응
+        window.addEventListener('resize', onWindowResize);
+
+      } catch (err) {
+        console.warn("Three.js initialization failed. Falling back smoothly to UI mode.", err);
+        // 3D를 실행할 수 없는 브라우저/환경일 경우, 안내 팝업 및 UI로 안전하게 로딩창 차단 해제
+        document.getElementById('loader3d').style.display = 'none';
+        showToast("⚠️", "3D WebGL 컴파일 환경을 로드하지 못했으나, 일반 UI 버튼으로 농사/낚시 조작이 가능합니다!");
+      }
+    }
+
+    // --- STREAMING_CHUNK: Designing 3D house mesh ---
+    // 5-1) 3D 하우스 제작
+    function build3DHouse() {
+      const houseGroup = new THREE.Group();
+      houseGroup.position.set(-3, 0, -2); // 씬 뒤쪽에 배치
+
+      // 외벽 (Box)
+      const wallGeo = new THREE.BoxGeometry(6, 4, 5);
+      const wallMat = new THREE.MeshLambertMaterial({ color: 0xfffbeb }); // 황토벽색 기본
+      houseWallMesh = new THREE.Mesh(wallGeo, wallMat);
+      houseWallMesh.position.y = 2;
+      houseWallMesh.castShadow = true;
+      houseWallMesh.receiveShadow = true;
+      houseGroup.add(houseWallMesh);
+
+      // 지붕 (Cone)
+      const roofGeo = new THREE.ConeGeometry(5, 2.5, 4);
+      const roofMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 }); // 빨간 기와지붕 기본
+      houseRoofMesh = new THREE.Mesh(roofGeo, roofMat);
+      houseRoofMesh.position.y = 4.8;
+      houseRoofMesh.rotation.y = Math.PI / 4; // 대각선 기와 각도 매치
+      houseRoofMesh.castShadow = true;
+      houseGroup.add(houseRoofMesh);
+
+      // 현관문 (Box)
+      const doorGeo = new THREE.BoxGeometry(1.2, 2.2, 0.2);
+      const doorMat = new THREE.MeshLambertMaterial({ color: 0x78350f }); // 나무문 기본
+      houseDoorMesh = new THREE.Mesh(doorGeo, doorMat);
+      houseDoorMesh.position.set(1.5, 1.1, 2.51); // 앞벽 우측 배치
+      houseDoorMesh.castShadow = true;
+      houseGroup.add(houseDoorMesh);
+
+      // 창문 (Box)
+      const winGeo = new THREE.BoxGeometry(1.5, 1.5, 0.2);
+      const winMat = new THREE.MeshLambertMaterial({ color: 0xbae6fd }); // 스카이블루 유리
+      const windowMesh = new THREE.Mesh(winGeo, winMat);
+      windowMesh.position.set(-1.5, 2.2, 2.51); // 앞벽 좌측 배치
+      houseGroup.add(windowMesh);
+
+      // 창틀 십자가 데코
+      const frameGeo = new THREE.BoxGeometry(1.6, 0.1, 0.22);
+      const frameMat = new THREE.MeshBasicMaterial({ color: 0x78350f });
+      const frameH = new THREE.Mesh(frameGeo, frameMat);
+      frameH.position.set(-1.5, 2.2, 2.52);
+      houseGroup.add(frameH);
+      const frameV = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 0.22), frameMat);
+      frameV.position.set(-1.5, 2.2, 2.52);
+      houseGroup.add(frameV);
+
+      // 굴뚝 (Cylinder)
+      const chimneyGeo = new THREE.CylinderGeometry(0.4, 0.4, 2, 8);
+      const chimneyMat = new THREE.MeshLambertMaterial({ color: 0x57534e });
+      const chimney = new THREE.Mesh(chimneyGeo, chimneyMat);
+      chimney.position.set(-2, 4.8, -1.5);
+      chimney.castShadow = true;
+      houseGroup.add(chimney);
+
+      // 마당 장식 그룹
+      decorGroup = new THREE.Group();
+      houseGroup.add(decorGroup);
+
+      // 초기 기본 나무 한 그루 배치
+      buildDecorTree();
+
+      scene.add(houseGroup);
+    }
+
+    // --- STREAMING_CHUNK: Spawning landscaping components ---
+    // 5-2) 3D 마당 조경 생성 조력
+    function buildDecorTree() {
+      // 줄기
+      const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 2, 8);
+      const trunkMat = new THREE.MeshLambertMaterial({ color: 0x78350f });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.set(4, 1, 1);
+      trunk.castShadow = true;
+      decorGroup.add(trunk);
+
+      // 이파리 (세단 구체)
+      const leavesGeo = new THREE.SphereGeometry(1, 8, 8);
+      const leavesMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
+      const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+      leaves.position.set(4, 2.2, 1);
+      leaves.castShadow = true;
+      decorGroup.add(leaves);
+    }
+
+    // --- STREAMING_CHUNK: Spawning 3D garden plot layouts ---
+    // 5-3) 3D 텃밭 영역 빌드 (build3DGarden과 buildDGarden 일치화 완료!)
+    function build3DGarden() {
+      // 4개의 텃밭 좌표 지정 (앞마당 우측 앞 배치)
+      const plotPositions = [
+        { x: 2, z: 2 },  // 밭 0
+        { x: 4.5, z: 2 },  // 밭 1
+        { x: 2, z: 4.5 },  // 밭 2
+        { x: 4.5, z: 4.5 }   // 밭 3
+      ];
+
+      for (let i = 0; i < 4; i++) {
+        const plotGroup = new THREE.Group();
+        plotGroup.position.set(plotPositions[i].x, 0, plotPositions[i].z);
+
+        // 밭 테두리 목재 틀 (Box)
+        const frameGeo = new THREE.BoxGeometry(2, 0.3, 2);
+        const frameMat = new THREE.MeshLambertMaterial({ color: 0x5c3a21 });
+        const frame = new THREE.Mesh(frameGeo, frameMat);
+        frame.position.y = 0.15;
+        frame.receiveShadow = true;
+        plotGroup.add(frame);
+
+        // 흙 영역 (Box) - 작물 반응에 따라 상태 변화 예정
+        const dirtGeo = new THREE.BoxGeometry(1.8, 0.32, 1.8);
+        const dirtMat = new THREE.MeshLambertMaterial({ color: 0x4a321a }); // 초기 척박한 마른 흙색
+        const dirt = new THREE.Mesh(dirtGeo, dirtMat);
+        dirt.position.y = 0.16;
+        dirt.receiveShadow = true;
+        
+        // 커스텀 데이터 식별용 속성 바인딩
+        dirt.userData = { isPlot: true, plotId: i };
+        plotGroup.add(dirt);
+
+        gameState.plots[i].mesh = dirt; // 상태 반영을 위한 매핑
+
+        // 작물 성장물 수납 자식 노드
+        const plantContainer = new THREE.Group();
+        plantContainer.position.set(0, 0.3, 0);
+        plotGroup.add(plantContainer);
+        gameState.plots[i].plantMesh = plantContainer;
+
+        scene.add(plotGroup);
+      }
+    }
+
+    // --- STREAMING_CHUNK: Modeling character Gromit with clay textures ---
+    // 5-4) 고증된 정교한 3D 그로밋 캐릭터 제작
+    function build3DGromit() {
+      const gromit = new THREE.Group();
+      gromit.position.set(-1, 0, 1.8); // 마당 앞쪽에 앉아있도록 배치
+      gromit.scale.set(0.8, 0.8, 0.8);
+
+      // 머리통 ( 타원형 찰흙 머리통 고증 )
+      const headGeo = new THREE.SphereGeometry(1, 16, 16);
+      headGeo.scale(0.85, 1.25, 0.9); // 위아래로 길쭉한 그로밋 특유의 헤드 비율
+      const clayCreamMat = new THREE.MeshLambertMaterial({ color: 0xfcfaf2 }); // 고증된 크림 화이트 점토색
+      const head = new THREE.Mesh(headGeo, clayCreamMat);
+      head.position.y = 2.2;
+      head.castShadow = true;
+      gromit.add(head);
+
+      // 길쭉하게 툭 튀어나온 주둥이 (Snout)
+      const snoutGeo = new THREE.SphereGeometry(0.65, 16, 16);
+      snoutGeo.scale(1, 0.8, 1.4); // 앞으로 쭉 나와 동글납작한 주둥이
+      const snout = new THREE.Mesh(snoutGeo, clayCreamMat);
+      snout.position.set(0, 2.0, 0.4);
+      gromit.add(snout);
+
+      // 커다랗고 반질반질한 검정 단추 코 (Nose)
+      const noseGeo = new THREE.SphereGeometry(0.22, 12, 12);
+      noseGeo.scale(1.2, 0.9, 1.2);
+      const noseMat = new THREE.MeshLambertMaterial({ color: 0x1e1e1d });
+      const nose = new THREE.Mesh(noseGeo, noseMat);
+      nose.position.set(0, 2.15, 1.05); // 주둥이 정중앙 앞쪽에 콕 박힌 코
+      gromit.add(nose);
+
+      // 귀여운 구체형 왕눈 (Eyes - 딱 달라붙어있는 그로밋 눈 고증)
+      const eyeWhiteGeo = new THREE.SphereGeometry(0.2, 12, 12);
+      eyeWhiteGeo.scale(1, 1.2, 1);
+      const eyeWhiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+      const pupilGeo = new THREE.SphereGeometry(0.06, 8, 8);
+
+      // 왼쪽 눈
+      const eyeL = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+      eyeL.position.set(-0.16, 2.45, 0.7);
+      const pupilL = new THREE.Mesh(pupilGeo, eyeBlackMat);
+      pupilL.position.set(-0.15, 2.45, 0.88);
+      gromit.add(eyeL);
+      gromit.add(pupilL);
+
+      // 오른쪽 눈
+      const eyeR = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+      eyeR.position.set(0.16, 2.45, 0.7);
+      const pupilR = new THREE.Mesh(pupilGeo, eyeBlackMat);
+      pupilR.position.set(0.15, 2.45, 0.88);
+      gromit.add(eyeR);
+      gromit.add(pupilR);
+
+      // 찰흙 눈썹 (걱정하는 모션)
+      const browMat = new THREE.MeshBasicMaterial({ color: 0x42301c });
+      const browGeo = new THREE.BoxGeometry(0.18, 0.05, 0.05);
+      const browL = new THREE.Mesh(browGeo, browMat);
+      browL.position.set(-0.18, 2.65, 0.75);
+      browL.rotation.z = 0.15;
+      const browR = new THREE.Mesh(browGeo, browMat);
+      browR.position.set(0.18, 2.65, 0.75);
+      browR.rotation.z = -0.15;
+      gromit.add(browL);
+      gromit.add(browR);
+
+      // 축 처진 밤색의 두툼한 귀 (Ears - 그로밋 특유의 긴 floppy 귀)
+      const earGeo = new THREE.SphereGeometry(0.3, 12, 12);
+      earGeo.scale(0.5, 1.8, 0.8); // 아래로 길게 처진 비례 가공
+      const earMat = new THREE.MeshLambertMaterial({ color: 0x4a3319 }); // 어두운 밤색 클레이 귀
+      
+      const earL = new THREE.Mesh(earGeo, earMat);
+      earL.position.set(-0.8, 2.1, 0.1);
+      earL.rotation.z = 0.2; // 살짝 벌어진 각도
+      earL.rotation.x = 0.15;
+      gromit.add(earL);
+
+      const earR = new THREE.Mesh(earGeo, earMat);
+      earR.position.set(0.8, 2.1, 0.1);
+      earR.rotation.z = -0.2;
+      earR.rotation.x = 0.15;
+      gromit.add(earR);
+
+      // 빨간색 귀여운 목줄 (Collar)
+      const collarGeo = new THREE.TorusGeometry(0.55, 0.1, 8, 24);
+      const collarMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 }); // 정열의 레드 칼라
+      const collar = new THREE.Mesh(collarGeo, collarMat);
+      collar.rotation.x = Math.PI / 2;
+      collar.position.y = 1.45;
+      gromit.add(collar);
+
+      // 앉아있는 귀여운 통통한 몸통 (Body)
+      const bodyGeo = new THREE.SphereGeometry(0.9, 16, 16);
+      bodyGeo.scale(0.9, 1.3, 0.95);
+      const body = new THREE.Mesh(bodyGeo, clayCreamMat);
+      body.position.y = 0.9;
+      body.castShadow = true;
+      gromit.add(body);
+
+      // 뒷다리 & 앞다리 뭉툭한 형태
+      const legGeo = new THREE.SphereGeometry(0.3, 12, 12);
+      legGeo.scale(0.8, 1.4, 0.8);
+      
+      const frontLegL = new THREE.Mesh(legGeo, clayCreamMat);
+      frontLegL.position.set(-0.4, 0.5, 0.6);
+      gromit.add(frontLegL);
+
+      const frontLegR = new THREE.Mesh(legGeo, clayCreamMat);
+      frontLegR.position.set(0.4, 0.5, 0.6);
+      gromit.add(frontLegR);
+
+      scene.add(gromit);
+    }
+
+    // --- STREAMING_CHUNK: Adding viewport pointer listeners ---
+    // --- 6. 마우스 카메라 궤도 제어 및 레이캐스팅 클릭 설계 ---
+    function setupMouseInteractions(container) {
+      // 마우스 이벤트 리스너 추가 (클릭 앤 드래그 카메라 로테이션)
+      container.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+          isMouseDown = true;
+        } else if (e.button === 2) {
+          isRightMouseDown = true;
+        }
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('mouseup', () => {
+        isMouseDown = false;
+        isRightMouseDown = false;
+      });
+
+      // 우클릭 컨텍스트 메뉴 차단 (드래그 조작용)
+      container.addEventListener('contextmenu', e => e.preventDefault());
+
+      container.addEventListener('mousemove', (e) => {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+
+        if (isMouseDown) {
+          // 마우스 좌클릭: 카메라 회전
+          cameraRotation.theta -= deltaX * 0.005;
+          cameraRotation.phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.05, cameraRotation.phi - deltaY * 0.005));
+          updateCameraPosition();
+        } else if (isRightMouseDown) {
+          // 마우스 우클릭: 패닝 (Target 이동)
+          const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+          const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+          forward.y = 0; right.y = 0;
+          forward.normalize(); right.normalize();
+
+          cameraTarget.addScaledVector(right, -deltaX * 0.02);
+          cameraTarget.addScaledVector(forward, deltaY * 0.02);
+          updateCameraPosition();
+        }
+
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      });
+
+      // 마우스 휠로 줌인/아웃 지원
+      container.addEventListener('wheel', (e) => {
+        cameraRadius = Math.max(5, Math.min(45, cameraRadius + e.deltaY * 0.03));
+        updateCameraPosition();
+      });
+
+      // 텃밭 조작 전용 레이캐스팅 3D 클릭 리스너
+      container.addEventListener('click', (e) => {
+        if (isMouseDown || isRightMouseDown) return;
+
+        // 뷰포트 내 마우스 좌표 정규화
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        // 씬 내 클릭 타겟 검사
+        const intersects = raycaster.intersectObjects(scene.children, true);
+        
+        for (let i = 0; i < intersects.length; i++) {
+          const hitObj = intersects[i].object;
+          if (hitObj.userData && hitObj.userData.isPlot) {
+            // 3D 텃밭 클릭 성공! 해당 밭 ID 전송
+            const plotId = hitObj.userData.plotId;
+            clickPlot(plotId);
+            break;
+          }
+        }
+      });
+    }
+
+    // --- STREAMING_CHUNK: Updating spherical coordinate camera math ---
+    function updateCameraPosition() {
+      const x = cameraRadius * Math.sin(cameraRotation.phi) * Math.sin(cameraRotation.theta) + cameraTarget.x;
+      const y = cameraRadius * Math.cos(cameraRotation.phi) + cameraTarget.y;
+      const z = cameraRadius * Math.sin(cameraRotation.phi) * Math.cos(cameraRotation.theta) + cameraTarget.z;
+
+      camera.position.set(x, y, z);
+      camera.lookAt(cameraTarget);
+    }
+
+    // 7) 실시간 렌더링 루프
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const time = Date.now() * 0.001;
+      if (decorGroup && decorGroup.children.length > 2) {
+        decorGroup.children.forEach(mesh => {
+          if (mesh.geometry && mesh.geometry.type === 'SphereGeometry') {
+            mesh.rotation.y = Math.sin(time) * 0.05;
+            mesh.rotation.z = Math.cos(time) * 0.05;
+          }
+        });
+      }
+
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+    }
+
+    // 윈도우 크기 변화 대응 
+    function onWindowResize() {
+      const container = document.getElementById('canvas3d-container');
+      if (!container || !camera || !renderer) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    // --- STREAMING_CHUNK: Defining smooth camera interpolator ---
+    // --- 8. 탭 변환 및 3D 카메라 오토 스무스 피팅 (Pan/Zoom) ---
+    function switchTab(tab) {
+      const houseTab = document.getElementById('content-house');
+      const farmTab = document.getElementById('content-farm');
+      const fishingTab = document.getElementById('content-fishing');
+      
+      const houseBtn = document.getElementById('tab-house-btn');
+      const farmBtn = document.getElementById('tab-farm-btn');
+      const fishingBtn = document.getElementById('tab-fishing-btn');
+
+      // 탭 화면 토글
+      houseTab.classList.add('hidden');
+      farmTab.classList.add('hidden');
+      fishingTab.classList.add('hidden');
+
+      houseBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 text-stone-700 hover:bg-white/50";
+      farmBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 text-stone-700 hover:bg-white/50";
+      fishingBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 text-stone-700 hover:bg-white/50";
+
+      if (tab === 'house') {
+        houseTab.classList.remove('hidden');
+        houseBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 shadow bg-white text-[#8b5a2b]";
+        gromitSay("아늑한 시골집! 지붕과 벽지, 장독대, 캠프파이어 소품 등을 골드로 구매하여 영구 소장해봐요!");
+        
+        // 3D 카메라 대상 지점으로 부드러운 이동 (집 포커싱)
+        if (camera) animateCameraTarget(new THREE.Vector3(-3, 1.5, -2), 22, Math.PI / 4, Math.PI / 3);
+      } else if (tab === 'farm') {
+        farmTab.classList.remove('hidden');
+        farmBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 shadow bg-white text-[#8b5a2b]";
+        gromitSay("3D 텃밭 흙더미를 ⛏️개간한 뒤 야채 씨앗을 심고, 💧물을 줘서 감자와 당근, 고구마, 옥수수를 수확하자멍!");
+        
+        // 3D 카메라 대상을 텃밭으로 매끄럽게 피팅
+        if (camera) animateCameraTarget(new THREE.Vector3(3.2, 0.5, 3.2), 15, Math.PI / 3, Math.PI / 4.5);
+      } else if (tab === 'fishing') {
+        fishingTab.classList.remove('hidden');
+        fishingBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-center transition duration-200 flex items-center justify-center gap-1.5 shadow bg-white text-[#8b5a2b]";
+        gromitSay("졸졸 흐르는 개울가에서 낚시를 즐기자멍! 찌가 쏙 들어갈 때 REEL 버튼을 눌러 성공하면 고소득 보장이다멍!");
+
+        // 3D 카메라 대상을 개울가 선착장으로 매끄럽게 피팅
+        if (camera) animateCameraTarget(new THREE.Vector3(0, 0.5, 8.5), 12, Math.PI / 2, Math.PI / 3.5);
+      }
+    }
+
+    // 카메라 오토 포커스 트윈 보간
+    function animateCameraTarget(newTarget, newRadius, newTheta, newPhi) {
+      let step = 0;
+      const totalSteps = 30;
+
+      const startTarget = cameraTarget.clone();
+      const startRadius = cameraRadius;
+      const startTheta = cameraRotation.theta;
+      const startPhi = cameraRotation.phi;
+
+      function interpolate() {
+        if (step < totalSteps) {
+          step++;
+          const t = step / totalSteps;
+          const ease = 1 - Math.pow(1 - t, 3); // Ease-Out
+
+          cameraTarget.lerpVectors(startTarget, newTarget, ease);
+          cameraRadius = startRadius + (newRadius - startRadius) * ease;
+          cameraRotation.theta = startTheta + (newTheta - startTheta) * ease;
+          cameraRotation.phi = startPhi + (newPhi - startPhi) * ease;
+
+          updateCameraPosition();
+          requestAnimationFrame(interpolate);
+        }
+      }
+      interpolate();
+    }
+
+    // --- STREAMING_CHUNK: Populating custom shop items in UI grid ---
+    // --- 8-2. 인테리어 데코 상점 동적 UI 렌더링 ---
+    function buildShopUI() {
+      const categories = ['roof', 'wall', 'door', 'decor'];
+      
+      categories.forEach(category => {
+        const container = document.getElementById(`${category}-shop-container`);
+        if (!container) return;
+        container.innerHTML = ''; // 초기화
+
+        catalog[category].forEach(item => {
+          const isUnlocked = gameState.unlocked[category].includes(item.id);
+          const priceText = item.price === 0 ? '기본 (무료)' : `${item.price}💰`;
+          
+          let btnClass = "";
+          let labelText = "";
+          
+          if (isUnlocked) {
+            btnClass = "bg-green-100 hover:bg-green-200 text-green-800 border-green-300";
+            labelText = "배치하기";
+          } else {
+            btnClass = "bg-amber-600 hover:bg-amber-700 text-white border-transparent";
+            labelText = `구매: ${priceText}`;
+          }
+
+          const card = document.createElement('div');
+          card.className = "bg-white p-2.5 rounded-xl border border-stone-200 flex flex-col justify-between items-center text-center shadow-sm";
+          card.innerHTML = `
+            <div class="mb-1.5">
+              <span class="text-xs font-bold text-gray-800 block">${item.name}</span>
+              <span class="text-[10px] text-gray-500 block leading-none mt-0.5">${item.desc}</span>
+            </div>
+            <button onclick="handleShopClick('${category}', '${item.id}')" class="w-full py-1 px-2 rounded-lg text-xs font-bold border transition ${btnClass}">
+              ${labelText}
+            </button>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    // 상점 카드 구매 및 배치 클릭 핸들러
+    function handleShopClick(category, itemId) {
+      const isUnlocked = gameState.unlocked[category].includes(itemId);
+      const item = catalog[category].find(i => i.id === itemId);
+
+      if (isUnlocked) {
+        // 이미 소유한 아이템 -> 바로 배치 적용
+        applyDecoration(category, itemId);
+        showToast("✨", `${item.name}을(를) 배치했습니다!`);
+      } else {
+        // 미소유 아이템 -> 구매 시도
+        if (gameState.gold >= item.price) {
+          gameState.gold -= item.price;
+          gameState.unlocked[category].push(itemId);
+          
+          applyDecoration(category, itemId);
+          refreshUI();
+          buildShopUI(); // 상점 인터페이스 갱신
+          
+          gromitSay(`멍멍! (소중하게 모은 골드로 ${item.name}을(를) 영구 구매했습니다! 마당이 점차 멋져져요!)`);
+          showToast("💰", `${item.name} 구매 및 실시간 배치 완료! (-${item.price} 골드)`);
+        } else {
+          gromitSay("깨갱... (골드가 부족해서 살 수 없어요. 열심히 농사를 짓거나 낚시를 해봐요!)");
+          showToast("❌", `골드가 부족합니다! (필요: ${item.price} 골드)`);
+        }
+      }
+    }
+
+    // 실제로 3D 월드 모델에 장식 적용
+    function applyDecoration(category, itemId) {
+      const item = catalog[category].find(i => i.id === itemId);
+      if (!item) return;
+
+      if (category === 'roof' && houseRoofMesh) {
+        houseRoofMesh.material.color.setHex(item.color);
+      } else if (category === 'wall' && houseWallMesh) {
+        houseWallMesh.material.color.setHex(item.color);
+      } else if (category === 'door' && houseDoorMesh) {
+        houseDoorMesh.material.color.setHex(item.color);
+      } else if (category === 'decor') {
+        changeDecor3D(itemId);
+      }
+    }
+
+    // --- STREAMING_CHUNK: Spawning custom yard furniture mesh ---
+    // 마당 3D 조경물 설치 변경 로직
+    function changeDecor3D(style) {
+      if (!decorGroup) return;
+      // 기본 나무(자식 0, 1) 외의 장식은 일괄 초기화
+      while (decorGroup.children.length > 2) {
+        decorGroup.remove(decorGroup.children[2]);
+      }
+
+      if (style === 'flowers') {
+        // 들꽃 배치
+        for (let i = 0; i < 5; i++) {
+          const flowerGroup = new THREE.Group();
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6), new THREE.MeshLambertMaterial({color: 0x16a34a}));
+          stem.position.y = 0.3;
+          flowerGroup.add(stem);
+
+          const petal = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshLambertMaterial({color: 0xdb2777}));
+          petal.position.y = 0.6;
+          flowerGroup.add(petal);
+
+          flowerGroup.position.set(-4.5 + i * 0.5, 0, 1.5 + Math.sin(i) * 0.3);
+          decorGroup.add(flowerGroup);
+        }
+      } else if (style === 'bench') {
+        // 원목 벤치
+        const benchGroup = new THREE.Group();
+        benchGroup.position.set(-4.5, 0.1, 1.5);
+
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.5), new THREE.MeshLambertMaterial({color: 0xb45309}));
+        seat.position.y = 0.4;
+        seat.castShadow = true;
+        benchGroup.add(seat);
+
+        const legL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.4), new THREE.MeshLambertMaterial({color: 0x78350f}));
+        legL.position.set(-0.7, 0.2, 0);
+        benchGroup.add(legL);
+        const legR = legL.clone();
+        legR.position.set(0.7, 0.2, 0);
+        benchGroup.add(legR);
+
+        decorGroup.add(benchGroup);
+      } else if (style === 'doghouse') {
+        // 개집
+        const dogHouse = new THREE.Group();
+        dogHouse.position.set(-4.5, 0, 1.5);
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 1.2), new THREE.MeshLambertMaterial({color: 0xf3f4f6}));
+        body.position.y = 0.5;
+        body.castShadow = true;
+        dogHouse.add(body);
+
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.9, 0.6, 4), new THREE.MeshLambertMaterial({color: 0x1d4ed8}));
+        roof.position.y = 1.2;
+        roof.rotation.y = Math.PI / 4;
+        dogHouse.add(roof);
+
+        decorGroup.add(dogHouse);
+      } else if (style === 'pots') {
+        // 🏺 정겨운 장독대 3형제 세트
+        const potsGroup = new THREE.Group();
+        potsGroup.position.set(-4.5, 0, 1.5);
+
+        const potSpecs = [
+          { r: 0.35, h: 0.7, x: -0.5, z: 0 },
+          { r: 0.28, h: 0.55, x: 0.1, z: -0.2 },
+          { r: 0.22, h: 0.45, x: 0.5, z: 0.2 }
+        ];
+
+        potSpecs.forEach(spec => {
+          const singlePot = new THREE.Group();
+          singlePot.position.set(spec.x, 0, spec.z);
+
+          const bodyGeo = new THREE.CylinderGeometry(spec.r * 0.8, spec.r, spec.h, 12);
+          const potMat = new THREE.MeshLambertMaterial({ color: 0x3e2723 });
+          const body = new THREE.Mesh(bodyGeo, potMat);
+          body.position.y = spec.h / 2;
+          body.castShadow = true;
+          singlePot.add(body);
+
+          const lidGeo = new THREE.CylinderGeometry(spec.r * 0.9, spec.r * 0.9, 0.08, 12);
+          const lidMat = new THREE.MeshLambertMaterial({ color: 0x27120c });
+          const lid = new THREE.Mesh(lidGeo, lidMat);
+          lid.position.y = spec.h + 0.04;
+          singlePot.add(lid);
+
+          potsGroup.add(singlePot);
+        });
+
+        decorGroup.add(potsGroup);
+      } else if (style === 'campfire') {
+        // 🔥 캠프파이어 장작 및 타오르는 불덩이
+        const campGroup = new THREE.Group();
+        campGroup.position.set(-4.5, 0, 1.5);
+
+        const logMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
+        const logGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6);
+        for (let i = 0; i < 4; i++) {
+          const log = new THREE.Mesh(logGeo, logMat);
+          log.rotation.x = Math.PI / 2;
+          log.rotation.y = (Math.PI / 4) * i;
+          log.position.y = 0.05;
+          campGroup.add(log);
+        }
+
+        const flameGroup = new THREE.Group();
+        flameGroup.position.y = 0.1;
+
+        const flameCenter = new THREE.Mesh(
+          new THREE.ConeGeometry(0.2, 0.6, 6),
+          new THREE.MeshBasicMaterial({ color: 0xff3d00 })
+        );
+        flameCenter.position.y = 0.3;
+        flameGroup.add(flameCenter);
+
+        const subFlameGeo = new THREE.SphereGeometry(0.12, 8, 8);
+        const orangeMat = new THREE.MeshBasicMaterial({ color: 0xff9100 });
+        for (let i = 0; i < 3; i++) {
+          const sub = new THREE.Mesh(subFlameGeo, orangeMat);
+          sub.position.set(
+            Math.sin((Math.PI * 2 / 3) * i) * 0.15,
+            0.2 + Math.random() * 0.15,
+            Math.cos((Math.PI * 2 / 3) * i) * 0.15
+          );
+          flameGroup.add(sub);
+        }
+
+        campGroup.add(flameGroup);
+        decorGroup.add(campGroup);
+      }
+    }
+
+    // --- STREAMING_CHUNK: Updating the main stats dashboard panel ---
+    // --- 10. 알림 및 UI 상태 업데이트 ---
+    function refreshUI() {
+      document.getElementById('gold-amount').innerText = gameState.gold;
+      
+      // 농작물 수매 보관함 데이터 업데이트
+      document.getElementById('inv-potato').innerText = gameState.inv.potato;
+      document.getElementById('inv-carrot').innerText = gameState.inv.carrot;
+      document.getElementById('inv-sweetpotato').innerText = gameState.inv.sweetpotato;
+      document.getElementById('inv-corn').innerText = gameState.inv.corn;
+
+      // 낚시 수확량 데이터 업데이트
+      document.getElementById('inv-crucian').innerText = gameState.inv.crucian;
+      document.getElementById('inv-sweetfish').innerText = gameState.inv.sweetfish;
+      document.getElementById('inv-catfish').innerText = gameState.inv.catfish;
+      document.getElementById('inv-goldcarp').innerText = gameState.inv.goldcarp;
+
+      const levelNames = [
+        "초보 귀농가 그로밋", 
+        "숙련된 농부 그로밋", 
+        "프로 거대채소 마스터 그로밋",
+        "명예 고흥 마중마을 이장 그로밋"
+      ];
+      
+      const xpForNextLevel = 30; 
+      const currentLevelIndex = Math.min(Math.floor(gameState.xp / xpForNextLevel), levelNames.length - 1);
+      const remainingXp = xpForNextLevel - (gameState.xp % xpForNextLevel);
+      const progressPercent = Math.min(((gameState.xp % xpForNextLevel) / xpForNextLevel) * 100, 100);
+
+      document.getElementById('level-text').innerText = `Lv.${currentLevelIndex + 1} ${levelNames[currentLevelIndex]}`;
+      document.getElementById('xp-bar').style.width = `${progressPercent}%`;
+      document.getElementById('xp-needed').innerText = Math.ceil(remainingXp / 10);
+    }
+
+    // --- STREAMING_CHUNK: Selecting active gardening tool in the toolbar ---
+    // --- 11. 원예 도구 장착 설정 ---
+    function selectTool(tool) {
+      gameState.currentTool = tool;
+      
+      const tools = ['plow', 'seed-potato', 'seed-carrot', 'seed-sweetpotato', 'seed-corn', 'water'];
+      tools.forEach(t => {
+        const btn = document.getElementById(`tool-${t}`);
+        if (btn) {
+          btn.className = "py-2.5 px-2 bg-stone-100 text-stone-700 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-sm transition border-2 border-transparent text-xs";
+        }
+      });
+
+      const activeBtn = document.getElementById(`tool-${tool}`);
+      if (activeBtn) {
+        activeBtn.className = "py-2.5 px-2 bg-amber-100 ring-4 ring-amber-300 text-amber-950 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow transition border-2 border-amber-600 text-xs";
+      }
+
+      let desc = '';
+      if (tool === 'plow') desc = '⛏️ 땅 고르기 (단단한 흙 가꾸기)';
+      if (tool === 'seed-potato') desc = '🥔 감자 씨앗 심기 (비용 10골드)';
+      if (tool === 'seed-carrot') desc = '🥕 당근 씨앗 심기 (비용 15골드)';
+      if (tool === 'seed-sweetpotato') desc = '🍠 고구마 넝쿨 심기 (비용 20골드)';
+      if (tool === 'seed-corn') desc = '🌽 옥수수 모종 심기 (비용 25골드)';
+      if (tool === 'water') desc = '💧 물뿌리개 (수분 공급 및 급속 성장)';
+      
+      document.getElementById('current-tool-text').innerText = desc;
+    }
+
+    // --- STREAMING_CHUNK: Soil cultivating and seed sowing operations ---
+    // --- 12. 3D 텃밭 경작 엔진 ---
+    function clickPlot(plotId) {
+      const plot = gameState.plots[plotId];
+      const tool = gameState.currentTool;
+      const plotMesh = plot.mesh;
+      const plantContainer = plot.plantMesh;
+
+      if (!plotMesh || !plantContainer) {
+        // 3D 로드가 생략되었을 때를 대비한 2D 비상 보완 처리
+        process2DFarmFallback(plotId, tool);
+        return;
+      }
+
+      // 1) 척박한 땅 -> 개간하기 (⛏️)
+      if (plot.status === 'empty') {
+        if (tool === 'plow') {
+          plot.status = 'plowed';
+          plotMesh.material.color.setHex(0x5c3a21); // 비옥한 진갈색 밤색 흙
+          gromitSay("영차! ⛏️ 굳었던 흙을 정성껏 다듬었더니 영양 만점 경작지가 되었다멍!");
+          showToast("⛏️", `밭 #${plotId + 1} 구역의 흙이 완벽히 개간되었습니다!`);
+        } else {
+          showToast("❌", "먼저 '⛏️ 1단계: 땅 고르기' 도구로 텃밭의 흙을 정비하세요!");
+        }
+        return;
+      }
+
+      // 2) 비옥해진 땅 -> 씨앗 파종하기
+      if (plot.status === 'plowed') {
+        let cost = 0;
+        let cropName = '';
+        let dialog = '';
+
+        if (tool === 'seed-potato') { cost = 10; cropName = 'potato'; dialog = "동글동글한 감자 씨를 촉촉한 흙 속에 이식했다멍!"; }
+        else if (tool === 'seed-carrot') { cost = 15; cropName = 'carrot'; dialog = "달콤한 주황당근 씨앗을 야무지게 매립했다멍!"; }
+        else if (tool === 'seed-sweetpotato') { cost = 20; cropName = 'sweetpotato'; dialog = "해풍을 머금은 꿀고구마 줄기 모종을 깊숙이 심었다멍!"; }
+        else if (tool === 'seed-corn') { cost = 25; cropName = 'corn'; dialog = "달콤아삭 찰옥수수 모종을 바람이 잘 부는 곳에 안착했다멍!"; }
+        else {
+          showToast("❌", "도구함에서 심을 야채 씨앗이나 모종을 먼저 활성화해 주세요!");
+          return;
+        }
+
+        if (gameState.gold < cost) {
+          showToast("❌", "골드가 부족하여 해당 작물 씨앗을 구매할 수 없습니다!");
+          return;
+        }
+
+        gameState.gold -= cost;
+        plot.status = 'seeded';
+        plot.crop = cropName;
+        plot.progress = 10;
+
+        refreshUI();
+        update3DPlant(plotId);
+        
+        gromitSay(dialog);
+        showToast("🌱", `밭 #${plotId + 1}에 새로운 작물을 심었습니다! (-${cost} 골드)`);
+        
+        startAutomaticGrowth(plotId);
+        return;
+      }
+
+      // 3) 한창 자라는 싹 -> 💧물주기 (성장률 급상승)
+      if (plot.status === 'seeded') {
+        if (tool === 'water') {
+          if (plot.progress < 100) {
+            plot.progress = Math.min(plot.progress + 30, 100);
+            update3DPlant(plotId); // 성장 비주얼 업데이트
+
+            plantContainer.scale.set(1.2, 1.2, 1.2);
+            setTimeout(() => { plantContainer.scale.set(1, 1, 1); }, 200);
+
+            if (plot.progress >= 100) {
+              plot.status = 'ready';
+              gromitSay("만세! 주인의 사랑을 먹고 자란 채소가 수확할 만큼 크게 여물었다멍!");
+              showToast("✨", `밭 #${plotId + 1} 수확물이 완벽하게 완성되었습니다!`);
+            } else {
+              gromitSay("꿀꺽꿀꺽! 💧시원한 수분을 마신 작물이 하늘 높이 쑥쑥 뻗는다멍!");
+              showToast("💧", `작물에게 생명수를 듬뿍 주었습니다! (성장률 급상승)`);
+            }
+          }
+        } else {
+          showToast("ℹ️", "현재 작물이 한창 크는 중입니다. '💧 물주기'로 재배를 고속화해 보세요!");
+        }
+        return;
+      }
+
+      // 4) 다 자란 보석 같은 열매 -> 수확!
+      if (plot.status === 'ready') {
+        harvestCrop(plotId);
+      }
+    }
+
+    // 2D 비상 파밍 대체 지원용 로직
+    function process2DFarmFallback(plotId, tool) {
+      const plot = gameState.plots[plotId];
+      if (plot.status === 'empty') {
+        if (tool === 'plow') {
+          plot.status = 'plowed';
+          showToast("⛏️", `밭 #${plotId + 1} 비옥하게 개간 완료!`);
+        } else {
+          showToast("❌", "먼저 ⛏️ 땅을 갈아 주세요!");
+        }
+        return;
+      }
+      if (plot.status === 'plowed') {
+        let cost = tool === 'seed-potato' ? 10 : tool === 'seed-carrot' ? 15 : tool === 'seed-sweetpotato' ? 20 : tool === 'seed-corn' ? 25 : 0;
+        let crop = tool === 'seed-potato' ? 'potato' : tool === 'seed-carrot' ? 'carrot' : tool === 'seed-sweetpotato' ? 'sweetpotato' : tool === 'seed-corn' ? 'corn' : '';
+        if (!crop) { showToast("❌", "씨앗을 먼저 선택하세요!"); return; }
+        if (gameState.gold < cost) { showToast("❌", "골드가 부족합니다!"); return; }
+        gameState.gold -= cost;
+        plot.status = 'seeded';
+        plot.crop = crop;
+        plot.progress = 10;
+        refreshUI();
+        showToast("🌱", `밭 #${plotId + 1} 씨앗 파종 완료!`);
+        startAutomaticGrowth(plotId);
+        return;
+      }
+      if (plot.status === 'seeded') {
+        if (tool === 'water') {
+          plot.progress = Math.min(plot.progress + 30, 100);
+          if (plot.progress >= 100) {
+            plot.status = 'ready';
+            showToast("✨", `밭 #${plotId + 1} 수확물 숙성 완료!`);
+          } else {
+            showToast("💧", "수분을 충분히 공급했습니다.");
+          }
+        }
+        return;
+      }
+      if (plot.status === 'ready') {
+        harvestCrop(plotId);
+      }
+    }
+
+    function harvestCrop(plotId) {
+      const plot = gameState.plots[plotId];
+      if (plot.intervalId) {
+        clearInterval(plot.intervalId);
+        plot.intervalId = null;
+      }
+
+      const cropType = plot.crop;
+      gameState.inv[cropType] += 1;
+      gameState.xp += 10; // 수확 시 농업 지수 획득
+
+      // 텃밭 땅 리셋
+      plot.status = 'empty';
+      plot.crop = null;
+      plot.progress = 0;
+      if (plot.mesh) plot.mesh.material.color.setHex(0x4a321a); // 마른 흙색 리셋
+
+      // 3D 수작물 지우기
+      if (plot.plantMesh) {
+        while (plot.plantMesh.children.length > 0) {
+          plot.plantMesh.remove(plot.plantMesh.children[0]);
+        }
+      }
+
+      refreshUI();
+      
+      let cropKorean = { potato: '감자', carrot: '당근', sweetpotato: '고구마', corn: '옥수수' }[cropType];
+      gromitSay(`수확 대성공멍! 무척 튼실한 유기농 고흥산 ${cropKorean}를 품에 안았어! 시장에 좋은 값에 판매하자멍!`);
+      showToast("🎉", `천연 ${cropKorean} 1개 수확 및 귀농 경험치 획득!`);
+    }
+
+    // --- STREAMING_CHUNK: Designing 3D vegetables representation ---
+    // --- 13. 실시간 텃밭 3D 작물 모델링 ---
+    function update3DPlant(plotId) {
+      const plot = gameState.plots[plotId];
+      const container = plot.plantMesh;
+      if (!container) return;
+
+      while (container.children.length > 0) {
+        container.remove(container.children[0]);
+      }
+
+      const p = plot.progress;
+      const c = plot.crop;
+
+      // 1) 싹 단계 (모든 작물 공통형)
+      if (p < 40) {
+        const sproutGeo = new THREE.ConeGeometry(0.1, 0.3, 5);
+        const sproutMat = new THREE.MeshLambertMaterial({color: 0x86efac});
+        const sprout = new THREE.Mesh(sproutGeo, sproutMat);
+        sprout.position.y = 0.15;
+        container.add(sprout);
+      } 
+      // 2) 줄기 단계
+      else if (p >= 40 && p < 100) {
+        const stemMat = new THREE.MeshLambertMaterial({color: 0x22c55e});
+        const count = c === 'corn' ? 1 : 3; // 옥수수는 위로 한대만 곧게 자람
+        
+        if (c === 'corn') {
+          const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.9, 6), stemMat);
+          stalk.position.y = 0.45;
+          container.add(stalk);
+        } else {
+          for (let i = 0; i < count; i++) {
+            const stem = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.6, 5), stemMat);
+            stem.position.y = 0.3;
+            stem.rotation.z = -0.2 + i * 0.2;
+            container.add(stem);
+          }
+        }
+      } 
+      // 3) 완전히 영근 수확 가능 단계 (4종 분기 고증)
+      else if (p >= 100) {
+        if (c === 'potato') {
+          // 감자: 갈색 구체들
+          const potMat = new THREE.MeshLambertMaterial({color: 0xcca47c});
+          const potato = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), potMat);
+          potato.scale.set(1.2, 0.9, 1);
+          potato.position.y = 0.15;
+          potato.castShadow = true;
+          container.add(potato);
+
+          const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.4, 4), new THREE.MeshLambertMaterial({color: 0x15803d}));
+          leaf.position.set(0, 0.45, 0);
+          container.add(leaf);
+        } 
+        else if (c === 'carrot') {
+          // 당근: 주황색 원뿔 역방향
+          const carMat = new THREE.MeshLambertMaterial({color: 0xea580c});
+          const carrot = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.8, 8), carMat);
+          carrot.rotation.x = Math.PI;
+          carrot.position.y = 0.3;
+          carrot.castShadow = true;
+          container.add(carrot);
+
+          const topMat = new THREE.MeshLambertMaterial({color: 0x166534});
+          for(let i=0; i<3; i++) {
+            const topLeaf = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.4), topMat);
+            topLeaf.position.set(-0.1 + i*0.1, 0.8, 0);
+            topLeaf.rotation.z = -0.3 + i*0.3;
+            container.add(topLeaf);
+          }
+        }
+        else if (c === 'sweetpotato') {
+          // 고구마: 길쭉한 자줏빛/붉은 타원 구체들이 바닥에 가로놓임
+          const sweetMat = new THREE.MeshLambertMaterial({color: 0x881337}); // 딥 버건디/자주색
+          const sweet = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), sweetMat);
+          sweet.scale.set(1.7, 0.8, 0.8); // 길쭉하게 변형
+          sweet.rotation.z = Math.PI / 6; // 대각선으로 땅에 묻힌 느낌
+          sweet.position.set(0, 0.15, 0);
+          sweet.castShadow = true;
+          container.add(sweet);
+
+          // 무성한 잎사귀 넝쿨 표현
+          const vineMat = new THREE.MeshLambertMaterial({color: 0x166534});
+          for (let i = 0; i < 4; i++) {
+            const vine = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 6), vineMat);
+            vine.position.set(-0.3 + i*0.2, 0.3, -0.2 + (i%2)*0.4);
+            container.add(vine);
+          }
+        }
+        else if (c === 'corn') {
+          // 옥수수: 아주 높은 굵은 줄기 + 옆구리에 노란 옥수수 자루들
+          const stemMat = new THREE.MeshLambertMaterial({color: 0x166534});
+          const cornMat = new THREE.MeshLambertMaterial({color: 0xeab308}); // 노란색 알맹이
+
+          // 메인 대
+          const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 1.6, 8), stemMat);
+          stalk.position.y = 0.8;
+          stalk.castShadow = true;
+          container.add(stalk);
+
+          // 옥수수 이삭 2개 생성
+          for (let i = 0; i < 2; i++) {
+            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), cornMat);
+            ear.scale.set(0.8, 1.8, 0.8);
+            ear.rotation.z = i === 0 ? 0.3 : -0.3;
+            ear.position.set(i === 0 ? 0.22 : -0.22, 0.8 + i*0.3, 0);
+            container.add(ear);
+
+            // 옥수수 겉껍질
+            const husk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 4), stemMat);
+            husk.position.set(i === 0 ? 0.22 : -0.22, 0.65 + i*0.3, 0.05);
+            husk.rotation.z = i === 0 ? 0.4 : -0.4;
+            container.add(husk);
+          }
+        }
+      }
+    }
+
+    // --- STREAMING_CHUNK: Setting farming scheduling timers ---
+    // --- 14. 텃밭 자동 점진적 타이머 작동 ---
+    function startAutomaticGrowth(plotId) {
+      const plot = gameState.plots[plotId];
+      if (plot.intervalId) clearInterval(plot.intervalId);
+
+      plot.intervalId = setInterval(() => {
+        if (plot.status === 'seeded' && plot.progress < 100) {
+          plot.progress += 5; // 자연 대기 성장 속도
+          update3DPlant(plotId);
+
+          if (plot.progress >= 100) {
+            plot.progress = 100;
+            plot.status = 'ready';
+            update3DPlant(plotId);
+            clearInterval(plot.intervalId);
+          }
+        } else {
+          clearInterval(plot.intervalId);
+        }
+      }, 1000);
+    }
+
+    // --- STREAMING_CHUNK: Implementing fast fishing cast trigger ---
+    // --- 15. 개울가 낚시 미니게임 로직 엔진 ---
+    function startCasting() {
+      if (fishingState !== 'idle') return;
+
+      if (gameState.gold < 5) {
+        showToast("❌", "지렁이 미끼를 살 골드가 부족합니다! (5 골드 소진)");
+        gromitSay("깨갱... (미끼 살 돈이 없다멍! 어서 농작물을 먼저 팔아서 벌어오자멍!)");
+        return;
+      }
+
+      gameState.gold -= 5;
+      refreshUI();
+
+      fishingState = 'waiting';
+      document.getElementById('fishing-start-btn').classList.add('hidden');
+      document.getElementById('fishing-avatar').innerText = "💤";
+      document.getElementById('fishing-msg').innerText = "찌가 수면에 떨어졌습니다. 물고기의 입질을 기다립니다...";
+      
+      gromitSay("말없이 찌를 주시하는 그로밋... 과연 어떤 민물 대어가 올라올까멍?");
+
+      // 1초~3초 사이의 매우 빠른 무작위 입질 타이머 설정 (5초 이내 완료 고속 보장!)
+      const waitTime = 1000 + Math.random() * 2000;
+      fishingTimer = setTimeout(() => {
+        triggerBite();
+      }, waitTime);
+    }
+
+    // 찌가 붉게 달아오르는 입질 발동!
+    function triggerBite() {
+      fishingState = 'bite';
+      document.getElementById('fishing-avatar').innerText = "❗🚨";
+      document.getElementById('fishing-msg').innerText = "입질이 강하게 왔다멍!!! 어서 릴 감기를 누르세요!";
+      
+      gromitSay("멍멍!!! 입질이다멍! 빨리 REEL 낚아올리지 않으면 도망갈 거야멍!");
+
+      // 타이밍 미니게임 활성화
+      document.getElementById('fishing-game-bar').classList.remove('hidden');
+      
+      // 포인터가 좌우로 빠르게 움직이는 루프 시작
+      fishingPointerPos = 0;
+      fishingDirection = 1;
+      
+      if (fishingInterval) clearInterval(fishingInterval);
+      fishingInterval = setInterval(() => {
+        fishingPointerPos += fishingDirection * 4; // 이동 속도
+        if (fishingPointerPos >= 97) {
+          fishingPointerPos = 97;
+          fishingDirection = -1;
+        } else if (fishingPointerPos <= 0) {
+          fishingPointerPos = 0;
+          fishingDirection = 1;
+        }
+        document.getElementById('fishing-pointer').style.left = `${fishingPointerPos}%`;
+      }, 30);
+
+      // 3.5초 안에 버튼 안 누르면 자동 실패 소실
+      fishingTimer = setTimeout(() => {
+        failFishing("물고기가 힘차게 미끼만 따먹고 도망가 버렸습니다...");
+      }, 3500);
+    }
+
+    // 플레이어가 타이밍 맞춰 릴 버튼 클릭 시 판정
+    function strikeFish() {
+      if (fishingState !== 'bite') return;
+
+      clearTimeout(fishingTimer);
+      clearInterval(fishingInterval);
+      
+      // 히트존 검증 (녹색 구역: 35% ~ 65% 사이)
+      const currentPos = fishingPointerPos;
+      
+      if (currentPos >= 35 && currentPos <= 65) {
+        // 성공! 물고기 잡기 분기 처리
+        successFishing();
+      } else {
+        // 타이밍 어긋남 실패
+        failFishing("릴을 너무 빨리 혹은 너무 늦게 감아서 낚싯줄이 끊어졌습니다!");
+      }
+    }
+
+    // 낚시 대성공 처리 및 보상 획득
+    function successFishing() {
+      fishingState = 'idle';
+      document.getElementById('fishing-game-bar').classList.add('hidden');
+      document.getElementById('fishing-start-btn').classList.remove('hidden');
+
+      // 무작위 보상 확률 (황금잉어 5%, 메기 20%, 은어 35%, 붕어 40%)
+      const rand = Math.random() * 100;
+      let fishType = '';
+      let fishName = '';
+      let fishIcon = '';
+      let goldVal = 0;
+
+      if (rand < 5) {
+        fishType = 'goldcarp'; fishName = '👑 전설의 대형 황금잉어'; fishIcon = '💛'; goldVal = 150;
+      } else if (rand >= 5 && rand < 25) {
+        fishType = 'catfish'; fishName = '메기'; fishIcon = '🐟'; goldVal = 75;
+      } else if (rand >= 25 && rand < 60) {
+        fishType = 'sweetfish'; fishName = '은어'; fishIcon = '🐠'; goldVal = 45;
+      } else {
+        fishType = 'crucian'; fishName = '토종 붕어'; fishIcon = '🐡'; goldVal = 20;
+      }
+
+      gameState.inv[fishType] += 1;
+      gameState.xp += 15; // 낚시 대성공 시 귀농 경험치 지급
+
+      refreshUI();
+      document.getElementById('fishing-avatar').innerText = fishIcon;
+      document.getElementById('fishing-msg').innerText = `월척이다! 아주 통통한 [${fishName}] 수확 성공!`;
+
+      gromitSay(`멍멍! (팔딱거리는 신선한 ${fishName}을 낚았어요! 시장에서 귀하게 거래된다구멍!)`);
+      showToast("🎣", `민물 생선 [${fishName}] 보관함 적재 완료!`);
+    }
+
+    // 낚시 실패 처리
+    function failFishing(failMsg) {
+      fishingState = 'idle';
+      if (fishingInterval) clearInterval(fishingInterval);
+      
+      document.getElementById('fishing-game-bar').classList.add('hidden');
+      document.getElementById('fishing-start-btn').classList.remove('hidden');
+
+      document.getElementById('fishing-avatar').innerText = "💨";
+      document.getElementById('fishing-msg').innerText = failMsg;
+
+      gromitSay("깨깽... (아쉬워라! 다음에는 정신을 똑바로 차리고 녹색 영역에 들어올 때 건져올리자멍!)");
+      showToast("❌", "민물고기 낚시 실패!");
+    }
+
+    // --- STREAMING_CHUNK: Setting selling mechanisms ---
+    // --- 16. 농작물 및 물고기 판매 거래처 상점 시스템 ---
+    function sellItem(type, pricePerOne) {
+      const amount = gameState.inv[type];
+      if (amount <= 0) {
+        showToast("❌", "창고에 판매 가능한 자산이 단 1개도 존재하지 않습니다!");
+        return;
+      }
+
+      const totalEarned = amount * pricePerOne;
+      gameState.gold += totalEarned;
+      gameState.inv[type] = 0; // 초기화
+
+      refreshUI();
+      buildShopUI(); // 번 돈으로 인테리어 상점 갱신 적용
+
+      let cropNames = { potato: '친환경 감자', carrot: '유기농 당근', sweetpotato: '해풍 꿀고구마', corn: '찰옥수수' };
+      gromitSay(`우와! 수확한 고품질 우리 농산물 ${cropNames[type]} ${amount}개를 전량 팔아서 무려 ${totalEarned}골드를 확보했다멍!`);
+      showToast("💰", `농산물 시장 직거래 완료! (+${totalEarned} 골)`);
+    }
+
+    // 잡은 민물고기 모조리 상인에게 일괄 판매
+    function sellAllFish() {
+      const crucianCount = gameState.inv.crucian;
+      const sweetfishCount = gameState.inv.sweetfish;
+      const catfishCount = gameState.inv.catfish;
+      const goldcarpCount = gameState.inv.goldcarp;
+
+      const totalFishes = crucianCount + sweetfishCount + catfishCount + goldcarpCount;
+      if (totalFishes <= 0) {
+        showToast("❌", "창고에 낚아둔 민물고기가 없습니다!");
+        return;
+      }
+
+      const moneyEarned = (crucianCount * 20) + (sweetfishCount * 45) + (catfishCount * 75) + (goldcarpCount * 150);
+      gameState.gold += moneyEarned;
+
+      // 낚시 보관 수량 초기화
+      gameState.inv.crucian = 0;
+      gameState.inv.sweetfish = 0;
+      gameState.inv.catfish = 0;
+      gameState.inv.goldcarp = 0;
+
+      refreshUI();
+      buildShopUI();
+
+      gromitSay(`시장에 온 고흥 민물고기 중개상에게 생선 ${totalFishes}마리를 전부 양도하고 💰${moneyEarned} 골드를 정산받았다멍! 아주 풍족하구멍!`);
+      showToast("💰", `낚시 수확물 수매 대금 입금 완료! (+${moneyEarned} 골드)`);
+    }
+
+    // 캠페인 모달 스크립트
+    function openCampaignModal() {
+      document.getElementById('campaign-modal').classList.remove('hidden');
+    }
+
+    function closeCampaignModal() {
+      document.getElementById('campaign-modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

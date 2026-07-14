@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마왕성의 꼬마 육성기</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (감성적인 폰트 적용) -->
+    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gaegu', 'DungGeunMo', cursive, sans-serif;
+            background-color: #1a1625;
+        }
+        .pixel-border {
+            border-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><rect x='0' y='0' width='12' height='12' fill='none' stroke='%234a3f5a' stroke-width='4'/></svg>") 4 repeat;
+        }
+        /* 애니메이션 효과 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .character-float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen flex items-center justify-center p-2 sm:p-4 selection:bg-purple-500 selection:text-white">
+
+    <div id="game-container" class="w-full max-w-lg bg-[#2d2438] rounded-2xl shadow-2xl border-4 border-purple-900 overflow-hidden relative">
+        
+        <!-- 오프닝 화면 -->
+        <div id="screen-intro" class="p-6 text-center space-y-6">
+            <div class="space-y-2">
+                <span class="text-purple-400 text-sm font-bold tracking-widest uppercase">Fantasy Raising Simulation</span>
+                <h1 class="text-4xl sm:text-5xl font-black text-purple-300 drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]">
+                    마왕성에서<br>아기를 주웠다!
+                </h1>
+            </div>
+
+            <!-- 귀여운 아기 악마/인간 SVG 데코 -->
+            <div class="flex justify-center my-6 character-float">
+                <svg width="150" height="150" viewBox="0 0 100 100" class="drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                    <!-- 마왕의 뿔 배경 -->
+                    <path d="M 20,30 Q 15,10 35,20 Q 25,30 20,30" fill="#4a1d6d" />
+                    <path d="M 80,30 Q 85,10 65,20 Q 75,30 80,30" fill="#4a1d6d" />
+                    <!-- 바구니 -->
+                    <ellipse cx="50" cy="75" rx="35" ry="20" fill="#8b5a2b" />
+                    <ellipse cx="50" cy="65" rx="30" ry="15" fill="#a06e3b" />
+                    <!-- 아기 보자기 -->
+                    <circle cx="50" cy="50" r="22" fill="#e9d5ff" />
+                    <!-- 얼굴 -->
+                    <circle cx="50" cy="48" r="16" fill="#fed7aa" />
+                    <!-- 눈/볼터치 -->
+                    <circle cx="44" cy="48" r="2" fill="#312e81" />
+                    <circle cx="56" cy="48" r="2" fill="#312e81" />
+                    <ellipse cx="40" cy="52" rx="3" ry="1.5" fill="#f43f5e" opacity="0.6" />
+                    <ellipse cx="60" cy="52" rx="3" ry="1.5" fill="#f43f5e" opacity="0.6" />
+                    <path d="M 48,53 Q 50,55 52,53" stroke="#312e81" stroke-width="1.5" fill="none" />
+                </svg>
+            </div>
+
+            <p class="text-lg text-purple-200 leading-relaxed max-w-xs mx-auto">
+                마왕성 깊은 곳, 바구니에 담겨 울고 있던 인간 아기를 발견했습니다. 이 아이를 훌륭한(혹은 사악한) 재목으로 키워내시겠습니까?
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-purple-300 mb-2">아이의 이름을 지어주세요</label>
+                    <input type="text" id="baby-name" value="루나" maxlength="6" 
+                           class="w-full max-w-xs px-4 py-2 rounded-lg bg-purple-950 border-2 border-purple-700 text-center text-xl text-yellow-300 focus:outline-none focus:border-yellow-400">
+                </div>
+                <button onclick="startGame()" class="w-full max-w-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xl py-3 px-6 rounded-xl shadow-lg border-b-4 border-indigo-800 transition transform active:scale-95">
+                    육성 시작하기 😈
+                </button>
+            </div>
+        </div>
+
+        <!-- 메인 게임 화면 (처음에는 숨김) -->
+        <div id="screen-game" class="hidden p-4 space-y-4">
+            <!-- 상단 바: 이름, 나이, 소지금 -->
+            <div class="flex justify-between items-center bg-purple-950/60 p-3 rounded-xl border border-purple-800">
+                <div>
+                    <span id="display-name" class="text-xl font-bold text-yellow-300">루나</span>
+                    <span id="display-age" class="text-sm ml-2 text-purple-300">(0세, 영아기)</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-yellow-400">🪙</span>
+                    <span id="display-gold" class="font-bold text-yellow-300">500G</span>
+                </div>
+            </div>
+
+            <!-- 캐릭터 일러스트 영역 및 상태 게이지 -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-stretch">
+                <!-- 캐릭터 일러스트 (왼쪽) -->
+                <div class="sm:col-span-6 bg-purple-950/40 rounded-xl p-4 flex flex-col items-center justify-center border border-purple-800 min-h-[180px] relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#8b5cf6_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                    <div id="character-svg-container" class="character-float relative z-10">
+                        <!-- 나이에 따라 실시간으로 교체될 SVG 캐릭터 모델링 -->
+                    </div>
+                    <span id="character-status-text" class="text-xs text-purple-300 mt-2 z-10 px-2 py-0.5 rounded bg-purple-900/80">
+                        콜골 잠을 자고 있습니다
+                    </span>
+                </div>
+
+                <!-- 상태 스탯 게이지 (오른쪽) -->
+                <div class="sm:col-span-6 bg-purple-950/40 rounded-xl p-3 border border-purple-800 flex flex-col justify-between space-y-2">
+                    <h3 class="text-sm font-bold text-purple-300 border-b border-purple-800 pb-1">현재 능력치</h3>
+                    
+                    <!-- 체력 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-0.5">
+                            <span>❤️ 체력 (Health)</span>
+                            <span id="stat-health-val" class="font-bold">50/100</span>
+                        </div>
+                        <div class="w-full bg-purple-950 rounded-full h-2">
+                            <div id="stat-health-bar" class="bg-rose-500 h-2 rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 마력 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-0.5">
+                            <span>🔮 마력 (Mana)</span>
+                            <span id="stat-mana-val" class="font-bold">10/100</span>
+                        </div>
+                        <div class="w-full bg-purple-950 rounded-full h-2">
+                            <div id="stat-mana-bar" class="bg-indigo-500 h-2 rounded-full" style="width: 10%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 도덕성 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-0.5">
+                            <span>😇 도덕성 (Morality)</span>
+                            <span id="stat-morality-val" class="font-bold">50/100</span>
+                        </div>
+                        <div class="w-full bg-purple-950 rounded-full h-2">
+                            <div id="stat-morality-bar" class="bg-teal-400 h-2 rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 스트레스 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-0.5">
+                            <span>🔥 스트레스 (Stress)</span>
+                            <span id="stat-stress-val" class="font-bold">0/100</span>
+                        </div>
+                        <div class="w-full bg-purple-950 rounded-full h-2">
+                            <div id="stat-stress-bar" class="bg-amber-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 스케줄 선택 및 일지 영역 -->
+            <div class="space-y-3">
+                <h3 class="text-md font-bold text-purple-200">주말 행동 스케줄을 선택하세요!</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- 교육 -->
+                    <button onclick="runSchedule('education')" class="p-2.5 rounded-xl bg-gradient-to-b from-purple-800 to-purple-900 border border-purple-700 hover:from-purple-700 hover:to-purple-800 transition active:scale-95 text-center flex flex-col items-center">
+                        <span class="text-2xl">📚</span>
+                        <span class="text-sm font-bold mt-1">마왕 교육</span>
+                        <span class="text-[10px] text-purple-300">-50G / 체력-,마력+</span>
+                    </button>
+                    <!-- 알바 -->
+                    <button onclick="runSchedule('work')" class="p-2.5 rounded-xl bg-gradient-to-b from-blue-900 to-indigo-950 border border-blue-800 hover:from-blue-800 hover:to-indigo-900 transition active:scale-95 text-center flex flex-col items-center">
+                        <span class="text-2xl">⛏️</span>
+                        <span class="text-sm font-bold mt-1">광산 알바</span>
+                        <span class="text-[10px] text-blue-300">+100G / 체력-,스트레스+</span>
+                    </button>
+                    <!-- 휴식 -->
+                    <button onclick="runSchedule('rest')" class="p-2.5 rounded-xl bg-gradient-to-b from-emerald-900 to-teal-950 border border-emerald-800 hover:from-emerald-800 hover:to-teal-900 transition active:scale-95 text-center flex flex-col items-center">
+                        <span class="text-2xl">🧸</span>
+                        <span class="text-sm font-bold mt-1">성내 휴식</span>
+                        <span class="text-[10px] text-emerald-300">-20G / 스트레스--,체력+</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 일지 및 알림판 -->
+            <div class="bg-black/40 p-3 rounded-xl border border-purple-900/60 min-h-[100px] flex flex-col justify-between">
+                <span class="text-xs text-purple-400 font-bold uppercase tracking-wider">마왕성 일지 (Log)</span>
+                <p id="game-log" class="text-sm text-gray-200 leading-relaxed mt-1">
+                    마왕성 어두운 방에서 조용히 육성이 시작되었습니다. 무엇을 먼저 가르쳐 볼까요?
+                </p>
+                <span id="log-stat-diff" class="text-xs text-yellow-300 mt-1 font-bold"></span>
+            </div>
+        </div>
+
+        <!-- 팝업/이벤트 레이어 (기본 숨김) -->
+        <div id="event-modal" class="hidden absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div class="bg-[#3b2b4c] border-2 border-purple-500 rounded-2xl p-5 max-w-sm w-full text-center space-y-4 shadow-2xl">
+                <span class="text-2xl" id="event-icon">⚡</span>
+                <h4 class="text-xl font-bold text-yellow-300" id="event-title">돌발 이벤트 발생!</h4>
+                <p class="text-sm text-gray-200 leading-relaxed" id="event-description">이벤트 내용이 여기에 들어갑니다.</p>
+                <div class="flex flex-col gap-2 pt-2" id="event-choices">
+                    <!-- 버튼들이 동적으로 생성됨 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 엔딩 화면 (기본 숨김) -->
+        <div id="screen-ending" class="hidden p-6 text-center space-y-6">
+            <span class="text-yellow-400 text-sm font-bold uppercase tracking-widest">Graduation & Ending</span>
+            <h2 class="text-3xl font-black text-purple-300">축하합니다!</h2>
+            
+            <div id="ending-illustration" class="flex justify-center character-float my-4">
+                <!-- 엔딩 일러스트 SVG가 동적으로 탑재됨 -->
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-2xl font-bold text-yellow-300" id="ending-title">엔딩 타이틀</h3>
+                <p class="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto" id="ending-description">
+                    아이의 최종 성장기가 이곳에 출력됩니다.
+                </p>
+            </div>
+
+            <button onclick="restartGame()" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg border-b-4 border-purple-800 transition transform active:scale-95">
+                새로운 아기 입양하기 🔄
+            </button>
+        </div>
+
+    </div>
+
+    <!-- UI 경고창 모달 -->
+    <div id="toast-modal" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white px-4 py-2 rounded-lg shadow-xl border border-rose-400 font-bold text-sm transition">
+        골드가 부족하거나 다른 문제가 발생했습니다!
+    </div>
+
+    <script>
+        // 게임 상태 정의
+        let state = {
+            name: "루나",
+            age: 0, // 0 ~ 18세까지 진행
+            gold: 500,
+            health: 50,
+            mana: 10,
+            morality: 50,
+            stress: 0,
+            phase: 'baby' // baby(0-4), kid(5-9), teen(10-14), adult(15-18)
+        };
+
+        // 나이별 단계 정의
+        function getPhase(age) {
+            if (age <= 4) return 'baby';
+            if (age <= 9) return 'kid';
+            if (age <= 14) return 'teen';
+            return 'adult';
+        }
+
+        // 각 나이별/단계별 SVG 렌더러
+        function updateCharacterSVG() {
+            const container = document.getElementById('character-svg-container');
+            const phase = getPhase(state.age);
+            let svgContent = '';
+
+            // 각 성장 단계별 고유 일러스트 (인라인 SVG)
+            if (phase === 'baby') {
+                svgContent = `
+                    <svg width="120" height="120" viewBox="0 0 100 100">
+                        <circle cx="50" cy="52" r="22" fill="#fed7aa" />
+                        <path d="M 32,45 C 32,32 68,32 68,45" fill="#4c1d95" />
+                        <!-- 쪽쪽이 -->
+                        <circle cx="50" cy="58" r="5" fill="#fb7185" />
+                        <rect x="48" y="55" width="4" height="6" fill="#f43f5e" />
+                        <!-- 눈 -->
+                        <line x1="42" y1="48" x2="46" y2="48" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="54" y1="48" x2="58" y2="48" stroke="#1e1b4b" stroke-width="2" stroke-linecap="round"/>
+                        <!-- 작은 마왕 뿔 -->
+                        <path d="M 35,38 Q 30,28 38,32" stroke="#4c1d95" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        <path d="M 65,38 Q 70,28 62,32" stroke="#4c1d95" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        <!-- 보자기 의상 -->
+                        <path d="M 35,70 C 35,55 65,55 65,70 Z" fill="#e9d5ff" />
+                    </svg>
+                `;
+            } else if (phase === 'kid') {
+                svgContent = `
+                    <svg width="120" height="120" viewBox="0 0 100 100">
+                        <!-- 몸통/망토 -->
+                        <path d="M 30,85 L 50,55 L 70,85 Z" fill="#581c87" />
+                        <circle cx="50" cy="45" r="20" fill="#fed7aa" />
+                        <!-- 헤어스타일 -->
+                        <path d="M 30,45 C 30,25 70,25 70,45 C 65,35 35,35 30,45" fill="#4c1d95" />
+                        <!-- 뿔 -->
+                        <path d="M 34,32 Q 24,18 36,24" stroke="#4c1d95" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <path d="M 66,32 Q 76,18 64,24" stroke="#4c1d95" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <!-- 표정 -->
+                        <circle cx="44" cy="44" r="2.5" fill="#1e1b4b" />
+                        <circle cx="56" cy="44" r="2.5" fill="#1e1b4b" />
+                        <path d="M 47,52 Q 50,55 53,52" stroke="#1e1b4b" stroke-width="2" fill="none" stroke-linecap="round" />
+                        <!-- 볼터치 -->
+                        <circle cx="40" cy="48" r="2" fill="#fb7185" />
+                        <circle cx="60" cy="48" r="2" fill="#fb7185" />
+                    </svg>
+                `;
+            } else if (phase === 'teen') {
+                svgContent = `
+                    <svg width="120" height="120" viewBox="0 0 100 100">
+                        <!-- 망토 -->
+                        <path d="M 25,90 L 50,50 L 75,90 Z" fill="#3b0764" />
+                        <!-- 옷 -->
+                        <rect x="40" y="60" width="20" height="30" fill="#a21caf" />
+                        <circle cx="50" cy="40" r="18" fill="#fed7aa" />
+                        <!-- 뿔 (조금 더 자람) -->
+                        <path d="M 32,26 Q 18,8 35,16" stroke="#1e1b4b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                        <path d="M 68,26 Q 82,8 65,16" stroke="#1e1b4b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                        <!-- 헤어스타일 -->
+                        <path d="M 32,40 C 30,15 70,15 68,40 C 60,30 40,30 32,40" fill="#1e1b4b" />
+                        <!-- 눈/입 (장난기 넘침) -->
+                        <path d="M 40,38 Q 44,36 46,40" stroke="#1e1b4b" stroke-width="2" fill="none" />
+                        <path d="M 60,38 Q 56,36 54,40" stroke="#1e1b4b" stroke-width="2" fill="none" />
+                        <path d="M 47,48 Q 50,52 53,48" stroke="#1e1b4b" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                `;
+            } else { // adult (15-18세)
+                svgContent = `
+                    <svg width="120" height="120" viewBox="0 0 100 100">
+                        <!-- 마왕성 느낌의 장엄한 날개 -->
+                        <path d="M 15,40 Q 5,60 30,70 Q 25,50 40,55" fill="#1e1b4b" />
+                        <path d="M 85,40 Q 95,60 70,70 Q 75,50 60,55" fill="#1e1b4b" />
+                        <!-- 정장/로브 -->
+                        <path d="M 25,95 L 50,45 L 75,95 Z" fill="#12061c" />
+                        <path d="M 45,55 L 50,70 L 55,55 Z" fill="#dc2626" /> <!-- 레드 타이 -->
+                        <circle cx="50" cy="35" r="18" fill="#fcd34d" /> <!-- 노란빛 도는 눈부신 피부 -->
+                        <!-- 웅장한 뿔 -->
+                        <path d="M 34,22 Q 10,2 35,12" stroke="#12061c" stroke-width="7" fill="none" stroke-linecap="round"/>
+                        <path d="M 66,22 Q 90,2 65,12" stroke="#12061c" stroke-width="7" fill="none" stroke-linecap="round"/>
+                        <!-- 헤어 -->
+                        <path d="M 32,35 C 30,10 70,10 68,35" fill="#4a044e" />
+                        <!-- 샤프한 눈빛 -->
+                        <polygon points="40,33 46,36 41,38" fill="#12061c" />
+                        <polygon points="60,33 54,36 59,38" fill="#12061c" />
+                        <path d="M 48,44 Q 50,42 52,44" stroke="#12061c" stroke-width="2" fill="none" />
+                    </svg>
+                `;
+            }
+
+            container.innerHTML = svgContent;
+        }
+
+        // 상태창 업데이트
+        function updateUI() {
+            document.getElementById('display-name').textContent = state.name;
+            document.getElementById('display-age').textContent = `(${state.age}세, ${getPhaseKorean(state.age)})`;
+            document.getElementById('display-gold').textContent = `${state.gold}G`;
+
+            // 스탯 한계치 조절 (0~100)
+            state.health = Math.max(0, Math.min(100, state.health));
+            state.mana = Math.max(0, Math.min(100, state.mana));
+            state.morality = Math.max(0, Math.min(100, state.morality));
+            state.stress = Math.max(0, Math.min(100, state.stress));
+
+            // 수치 출력
+            document.getElementById('stat-health-val').textContent = `${state.health}/100`;
+            document.getElementById('stat-mana-val').textContent = `${state.mana}/100`;
+            document.getElementById('stat-morality-val').textContent = `${state.morality}/100`;
+            document.getElementById('stat-stress-val').textContent = `${state.stress}/100`;
+
+            // 게이지 바 애니메이션 업데이트
+            document.getElementById('stat-health-bar').style.width = `${state.health}%`;
+            document.getElementById('stat-mana-bar').style.width = `${state.mana}%`;
+            document.getElementById('stat-morality-bar').style.width = `${state.morality}%`;
+            document.getElementById('stat-stress-bar').style.width = `${state.stress}%`;
+
+            // 일러스트 교체 반영
+            updateCharacterSVG();
+
+            // 아이의 상태 문구 정의
+            const statusText = document.getElementById('character-status-text');
+            if (state.stress > 70) {
+                statusText.textContent = "🥵 너무 스트레스를 받아 삐뚤어지려 합니다!";
+                statusText.className = "text-xs text-rose-300 mt-2 z-10 px-2 py-0.5 rounded bg-rose-950/90 font-bold animate-pulse";
+            } else if (state.health < 20) {
+                statusText.textContent = "🤢 체력이 바닥나 시름시름 앓고 있습니다.";
+                statusText.className = "text-xs text-yellow-300 mt-2 z-10 px-2 py-0.5 rounded bg-amber-950/90 font-bold animate-pulse";
+            } else if (state.morality > 80) {
+                statusText.textContent = "👼 마왕성에서 보기 드문 천사표 아이입니다.";
+                statusText.className = "text-xs text-teal-300 mt-2 z-10 px-2 py-0.5 rounded bg-teal-950/80";
+            } else {
+                statusText.textContent = "😊 오늘 하루도 평화롭게 무럭무럭 자랍니다.";
+                statusText.className = "text-xs text-purple-300 mt-2 z-10 px-2 py-0.5 rounded bg-purple-900/80";
+            }
+        }
+
+        function getPhaseKorean(age) {
+            if (age <= 4) return '영아기';
+            if (age <= 9) return '유아기';
+            if (age <= 14) return '청소년기';
+            return '청년기';
+        }
+
+        // 토스트 알림 팝업
+        function showToast(message) {
+            const toast = document.getElementById('toast-modal');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        // 게임 시작
+        function startGame() {
+            const nameInput = document.getElementById('baby-name').value.trim();
+            if (!nameInput) {
+                showToast("이름을 꼭 입력해 주세요!");
+                return;
+            }
+            state.name = nameInput;
+
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            updateUI();
+        }
+
+        // 스케줄 실행 버튼 클릭 시
+        function runSchedule(type) {
+            let logText = "";
+            let diffText = "";
+
+            if (type === 'education') {
+                if (state.gold < 50) {
+                    showToast("🪙 교육을 시키기 위한 골드가 부족합니다!");
+                    return;
+                }
+                state.gold -= 50;
+                state.mana += 15;
+                state.health -= 5;
+                state.stress += 10;
+                logText = `당신은 ${state.name}에게 마법 교육을 시켰습니다. 도서관에서 먼지 쌓인 마법서를 읽느라 눈이 벌게졌습니다.`;
+                diffText = "🔮 마력 +15 | ❤️ 체력 -5 | 🔥 스트레스 +10 | 🪙 골드 -50G";
+            } 
+            else if (type === 'work') {
+                state.gold += 100;
+                state.health -= 15;
+                state.stress += 15;
+                logText = `${state.name}는 어두컴컴한 마왕성 지하 광산에 가서 마정석을 캤습니다. 손을 흙투성이로 만들며 번 돈을 당신에게 건넵니다.`;
+                diffText = "🪙 골드 +100G | ❤️ 체력 -15 | 🔥 스트레스 +15";
+            } 
+            else if (type === 'rest') {
+                if (state.gold < 20) {
+                    showToast("🪙 아이에게 맛있는 것을 사주고 휴식을 줄 돈이 부족합니다!");
+                    return;
+                }
+                state.gold -= 20;
+                state.health += 20;
+                state.stress = Math.max(0, state.stress - 30);
+                logText = `${state.name}와 하루 종일 마왕성 정원을 거닐며 악마 꽃들에게 물을 주었습니다. 아이가 매우 기뻐합니다.`;
+                diffText = "❤️ 체력 +20 | 🔥 스트레스 -30 | 🪙 골드 -20G";
+            }
+
+            // 일지 업데이트 및 UI 반영
+            document.getElementById('game-log').textContent = logText;
+            document.getElementById('log-stat-diff').textContent = diffText;
+
+            // 나이 상승 및 페이즈 체크
+            state.age += 1;
+
+            if (state.age >= 18) {
+                // 게임 끝 -> 엔딩으로 진입
+                triggerEnding();
+                return;
+            }
+
+            // 이벤트 발생 확률 (매 턴 30% 확률로 무작위 이벤트 발생)
+            if (Math.random() < 0.35) {
+                setTimeout(() => {
+                    triggerRandomEvent();
+                }, 800);
+            } else {
+                updateUI();
+            }
+        }
+
+        // 무작위 돌발 이벤트들
+        const events = [
+            {
+                title: "인간 마을에서 온 길 잃은 아기 사슴",
+                description: "아이가 성 밖에서 작은 아기 사슴을 발견해 데려왔습니다. '이거 구워 먹어도 돼?' 라고 묻습니다.",
+                icon: "🦌",
+                choices: [
+                    {
+                        text: "구워 먹으면 정말 맛있겠구나! (마왕식 교육)",
+                        effect: () => {
+                            state.morality -= 20;
+                            state.health += 10;
+                            return `도덕성이 대폭 깎였지만, 보양식(?)을 먹고 아이의 건강이 좋아졌습니다.`;
+                        }
+                    },
+                    {
+                        text: "아니란다, 마을로 돌려 보내주자구나. (인간식 교육)",
+                        effect: () => {
+                            state.morality += 25;
+                            state.stress += 5;
+                            return `사슴을 돌려 보내며 생명의 소중함을 깨달아 도덕성이 크게 올랐습니다.`;
+                        }
+                    }
+                ]
+            },
+            {
+                title: "비상금이 담긴 보물상자 발견!",
+                description: "마왕성 서재 구석탱이에서 아주 오래전에 당신이 숨겨둔 비상금 항아리를 아이가 찾아냈습니다.",
+                icon: "💰",
+                choices: [
+                    {
+                        text: "찾아낸 기념으로 절반을 나누어준다.",
+                        effect: () => {
+                            state.gold += 150;
+                            state.stress = Math.max(0, state.stress - 15);
+                            return `아이에게 용돈을 선물했습니다. 아이의 스트레스가 풀렸습니다. (+150G)`;
+                        }
+                    },
+                    {
+                        text: "마왕의 권위로 압수한다.",
+                        effect: () => {
+                            state.gold += 300;
+                            state.stress += 20;
+                            state.morality -= 10;
+                            return `비상금을 모두 회수했습니다. 아이는 하루 종일 방구석에서 궁시렁거렸습니다.`;
+                        }
+                    }
+                ]
+            },
+            {
+                title: "침입한 모험가와의 대면",
+                description: "마왕성 내부 침입 경보가 울렸습니다! 가냘픈 초보 모험가가 용감하게 침입했지만, 아이에게 가볍게 제압당했습니다. 어떻게 처단할까요?",
+                icon: "⚔️",
+                choices: [
+                    {
+                        text: "그대로 지하 감옥에 가두고 노동력을 수탈하자!",
+                        effect: () => {
+                            state.morality -= 15;
+                            state.mana += 10;
+                            return `모험가는 지하 광산으로 강제 징용되었습니다. 아이는 승리감과 마력을 얻었습니다.`;
+                        }
+                    },
+                    {
+                        text: "앞으로는 나쁜 짓 하지 말라며 돌려보내 주자.",
+                        effect: () => {
+                            state.morality += 20;
+                            state.stress += 10;
+                            return `자비로운 처사에 침입한 모험가는 눈물을 흘렸습니다. 도덕성이 대폭 상승합니다.`;
+                        }
+                    }
+                ]
+            },
+            {
+                title: "열병에 걸린 새벽",
+                description: "아이의 몸이 불덩이처럼 뜨겁습니다. 어두운 마왕성에 치료제가 보이지 않습니다.",
+                icon: "🌡️",
+                choices: [
+                    {
+                        text: "인간 마을에 잠입하여 백신을 훔쳐 온다.",
+                        effect: () => {
+                            state.gold -= 50;
+                            state.health += 30;
+                            state.morality -= 10;
+                            return `당신은 인간 마을의 약방을 털어 약을 구해왔습니다. 다행히 고열이 내렸습니다.`;
+                        }
+                    },
+                    {
+                        text: "악마의 치유 주문을 억지로 영창해 준다.",
+                        effect: () => {
+                            state.mana += 20;
+                            state.health -= 15;
+                            return `악마의 차가운 치유 마력 덕에 열은 식었지만 마력 부작용으로 체력이 소모되었습니다.`;
+                        }
+                    }
+                ]
+            }
+        ];
+
+        // 이벤트 발동 함수
+        function triggerRandomEvent() {
+            const modal = document.getElementById('event-modal');
+            const randIdx = Math.floor(Math.random() * events.length);
+            const ev = events[randIdx];
+
+            document.getElementById('event-title').textContent = ev.title;
+            document.getElementById('event-description').textContent = ev.description;
+            document.getElementById('event-icon').textContent = ev.icon;
+
+            const choiceContainer = document.getElementById('event-choices');
+            choiceContainer.innerHTML = ''; // 초기화
+
+            ev.choices.forEach(ch => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-2.5 px-4 rounded-lg bg-purple-900 border border-purple-700 hover:bg-purple-800 text-left text-xs text-purple-100 transition duration-150";
+                btn.textContent = ch.text;
+                btn.onclick = () => {
+                    const resultText = ch.effect();
+                    modal.classList.add('hidden');
+                    
+                    // 이벤트 결과를 일지에 기록
+                    document.getElementById('game-log').textContent = `[이벤트 발생!] ${resultText}`;
+                    document.getElementById('log-stat-diff').textContent = "";
+                    
+                    updateUI();
+                };
+                choiceContainer.appendChild(btn);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        // 게임 엔딩 처리
+        function triggerEnding() {
+            document.getElementById('screen-game').classList.add('hidden');
+            const endingScreen = document.getElementById('screen-ending');
+            endingScreen.classList.remove('hidden');
+
+            const titleEl = document.getElementById('ending-title');
+            const descEl = document.getElementById('ending-description');
+            const illustContainer = document.getElementById('ending-illustration');
+
+            let endingTitle = "";
+            let endingDesc = "";
+            let endingSvg = "";
+
+            // 조건 분기에 따른 엔딩 5가지
+            if (state.morality >= 80 && state.mana >= 70) {
+                endingTitle = `✨ 성녀가 된 ${state.name} (위대한 용사)`;
+                endingDesc = `마왕성에서 자랐으나 인간의 선함과 정의로움을 끝내 잃지 않았습니다. 당신의 뜨거운 마법 조기 교육과 정의로운 도덕적 훈육 덕분에 세상을 구원하는 위대한 대마법사이자 용사가 되었습니다. 가끔 마왕성에 들러 아버지인 당신의 어깨를 토닥여 줍니다.`;
+                endingSvg = `
+                    <svg width="150" height="150" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#fcd34d" stroke-width="4" stroke-dasharray="4"/>
+                        <!-- 빛나는 천사형 용사 캐릭터 -->
+                        <path d="M 25,90 L 50,40 L 75,90 Z" fill="#e2e8f0" />
+                        <circle cx="50" cy="35" r="18" fill="#fed7aa" />
+                        <path d="M 30,25 C 40,5 60,5 70,25" fill="#fde047" /> <!-- 빛나는 금발 -->
+                        <!-- 미니 황금관 -->
+                        <polygon points="45,10 50,5 55,10" fill="#fbbf24" />
+                        <polygon points="40,14 45,10 50,14 55,10 60,14" fill="#f59e0b" />
+                        <!-- 눈부신 표정 -->
+                        <circle cx="45" cy="35" r="2" fill="#0f172a" />
+                        <circle cx="55" cy="35" r="2" fill="#0f172a" />
+                        <path d="M 46,42 Q 50,46 54,42" stroke="#0f172a" stroke-width="2" fill="none" />
+                        <!-- 장검 -->
+                        <rect x="72" y="40" width="4" height="40" fill="#94a3b8" />
+                        <rect x="68" y="70" width="12" height="4" fill="#fbbf24" />
+                    </svg>
+                `;
+            } else if (state.morality < 30 && state.mana >= 75) {
+                endingTitle = `👑 마왕성을 지배하는 폭군 (어둠의 마왕)`;
+                endingDesc = `당신의 피를 이어받은 듯, 아이는 악마보다 더 차갑고 강력한 마왕으로 군림했습니다. 마법에 특출난 천재성을 보이며 성의 원로들을 굴복시켰고 당신을 이어 진정한 제2대 암흑 마왕의 자리에 올랐습니다. 당신은 이제 원로 상왕 대접을 받으며 성 내에서 편안한 말년을 보냅니다.`;
+                endingSvg = `
+                    <svg width="150" height="150" viewBox="0 0 100 100">
+                        <!-- 악마 날개 -->
+                        <path d="M 10,30 Q 0,60 30,70 L 30,50 Z" fill="#090514" />
+                        <path d="M 90,30 Q 100,60 70,70 L 70,50 Z" fill="#090514" />
+                        <!-- 로브 -->
+                        <path d="M 25,95 L 50,45 L 75,95 Z" fill="#2e1065" />
+                        <circle cx="50" cy="35" r="18" fill="#e9d5ff" />
+                        <!-- 거대 뿔 -->
+                        <path d="M 32,20 Q 5,2 32,10" stroke="#090514" stroke-width="8" fill="none" stroke-linecap="round"/>
+                        <path d="M 68,20 Q 95,2 68,10" stroke="#090514" stroke-width="8" fill="none" stroke-linecap="round"/>
+                        <path d="M 32,35 C 30,15 70,15 68,35" fill="#090514" />
+                        <!-- 붉은 안광 -->
+                        <circle cx="43" cy="33" r="3" fill="#ef4444" />
+                        <circle cx="57" cy="33" r="3" fill="#ef4444" />
+                        <!-- 차가운 붉은 입선 -->
+                        <line x1="45" y1="44" x2="55" y2="44" stroke="#ef4444" stroke-width="2"/>
+                    </svg>
+                `;
+            } else if (state.morality >= 50 && state.health >= 60) {
+                endingTitle = `🌾 평화로운 마왕성 농부 (자연주의자)`;
+                endingDesc = `싸움도 마법도 귀찮아하던 ${state.name}는 마왕성 앞뜰을 비옥하게 가꿔 텃밭으로 만들었습니다. 아이가 직접 구운 달콤한 감자와 허브차는 마계 최고 진미가 되었습니다. 자극적이지 않고 평범하지만 그 어떤 직업보다 건강하고 행복한 삶을 보내고 있습니다.`;
+                endingSvg = `
+                    <svg width="150" height="150" viewBox="0 0 100 100">
+                        <path d="M 25,90 L 50,45 L 75,90 Z" fill="#15803d" />
+                        <circle cx="50" cy="35" r="18" fill="#fed7aa" />
+                        <!-- 밀짚모자 -->
+                        <ellipse cx="50" cy="22" rx="25" ry="8" fill="#ca8a04" />
+                        <path d="M 35,22 C 35,10 65,10 65,22" fill="#eab308" />
+                        <!-- 뿔이 모자 밖으로 튀어나옴 -->
+                        <line x1="30" y1="18" x2="25" y2="10" stroke="#78350f" stroke-width="3" />
+                        <line x1="70" y1="18" x2="75" y2="10" stroke="#78350f" stroke-width="3" />
+                        <circle cx="44" cy="35" r="2" fill="#1e1b4b" />
+                        <circle cx="56" cy="35" r="2" fill="#1e1b4b" />
+                        <path d="M 46,42 Q 50,44 54,42" stroke="#1e1b4b" stroke-width="2" fill="none" />
+                        <!-- 사과 소품 -->
+                        <circle cx="70" cy="75" r="8" fill="#ef4444" />
+                        <rect x="69" y="64" width="2" height="4" fill="#78350f" />
+                    </svg>
+                `;
+            } else if (state.mana >= 50 && state.morality < 50) {
+                endingTitle = `🧪 어둠의 연금술사 (마녀)`;
+                endingDesc = `${state.name}는 지독한 은둔주의자가 되어 성 구석 지하 감옥을 연금술 실험실로 개조했습니다. 마족의 피와 독초를 섞어 어떤 병이든 낫게 하지만 동시에 사악한 환각을 동반하는 물약을 만듭니다. 괴짜라고 손가락질 받지만 암암리에 아이의 비약을 사려는 마족들로 연금술실 문턱이 닳습니다.`;
+                endingSvg = `
+                    <svg width="150" height="150" viewBox="0 0 100 100">
+                        <path d="M 25,90 L 50,45 L 75,90 Z" fill="#1e1b4b" />
+                        <circle cx="50" cy="35" r="18" fill="#fed7aa" />
+                        <!-- 마법사 꼬깔모자 -->
+                        <polygon points="50,2 35,22 65,22" fill="#030712" />
+                        <circle cx="44" cy="35" r="2" fill="#22c55e" /> <!-- 초록 안경 -->
+                        <circle cx="56" cy="35" r="2" fill="#22c55e" />
+                        <line x1="46" y1="35" x2="54" y2="35" stroke="#22c55e" stroke-width="2" />
+                        <!-- 시약 병 -->
+                        <ellipse cx="70" cy="75" rx="8" ry="12" fill="#ec4899" />
+                        <rect x="68" y="58" width="4" height="6" fill="#111827" />
+                    </svg>
+                `;
+            } else {
+                endingTitle = `👿 침대와 하나가 된 니트 악마 (백수)`;
+                endingDesc = `학업도 일도 극도로 싫어하던 ${state.name}는 결국 아무것도 이루지 못했습니다. 18세가 되었음에도 마왕성 침대에 누워 하루 종일 군것질을 하며 빈둥거립니다. '한 입만 줘봐'라며 당신의 용돈을 호시탐탐 노립니다. 비록 사악한 마왕은 되지 못했지만, 영원히 당신 곁에서 집밥을 축낼 것입니다.`;
+                endingSvg = `
+                    <svg width="150" height="150" viewBox="0 0 100 100">
+                        <rect x="20" y="65" width="60" height="30" rx="10" fill="#9333ea" />
+                        <!-- 이불더미 안의 아이 -->
+                        <circle cx="50" cy="55" r="18" fill="#fed7aa" />
+                        <path d="M 32,55 C 32,35 68,35 68,55" fill="#4b5563" /> <!-- 부스스한 머리 -->
+                        <!-- 짝눈 (지루함) -->
+                        <line x1="42" y1="52" x2="48" y2="52" stroke="#111827" stroke-width="2" />
+                        <path d="M 52,50 Q 56,54 58,51" stroke="#111827" stroke-width="2" fill="none" />
+                        <path d="M 47,60 Q 50,58 53,60" stroke="#111827" stroke-width="2" fill="none" />
+                    </svg>
+                `;
+            }
+
+            titleEl.textContent = endingTitle;
+            descEl.textContent = endingDesc;
+            illustContainer.innerHTML = endingSvg;
+        }
+
+        // 다시 하기
+        function restartGame() {
+            state = {
+                name: "루나",
+                age: 0,
+                gold: 500,
+                health: 50,
+                mana: 10,
+                morality: 50,
+                stress: 0,
+                phase: 'baby'
+            };
+            document.getElementById('screen-ending').classList.add('hidden');
+            document.getElementById('screen-intro').classList.remove('hidden');
+            document.getElementById('baby-name').value = "루나";
+            document.getElementById('game-log').textContent = "마왕성 어두운 방에서 조용히 육성이 시작되었습니다. 무엇을 먼저 가르쳐 볼까요?";
+            document.getElementById('log-stat-diff').textContent = "";
+        }
+    </script>
+</body>
+</html>
