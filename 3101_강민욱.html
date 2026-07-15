@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>태안군 이장님 징치기 버스 도우미</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: 동글동글하고 눈에 잘 띄는 나눔바른고딕 / 블랙한산스 / 수트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Sans+KR:wght@500;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        title: ['Do Hyeon', 'sans-serif'],
+                        gong: ['Black Han Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        traditional: {
+                            bg: '#fcf8f2', // 한지 느낌 배경색
+                            paper: '#f5edd6', // 조금 더 짙은 한지색
+                            wood: '#5c4033', // 나무 기둥색
+                            gold: '#dfb127', // 징 황동색
+                            goldDark: '#b8860b',
+                            red: '#b22222', // 단청 빨강
+                            blue: '#1e40af', // 전통 파랑
+                            green: '#065f46' // 전통 초록
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #fcf8f2;
+            -webkit-user-select: none; /* 징 꾹 누를 때 텍스트 선택 방지 */
+            user-select: none;
+        }
+        
+        /* 징 진동 애니메이션 */
+        @keyframes vibrate {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-2px, -2px) rotate(-1deg); }
+            20% { transform: translate(2px, 0px) rotate(1deg); }
+            30% { transform: translate(-2px, 2px) rotate(0deg); }
+            40% { transform: translate(2px, 2px) rotate(1deg); }
+            50% { transform: translate(-2px, -2px) rotate(-1deg); }
+            60% { transform: translate(2px, 0px) rotate(0deg); }
+            70% { transform: translate(-2px, 2px) rotate(-1deg); }
+            80% { transform: translate(2px, -2px) rotate(1deg); }
+            90% { transform: translate(-2px, 0px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        
+        .gong-vibrate {
+            animation: vibrate 0.15s infinite;
+        }
+
+        /* 큰 글씨 가독성을 위한 아웃라인 효과 */
+        .text-stroke {
+            -webkit-text-stroke: 1px #5c4033;
+        }
+
+        /* 모바일 터치 피드백 무력화 방지 및 부드러운 스크롤 */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen shadow-2xl bg-traditional-bg border-x-4 border-traditional-wood flex flex-col justify-between">
+
+    <!-- 상단 타이틀 바 -->
+    <header class="bg-traditional-wood text-white p-4 text-center rounded-b-3xl shadow-lg border-b-4 border-traditional-gold">
+        <div class="flex justify-between items-center px-2">
+            <span class="text-xs bg-traditional-gold text-traditional-wood px-2 py-1 rounded-full font-bold">충청남도 태안군</span>
+            <div class="flex gap-2">
+                <button onclick="changeFontSize(1)" class="bg-stone-700 hover:bg-stone-600 px-3 py-1 rounded text-lg font-black border border-white">가+</button>
+                <button onclick="changeFontSize(-1)" class="bg-stone-700 hover:bg-stone-600 px-3 py-1 rounded text-lg font-black border border-white">가-</button>
+            </div>
+        </div>
+        <h1 class="text-3xl font-title tracking-wider mt-2 flex justify-center items-center gap-2">
+            <i class="fa-solid fa-gong text-traditional-gold animate-bounce"></i>
+            태안 이장님 버스 도우미
+        </h1>
+        <p class="text-sm text-amber-200 mt-1 font-bold">"징을 치면 버스 소식이 군청으로 바로 가유!"</p>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main id="main-content" class="p-4 space-y-6 flex-grow text-[20px] leading-relaxed">
+        
+        <!-- 1. 실시간 버스 정보 카드 (언제, 어디서, 어떻게 와유?) -->
+        <section class="bg-white p-5 rounded-2xl border-4 border-traditional-paper shadow-md">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="bg-traditional-blue text-white px-3 py-1 rounded-full text-base font-bold">실시간 정보</span>
+                <h2 class="font-title text-2xl text-traditional-wood">우리 버스 언제 와유?</h2>
+            </div>
+            
+            <div class="bg-stone-50 p-4 rounded-xl border-2 border-stone-200 text-center space-y-2">
+                <div class="text-stone-500 font-bold text-lg">선택된 노선: <span class="text-traditional-blue text-xl">안면도 ➡️ 태안터미널 (101번)</span></div>
+                
+                <div class="flex justify-around items-center py-2 bg-amber-50 rounded-lg border border-amber-200">
+                    <div>
+                        <p class="text-stone-600 text-sm font-bold">남은 시간</p>
+                        <p class="text-4xl font-gong text-traditional-red animate-pulse mt-1">6분 뒤!</p>
+                    </div>
+                    <div class="h-12 w-0.5 bg-stone-300"></div>
+                    <div>
+                        <p class="text-stone-600 text-sm font-bold">현재 위치</p>
+                        <p class="text-2xl font-bold text-traditional-wood mt-1">남면 정류장 부근</p>
+                    </div>
+                </div>
+
+                <!-- 버스 진행 방향 인포그래픽 -->
+                <div class="relative pt-6 pb-2 px-2">
+                    <div class="h-3 bg-stone-300 rounded-full w-full"></div>
+                    <!-- 버스 지나간 빨간 선 -->
+                    <div class="absolute top-6 left-2 h-3 bg-traditional-red rounded-full w-2/3"></div>
+                    
+                    <!-- 정류장 마커 1 (기점) -->
+                    <div class="absolute top-4 left-0 text-center">
+                        <div class="w-7 h-7 rounded-full bg-traditional-wood border-2 border-white mx-auto flex items-center justify-center text-xs text-white font-bold">시작</div>
+                        <p class="text-xs font-bold mt-1 text-stone-500">안면도</p>
+                    </div>
+                    
+                    <!-- 실시간 버스 아이콘 -->
+                    <div class="absolute -top-1 left-2/3 -translate-x-1/2 text-center animate-bounce">
+                        <i class="fa-solid fa-bus text-3xl text-traditional-red"></i>
+                        <span class="block bg-traditional-red text-white text-[10px] px-1 rounded font-bold">101번</span>
+                    </div>
+
+                    <!-- 정류장 마커 2 (종점) -->
+                    <div class="absolute top-4 right-0 text-center">
+                        <div class="w-7 h-7 rounded-full bg-traditional-blue border-2 border-white mx-auto flex items-center justify-center text-xs text-white font-bold">도착</div>
+                        <p class="text-xs font-bold mt-1 text-stone-500">태안터미널</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 버스 노선 상세 카드 (어딜 갔다가 어디로 가나유?) -->
+        <section class="bg-white p-5 rounded-2xl border-4 border-traditional-paper shadow-md">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="bg-traditional-green text-white px-3 py-1 rounded-full text-base font-bold">노선도</span>
+                    <h2 class="font-title text-2xl text-traditional-wood">어딜 거쳐 가나유?</h2>
+                </div>
+                <button onclick="toggleRouteDetails()" class="text-sm font-bold bg-stone-100 hover:bg-stone-200 border-2 border-stone-300 px-2 py-1 rounded-lg">전체 노선 보기 <i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+
+            <!-- 요약 경로 타임라인 -->
+            <div class="space-y-3 relative before:absolute before:bottom-2 before:top-2 before:left-3.5 before:w-1 before:bg-stone-300">
+                <!-- 1 -->
+                <div class="flex items-center gap-4 pl-1">
+                    <div class="w-7 h-7 rounded-full bg-traditional-wood text-white flex items-center justify-center text-sm font-bold z-10">1</div>
+                    <div>
+                        <p class="font-bold text-traditional-wood text-xl">안면도 수산시장 <span class="text-sm text-stone-500">(기점 출발)</span></p>
+                        <p class="text-sm text-stone-500">매시 정각 출발해유</p>
+                    </div>
+                </div>
+                <!-- 2 (현재 위치 직전) -->
+                <div class="flex items-center gap-4 pl-1">
+                    <div class="w-7 h-7 rounded-full bg-traditional-red text-white flex items-center justify-center text-sm font-bold z-10 animate-ping"></div>
+                    <div class="w-7 h-7 rounded-full bg-traditional-red text-white flex items-center justify-center text-sm font-bold absolute left-1 z-10">2</div>
+                    <div>
+                        <p class="font-bold text-traditional-red text-xl">남면 지장실 정류장 <span class="text-xs bg-traditional-red text-white px-2 py-0.5 rounded-full font-bold">지금 지나가유!</span></p>
+                        <p class="text-sm text-stone-500">다음 정류장 대기중</p>
+                    </div>
+                </div>
+                <!-- 3 -->
+                <div class="flex items-center gap-4 pl-1">
+                    <div class="w-7 h-7 rounded-full bg-stone-400 text-white flex items-center justify-center text-sm font-bold z-10">3</div>
+                    <div>
+                        <p class="font-bold text-stone-700 text-xl">몽산포 해수욕장 입구</p>
+                        <p class="text-sm text-stone-500">약 5분 뒤 도착 예정</p>
+                    </div>
+                </div>
+
+                <!-- 숨겨진 추가 노선도 -->
+                <div id="extended-route" class="hidden space-y-3 pt-3">
+                    <div class="flex items-center gap-4 pl-1">
+                        <div class="w-7 h-7 rounded-full bg-stone-400 text-white flex items-center justify-center text-sm font-bold z-10">4</div>
+                        <div>
+                            <p class="font-bold text-stone-700 text-xl">평천리 마을회관</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 pl-1">
+                        <div class="w-7 h-7 rounded-full bg-traditional-blue text-white flex items-center justify-center text-sm font-bold z-10">5</div>
+                        <div>
+                            <p class="font-bold text-traditional-blue text-xl">태안 종합버스터미널 <span class="text-sm text-stone-500">(종점 도착)</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 핵심: 이장님 징치기 위젯 (안 와요 징치기!) -->
+        <section class="bg-traditional-paper p-6 rounded-3xl border-4 border-traditional-wood shadow-xl text-center relative overflow-hidden">
+            <!-- 전통 단청 느낌 무늬 데코 -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 via-yellow-500 to-blue-600"></div>
+            
+            <h2 class="font-gong text-3xl text-traditional-red tracking-wide mt-2">버스가 안 와서 속터지쥬?</h2>
+            <p class="text-stone-700 font-bold text-lg mt-2 mb-4 leading-normal">
+                아래 <span class="text-traditional-red font-black">놋쇠 징</span>을 손가락으로 <br>
+                <span class="bg-amber-200 px-2 py-0.5 rounded font-black text-traditional-wood">딱 3초 동안 꾹~</span> 누르고 계셔유!
+            </p>
+
+            <!-- 징 컨테이너 -->
+            <div class="relative flex justify-center items-center my-6">
+                <!-- 뒤쪽 전통 나무 지지대 장식 -->
+                <div class="absolute w-64 h-64 border-t-8 border-x-8 border-traditional-wood rounded-t-full -top-4 z-0"></div>
+                <div class="absolute bottom-0 w-72 h-4 bg-traditional-wood rounded z-0"></div>
+
+                <!-- 징 본체 (꾹 누르는 대상) -->
+                <div id="gong-button" 
+                     class="relative w-48 h-48 rounded-full bg-gradient-to-br from-yellow-300 via-traditional-gold to-yellow-800 border-8 border-amber-900 shadow-2xl flex flex-col justify-center items-center cursor-pointer transition-transform duration-100 z-10 active:scale-95"
+                     onmousedown="startGongHold(event)"
+                     onmouseup="endGongHold()"
+                     onmouseleave="endGongHold()"
+                     ontouchstart="startGongHold(event)"
+                     ontouchend="endGongHold()">
+                    
+                    <!-- 징 중앙 엠보싱 데코 -->
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-100 via-traditional-goldDark to-yellow-900 border-4 border-yellow-700 flex items-center justify-center shadow-inner">
+                        <span class="font-gong text-3xl text-white text-shadow text-stroke">징</span>
+                    </div>
+                    
+                    <span class="text-xs text-yellow-950 font-black mt-2 bg-white/60 px-2 py-0.5 rounded-full">꾹 누르기</span>
+                </div>
+
+                <!-- 충전 진행 상태 원 표시 (SVG) -->
+                <svg class="absolute w-56 h-56 z-20 pointer-events-none transform -rotate-90">
+                    <circle cx="112" cy="112" r="102" stroke="rgba(178, 34, 34, 0.2)" stroke-width="8" fill="transparent" />
+                    <circle id="progress-bar" cx="112" cy="112" r="102" stroke="#b22222" stroke-width="10" fill="transparent" 
+                            stroke-dasharray="640" stroke-dashoffset="640" stroke-linecap="round" class="transition-all duration-75" />
+                </svg>
+            </div>
+
+            <p class="text-stone-600 font-bold text-sm mt-2">※ 징소리가 나며 태안군청 스마트 민원으로 자동 등록됩니다.</p>
+        </section>
+
+        <!-- 4. 태안군청 노선 건의 (민원 신청) -->
+        <section class="bg-white p-5 rounded-2xl border-4 border-traditional-paper shadow-md">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="bg-traditional-red text-white px-3 py-1 rounded-full text-base font-bold">노선 건의</span>
+                <h2 class="font-title text-2xl text-traditional-wood">태안군청에 건의하세유</h2>
+            </div>
+
+            <p class="text-stone-600 text-sm font-bold mb-4">"우리 동네에 버스가 새로 댕겼으면 좋겄는 곳을 터치해주셔유!"</p>
+
+            <form id="petition-form" onsubmit="submitPetition(event)" class="space-y-4">
+                <!-- 출발지 선택 -->
+                <div>
+                    <label class="block font-bold text-stone-700 mb-1">1. 내가 사시는 마을</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="selectTown('start', '태안읍')" class="town-btn-start bg-stone-100 hover:bg-stone-200 py-2 px-1 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition">태안읍</button>
+                        <button type="button" onclick="selectTown('start', '안면읍')" class="town-btn-start bg-stone-100 hover:bg-stone-200 py-2 px-1 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition">안면읍</button>
+                        <button type="button" onclick="selectTown('start', '남면')" class="town-btn-start bg-stone-100 hover:bg-stone-200 py-2 px-1 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition">남면</button>
+                    </div>
+                </div>
+
+                <!-- 목적지 선택 -->
+                <div>
+                    <label class="block font-bold text-stone-700 mb-1">2. 버스타고 가고싶은 곳</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="selectTown('end', '태안 의료원(병원)')" class="town-btn-end bg-stone-100 hover:bg-stone-200 py-2.5 px-2 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition"><i class="fa-solid fa-hospital text-red-500 mr-1"></i>태안 의료원</button>
+                        <button type="button" onclick="selectTown('end', '태안 서부시장')" class="town-btn-end bg-stone-100 hover:bg-stone-200 py-2.5 px-2 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition"><i class="fa-solid fa-shop text-amber-600 mr-1"></i>서부시장</button>
+                        <button type="button" onclick="selectTown('end', '안면도 고등학교')" class="town-btn-end bg-stone-100 hover:bg-stone-200 py-2.5 px-2 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition"><i class="fa-solid fa-school text-blue-500 mr-1"></i>안면고교</button>
+                        <button type="button" onclick="selectTown('end', '직접 적기 (입력)')" class="town-btn-end bg-stone-100 hover:bg-stone-200 py-2.5 px-2 text-base font-bold border-2 border-stone-300 rounded-lg text-stone-700 transition"><i class="fa-solid fa-pen text-stone-500 mr-1"></i>직접 적기</button>
+                    </div>
+                </div>
+
+                <!-- 직접 입력창 (기본 숨김) -->
+                <div id="custom-destination-container" class="hidden">
+                    <label class="block font-bold text-stone-700 mb-1">어디로 가고 싶으신가유?</label>
+                    <input type="text" id="custom-destination" placeholder="예: 소원면 복지회관" class="w-full border-4 border-traditional-paper p-3 rounded-xl text-lg font-bold outline-none focus:border-traditional-gold">
+                </div>
+
+                <!-- 민원 전송 버튼 -->
+                <button type="submit" class="w-full bg-traditional-red hover:bg-red-800 text-white font-gong py-4 rounded-2xl text-2xl shadow-lg border-b-4 border-red-950 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    태안군청으로 민원 보내기
+                </button>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- 하단 라이선스 및 푸터 -->
+    <footer class="bg-stone-200 p-4 text-center border-t border-stone-300 text-xs text-stone-600 font-bold rounded-t-3xl">
+        <p>© 2026 태안군청 농어촌버스 공공데이터 연계 서비스</p>
+        <p class="mt-1 text-traditional-red">이장님 징치기 민원 보관소 : <span id="complaint-count" class="font-black">124</span>건 접수됨</p>
+    </footer>
+
+    <!-- 알림 모달창 (alert 사용 금지) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-8 border-traditional-paper max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+            <div id="modal-icon-container" class="text-5xl text-traditional-red animate-bounce">
+                <!-- 자바스크립트에서 변경 -->
+            </div>
+            <h3 id="modal-title" class="text-3xl font-title text-traditional-wood">지이이이이잉~!</h3>
+            <p id="modal-desc" class="text-stone-700 text-lg font-bold leading-relaxed">
+                버스 안 온다고 민원을 넣었슈!<br>이장님이 군청에 소리치러 가유!
+            </p>
+            <button onclick="closeModal()" class="w-full bg-traditional-wood hover:bg-stone-800 text-white font-gong py-3 rounded-xl text-xl border-b-4 border-stone-950">
+                알겄슈 (확인)
+            </button>
+        </div>
+    </div>
+
+    <!-- 오디오용 Web Audio API 스크립트 -->
+    <script>
+        // 징소리를 만들기 위한 합성 사운드 제네레이터
+        let audioCtx = null;
+
+        function playGongSound() {
+            try {
+                // 오디오 컨텍스트 초기화
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // 징소리 깊고 웅장한 금속성 공명음 합성
+                const duration = 3.0;
+                
+                // 1. 깊은 저음 진동 (동체 음원)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(80, audioCtx.currentTime); // 80Hz 깊은 저음
+                osc1.frequency.exponentialRampToValueAtTime(45, audioCtx.currentTime + duration);
+
+                // 2. 금속 마찰 배음 (고주파 노이즈 필터링)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(140, audioCtx.currentTime);
+                osc2.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 1.5);
+
+                // 볼륨 스케일 조절
+                gain1.gain.setValueAtTime(0.8, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                gain2.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration - 1.0);
+
+                // 3. 살짝 흔들리는 사운드를 위한 LFO 효과 (지이이이이잉~ 표현)
+                const lfo = audioCtx.createOscillator();
+                const lfoGain = audioCtx.createGain();
+                lfo.frequency.value = 16; // 16Hz 떨림
+                lfoGain.gain.value = 15; // 주파수 모듈레이션 값
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc1.frequency);
+                lfoGain.connect(osc2.frequency);
+
+                // 마스터 노드 연결
+                osc1.connect(gain1);
+                osc2.connect(gain2);
+                
+                gain1.connect(audioCtx.destination);
+                gain2.connect(audioCtx.destination);
+
+                // 재생 시작 및 종료 예약
+                lfo.start();
+                osc1.start();
+                osc2.start();
+
+                lfo.stop(audioCtx.currentTime + duration);
+                osc1.stop(audioCtx.currentTime + duration);
+                osc2.stop(audioCtx.currentTime + duration);
+
+            } catch (error) {
+                console.log("웹 오디오 에러 발생: 브라우저가 오디오 작동을 막고 있거나 지원하지 않음", error);
+            }
+        }
+    </script>
+
+    <!-- 인터랙션 및 핵심 로직 스크립트 -->
+    <script>
+        // 글씨 크기 전역 상태
+        let currentFontSize = 20; // 기본 20px (어르신 전용 최적 크기)
+        
+        function changeFontSize(direction) {
+            currentFontSize += direction * 2;
+            if (currentFontSize < 14) currentFontSize = 14;
+            if (currentFontSize > 30) currentFontSize = 30;
+            
+            document.getElementById('main-content').style.fontSize = currentFontSize + 'px';
+            
+            // 모든 버튼 및 인풋 텍스트 크기도 동적으로 조절
+            const allButtons = document.querySelectorAll('button, input, p, h2');
+            allButtons.forEach(btn => {
+                if(!btn.classList.contains('font-gong') && !btn.classList.contains('font-title')) {
+                    btn.style.fontSize = (currentFontSize * 0.9) + 'px';
+                }
+            });
+        }
+
+        // 전체 노선 보기 접기/펴기
+        function toggleRouteDetails() {
+            const extended = document.getElementById('extended-route');
+            if (extended.classList.contains('hidden')) {
+                extended.classList.remove('hidden');
+            } else {
+                extended.classList.add('hidden');
+            }
+        }
+
+        // 꾹 누르기 상태 변수
+        let holdTimer = null;
+        let holdProgress = 0;
+        let progressInterval = null;
+        let selectedStartTown = '';
+        let selectedEndTown = '';
+
+        const gongButton = document.getElementById('gong-button');
+        const progressBar = document.getElementById('progress-bar');
+        const maxOffset = 640; // SVG circle의 둘레 (2 * pi * r => 2 * 3.14159 * 102 = 640.8)
+
+        // 3초 누르기 시작
+        function startGongHold(e) {
+            e.preventDefault();
+            holdProgress = 0;
+            progressBar.style.strokeDashoffset = maxOffset;
+            gongButton.classList.add('gong-vibrate');
+
+            // 0.1초마다 진행률 갱신 (총 3초 = 30단계)
+            progressInterval = setInterval(() => {
+                holdProgress += 3.33; // 100% / 30steps
+                if (holdProgress >= 100) {
+                    holdProgress = 100;
+                    triggerGongAction();
+                    endGongHold();
+                }
+                const currentOffset = maxOffset - (maxOffset * (holdProgress / 100));
+                progressBar.style.strokeDashoffset = currentOffset;
+            }, 100);
+        }
+
+        // 누르기 취소
+        function endGongHold() {
+            gongButton.classList.remove('gong-vibrate');
+            clearInterval(progressInterval);
+            progressBar.style.strokeDashoffset = maxOffset;
+        }
+
+        // 징이 다 눌렸을 때 발동하는 찐 징치기 효과!
+        function triggerGongAction() {
+            // 1. 징 소리 재생 (Web Audio API)
+            playGongSound();
+
+            // 2. 가상 전송 카운터 증가
+            const countElem = document.getElementById('complaint-count');
+            let count = parseInt(countElem.innerText);
+            countElem.innerText = count + 1;
+
+            // 3. 모달 팝업으로 완료 표시
+            showModal(
+                `<i class="fa-solid fa-bell-on text-6xl text-traditional-gold animate-bounce"></i>`,
+                "지이이이이잉~!",
+                "101번 버스가 안 온다고 태안군청에 대중교통 불편 신고를 즉시 접수했슈! 이장님이 군수님 책상을 쾅 치러 출동해유!"
+            );
+        }
+
+        // 가상 노선 선택 기능
+        function selectTown(type, name) {
+            if (type === 'start') {
+                selectedStartTown = name;
+                // 기존 활성화 해제
+                const btns = document.querySelectorAll('.town-btn-start');
+                btns.forEach(btn => btn.className = btn.className.replace('bg-traditional-gold text-white border-traditional-gold', 'bg-stone-100 text-stone-700 border-stone-300'));
+                
+                // 이번에 누른 버튼 활성화
+                event.target.className = event.target.className.replace('bg-stone-100 text-stone-700 border-stone-300', 'bg-traditional-gold text-white border-traditional-gold');
+            } else if (type === 'end') {
+                selectedEndTown = name;
+                
+                // 직접 적기 선택시 인풋창 보이기
+                const customDest = document.getElementById('custom-destination-container');
+                if (name === '직접 적기 (입력)') {
+                    customDest.classList.remove('hidden');
+                } else {
+                    customDest.classList.add('hidden');
+                }
+
+                const btns = document.querySelectorAll('.town-btn-end');
+                btns.forEach(btn => btn.className = btn.className.replace('bg-traditional-blue text-white border-traditional-blue', 'bg-stone-100 text-stone-700 border-stone-300'));
+                
+                event.target.className = event.target.className.replace('bg-stone-100 text-stone-700 border-stone-300', 'bg-traditional-blue text-white border-traditional-blue');
+            }
+        }
+
+        // 태안군청 민원 가상 전송
+        function submitPetition(e) {
+            e.preventDefault();
+
+            let destination = selectedEndTown;
+            if (selectedEndTown === '직접 적기 (입력)') {
+                destination = document.getElementById('custom-destination').value.trim();
+            }
+
+            if (!selectedStartTown) {
+                showModal(
+                    `<i class="fa-solid fa-triangle-exclamation text-6xl text-traditional-red"></i>`,
+                    "이런, 빼먹으셨슈!",
+                    "어디 사시는지 '내가 사시는 마을'을 먼저 골라주셔유!"
+                );
+                return;
+            }
+
+            if (!destination) {
+                showModal(
+                    `<i class="fa-solid fa-triangle-exclamation text-6xl text-traditional-red"></i>`,
+                    "목적지가 없슈!",
+                    "버스가 가줬으면 하는 목적지를 하나만 터치해주셔유!"
+                );
+                return;
+            }
+
+            // 가상 전송 완료 모달
+            showModal(
+                `<i class="fa-solid fa-circle-check text-6xl text-traditional-green animate-bounce"></i>`,
+                "접수 완료되었슈!",
+                `[${selectedStartTown}] 에서 [${destination}] 까지 가는 대중교통 노선이 부족하다는 소중한 주민 의견을 태안군청 민원창구로 정성껏 전송했슈. 고마워유!`
+            );
+
+            // 입력 초기화
+            selectedStartTown = '';
+            selectedEndTown = '';
+            document.getElementById('custom-destination').value = '';
+            document.getElementById('custom-destination-container').class = 'hidden';
+            
+            // 모든 버튼 선택 스타일 초기화
+            const btns = document.querySelectorAll('.town-btn-start, .town-btn-end');
+            btns.forEach(btn => {
+                btn.className = btn.className.replace('bg-traditional-gold text-white border-traditional-gold', 'bg-stone-100 text-stone-700 border-stone-300');
+                btn.className = btn.className.replace('bg-traditional-blue text-white border-traditional-blue', 'bg-stone-100 text-stone-700 border-stone-300');
+            });
+        }
+
+        // 모달 제어 함수
+        function showModal(iconHtml, title, desc) {
+            document.getElementById('modal-icon-container').innerHTML = iconHtml;
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerHTML = desc;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
